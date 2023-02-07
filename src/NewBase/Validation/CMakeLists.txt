@@ -1,0 +1,10 @@
+target_sources(
+	${DOCUMENT_NAME}
+	PRIVATE
+       SmartFlexDataAdmin.cpp
+       SmartFlexDataAdmin.h
+       SmartFlexibleValidation.cpp
+       SmartFlexibleValidation.h
+       ValidationData.cpp
+       ValidationData.h
+)

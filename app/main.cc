@@ -155,13 +155,12 @@ void readJson(string jsonFileName, Doc* pDoc) {
 
     }
 }
-/*
+
 bool CreateOutputCSVFile(string filename, Doc* pDoc) {
     // Get the output file
     string outputFileName = ((ModelFiles*)pDoc)->GetNewOutputFileName();
     CPG* cpgFile = new CPG();
     cpgFile->Open(outputFileName);
-
     cout << "All Runs have now been completed \n";
 
     // printing the time took to run the model
@@ -198,7 +197,8 @@ bool CreateOutputCSVFile(string filename, Doc* pDoc) {
     while (getline(in, line))
     {
        // Tokenizer tok(line);
-        vec.assign(tok.begin(), tok.end());
+        vec = FUtil::GetStringVectorFromStringLine(line);
+       // vec.assign(tok.begin(), tok.end());
 
         // vector now contains strings from one row, output to cout here
 //            copy(vec.begin(), vec.end(), ostream_iterator<string>(cout, "|"));
@@ -214,7 +214,7 @@ bool CreateOutputCSVFile(string filename, Doc* pDoc) {
             }
 
             std::vector <float> currentVector = cpgFile->GetVarVector(currentIndex);
-            string parameterValues = arrayToString(currentVector);
+            string parameterValues = FUtil::arrayToString(currentVector);
 
             //            Gs* pGsPointer = pDoc->GetGsPointer(currentParameter);
             //            if (pGsPointer != NULL) {
@@ -228,19 +228,10 @@ bool CreateOutputCSVFile(string filename, Doc* pDoc) {
 
             loopIndex++;
         }
-
-
-
-
     }
-
     cout << "}";
-
-
-
-
 }
-*/
+
 
 string createInputBinFile(string csvFileName) {
     PGFileImport File;

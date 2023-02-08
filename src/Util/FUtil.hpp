@@ -86,6 +86,17 @@ namespace FUtil
 
 #endif
 	}
+	static std::string arrayToString(std::vector <float> v) {
+		std::stringstream ss;
+		for (size_t i = 0; i < v.size(); ++i)
+		{
+			if (i != 0)
+				ss << ",";
+			ss << v[i];
+		}
+		std::string s = ss.str();
+		return s;
+	}
 
 
 

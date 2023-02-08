@@ -24,8 +24,7 @@ set(PG_LIB_SOURCE
         FileImport/ExtraLinkedInformation.h
 
 )
-add_library(${PG_LIB_NAME} STATIC
-    ${PG_LIB_SOURCE}
+add_library(${PG_LIB_NAME} STATIC ${PG_LIB_SOURCE}
 )
 target_include_directories(${PG_LIB_NAME} PUBLIC
     "./")

@@ -1,4 +1,4 @@
-set(MODEL_NAME model)
+set(MODEL_LIBNAME model)
 set(MODEL_SOURCES 
         Atmosphere/Functors/IrrigationWater_Functors.h
         Atmosphere/Functors/Met_Functors.h
@@ -205,18 +205,12 @@ set(MODEL_SOURCES
 )
 
 
-set(MODEL_INCLUDES
-    "./"
-)
-
-
-add_library(${MODEL_NAME} STATIC
+add_library(${MODEL_LIBNAME} STATIC
     ${MODEL_SOURCES}
  )
-target_include_directories(${MODEL_NAME} PRIVATE
-    ${MODEL_INCLUDES})
-target_link_libraries(${MODEL_NAME} INTERFACE
-    ${PG_LIB_NAME} )
+target_include_directories(${MODEL_LIBNAME} PUBLIC
+    "./")
+
 
 
 

@@ -39,9 +39,7 @@ add_subdirectory(mcmc)
 #target_include_directories(
 #	modeltypeslib
 #	PRIVATE src/modeltypes)
-target_link_libraries(${DOCUMENT_NAME} INTERFACE ${LIBRARY_NAME} ${LIBRARY_NAME2})
-target_link_libraries(${DOCUMENT_NAME} INTERFACE ${LIBUTIL_NAME})
-target_link_libraries(${DOCUMENT_NAME} INTERFACE mcmclib)
+
 target_include_directories(${DOCUMENT_NAME} PUBLIC
     "./"
     "../"

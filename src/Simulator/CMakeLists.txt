@@ -15,10 +15,10 @@ set(LIBRARY_INCLUDES
     "../"
     "${CMAKE_BINARY_DIR}/configured_files/include")
 
-add_library(${LIBRARY_NAME} 
+add_library(${SIMULATOR_LIBNAME} 
     ${LIBRARY_SOURCES}
     ${LIBRARY_HEADERS})
-target_include_directories(${LIBRARY_NAME} PRIVATE
+target_include_directories(${SIMULATOR_LIBNAME} PUBLIC
     ${LIBRARY_INCLUDES})
 
 

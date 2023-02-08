@@ -1,7 +1,5 @@
-add_library(modeltypeslib)
-target_sources(
-	modeltypeslib
-	PRIVATE
+set(MODELTYPE_LIBNAME modeltypeslib)
+set(MODELTYPE_SOURCES 
 	CDB.cpp CDB.h
 	D.cpp D.h
     Ds.cpp Ds.h
@@ -32,7 +30,5 @@ target_sources(
 	../NewBase/CommonModelInfo.cpp
 	../NewBase/CommonModelInfo.h
 )
-#target_include_directories(
-#	modeltypeslib
-#	PRIVATE src/modeltypes)
-#target_link_directories(modeltypeslib PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+add_library(${MODELTYPE_LIBNAME} STATIC ${MODELTYPE_SOURCES})
+target_link_directories(${MODELTYPE_LIBNAME} PUBLIC ${CMAKE_CURRENT_LIST_DIR})

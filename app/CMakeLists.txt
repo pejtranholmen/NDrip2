@@ -10,15 +10,18 @@ target_include_directories(${EXECUTABLE_NAME}
     "${CMAKE_BINARY_DIR}/configured_files/include"
 )
 
-target_link_libraries(documentlib INTERFACE pglib)
+
+target_link_libraries(model INTERFACE pglib)
+target_link_libraries(model INTERFACE modeltypeslib)
+
+
+target_link_libraries(documentlib INTERFACE pglib )
 target_link_libraries(documentlib INTERFACE model)
 target_link_libraries(documentlib INTERFACE libutil)
 target_link_libraries(documentlib INTERFACE libsoilpf)
-
+target_link_libraries(documentlib INTERFACE mcmclib)
 
 target_link_libraries(${EXECUTABLE_NAME} PUBLIC 
     documentlib
-    ${LIBRARY_NAME}
-    ${LIBRARY_NAME2}
-    modeltypeslib
+    ${SIMULATOR_LIBNAME}
  )

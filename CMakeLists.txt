@@ -8,7 +8,7 @@ include(FetchContent)
 
 project(CoupModelBase VERSION 1.0.0 LANGUAGES CXX)
 
-set(LIBRARY_NAME Library)
+set(SIMULATOR_LIBNAME SimLibrary)
 set(EXECUTABLE_NAME Executable)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")

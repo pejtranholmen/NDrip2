@@ -17,16 +17,20 @@ using namespace std;
 #include <chrono>
 #ifdef MS_CODE
 #include <direct.h>
+#else
+#include <filesystem>
+#include <unistd.h>
+
 #endif
 
-//#include "Util/Constants.h"
-/*
+#include "Util/Constants.h"
+
 #include "config.hpp"
 #include "Simulator/DefineModel.h"
 #include "Model/Structure/StructureModel.h"
 #include <cxxopts.hpp>
 #include <nlohmann/json.hpp>
-*/
+
 
 void SimProc(size_t i, Doc* pDoc, bool Multi)
 {
@@ -79,7 +83,7 @@ bool MakeMulti(size_t i, Doc* pDoc) {
     }
     return out;
 }
-/*
+
 void readJson(string jsonFileName, Doc* pDoc) {
 
     std::ifstream i(jsonFileName);
@@ -150,7 +154,7 @@ void readJson(string jsonFileName, Doc* pDoc) {
         cout << "No json file used, file is missing (par.json)";
 
     }
-}*/
+}
 /*
 bool CreateOutputCSVFile(string filename, Doc* pDoc) {
     // Get the output file
@@ -249,7 +253,7 @@ string createInputBinFile(string csvFileName) {
 }
 int main(int argc, char *argv[])
 {
-  /*  cxxopts::Options options("test", "A brief description");
+   cxxopts::Options options("test", "A brief description");
 
     options.add_options()
         ("b,bar", "Param bar", cxxopts::value<std::string>())
@@ -272,7 +276,7 @@ int main(int argc, char *argv[])
     int foo = result["foo"].as<int>();
 
 
- */
+ 
 
     using namespace std;
     auto start = std::chrono::system_clock::now();
@@ -283,14 +287,13 @@ int main(int argc, char *argv[])
     string SimInputsFileNameJson=path+"\\par.json";
 
 #ifdef MS_CODE
-    char* buf;
-    buf = _getcwd(NULL, 0);
-
-    path = buf;
-    path += "\\";
+    char* buff;
+    buff = _getcwd(nullptr, 0);
+    path = buff; path += "\\";
     simFilePath = path + "Main_000000.Sim";
 #else
-    path = "/tmp/CoupModel/";
+    path = get_current_dir_name();
+    path+= "/";
 #endif
     // Setting global OPTIONS
     FUtil::WriteProfileStringStd("WorkingDirectory", path);

@@ -6,8 +6,8 @@
 //* Jan 1, AD 1 
 enum formats { STANDARD, SEPARATED_YMDHM, SEPARATED_YMD, YMD_HM, NOAA, SMHI, SWISS, SEPARATED_YMDH, CZECH, CZECH_COL_TRANS, MONTH_COL_TRANS, PROFOUND, IDSCAN, UNDEFINEDFORMAT, SMHI_OPENDATA, SILO, SITES };
 enum dateformats { YMDHM, YMD, DMY_SLASH };
-
 class GlobalInfo;
+class Doc;
 struct TIMECHECK {
 	bool CommonTimeStep;
 	bool CommonRecStep;
@@ -17,7 +17,6 @@ struct TIMECHECK {
 	size_t RecordStep;
 	size_t NumUniqueSteps;
 };
-
 struct LINKED_FILEINFO {
 	size_t Records;
 	size_t RecordsSelected;
@@ -31,8 +30,6 @@ struct DEC_COORD
 	double y;
 	double z;
 };
-
-
 struct FILEINFO
 {	
 	string InputfileName;
@@ -74,16 +71,12 @@ struct FILEINFO
 	vector<string> GlobalFilterItems;
 	string FilterItemToUse;
 };
-
 struct SWISSCORD
 {
 	size_t x;
 	size_t y;
 	size_t z;
 };
-
-
-
 struct IPGTID {
 	int iyear;
 	int imonth;
@@ -91,10 +84,6 @@ struct IPGTID {
 	int ihour;
 	int iminut;
 };
-
-
-
-#include "../std.h"
 class PGUtil
 {
 public:
@@ -137,6 +126,8 @@ public:
 	static int LengthOfMonth(unsigned int min);
 	static string CheckedForExistingBinFileName(string filename);
 	static bool CheckForPossiblePGDateString(string str);
+	static bool CreateOutputCSVFile(string filename, string filenameinput, Doc* pDoc);
+	static string createInputBinFile(string csvFileName);
 
 };
 

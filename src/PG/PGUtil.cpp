@@ -1,7 +1,11 @@
 #pragma once
 #include "../std.h"
 #include "./PGUtil.h"
+#include "./FileImport/PGFileImport.h"
 #include "../Util/FUtil.hpp"
+#include "../NewBase/Doc.h"
+#include <chrono>
+
 #ifndef NO_MS_GUI
 #include "../Util/ModelUtil.h"
 #endif
@@ -1087,4 +1091,91 @@ bool PGUtil::CheckForPossiblePGDateString(string str)
 	if (koll.iyear > 0 && koll.imonth > 0 && koll.imonth < 13 && koll.iday>0 && koll.iday < 367) return true;
 
 	return false;
+}
+bool PGUtil::CreateOutputCSVFile(string filename, string filenameinput, Doc* pDoc) {
+	// Get the output file
+	string outputFileName = ((ModelFiles*)pDoc)->GetNewOutputFileName();
+	CPG* cpgFile = new CPG();
+	cpgFile->Open(outputFileName);
+	cout << "All Runs have now been completed \n";
+
+	// printing the time took to run the model
+	auto end = std::chrono::system_clock::now();
+	std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+	std::cout << "finished computation at " << std::ctime(&end_time) << "s\n";
+
+	// Printing Return value sign, from this part all the data is in JSON format
+	cout << "#*#";
+
+	//    string outputVariables[7] = { "Acc_MinN_Storage", "AccMinNLeaching", "N Total Plant", "N Tot MinN Soil", "PressureHead", "N Plant AboveG", "AccDenitrification"};
+	//    string outputVariablesIDs[7] = { "1", "1", "1", "1", "20- 25 cm 1", "1","1"};
+	//
+
+	size_t timeinterval = cpgFile->GetNormalTimeInterval();
+	string startDate = cpgFile->GetDate(1);
+
+	cpgFile->ExportToFile("LastOutput.csv", false, false);
+
+	// Read output parameters from CSV
+	// replaced line
+	//string data(path + argv[6]);
+	string data(filenameinput);
+	ifstream in(data.c_str());
+	if (!in.is_open()) return 1;
+
+	//typedef tokenizer< escaped_list_separator<char> > Tokenizer;
+	vector< string > vec;
+	string line;
+	int loopIndex = 0;
+
+	// Return value
+	cout << "{";
+	while (getline(in, line))
+	{
+		// Tokenizer tok(line);
+		vec = FUtil::GetStringVectorFromStringLine(line, 6);
+		// vec.assign(tok.begin(), tok.end());
+
+		 // vector now contains strings from one row, output to cout here
+ //            copy(vec.begin(), vec.end(), ostream_iterator<string>(cout, "|"));
+
+		string currentParameter = vec[0];
+		string currentParameterId = vec[1];
+		size_t currentIndex = cpgFile->GetVarIndex(currentParameter, currentParameterId) + 1;
+
+		if (currentIndex != 0) {
+
+			if (loopIndex != 0) { // building the JSON
+				cout << ",";
+			}
+
+			std::vector <float> currentVector = cpgFile->GetVarVector(currentIndex);
+			string parameterValues = FUtil::arrayToString(currentVector);
+
+			//            Gs* pGsPointer = pDoc->GetGsPointer(currentParameter);
+			//            if (pGsPointer != NULL) {
+			//                double currentValue = pGsPointer->GetValue();
+			//            }
+
+			cout << "'" + currentParameter + "': {" <<
+				"'startDate':" << "'" << startDate << "'" << "," <<
+				"'timeIntervalMinutes':" << "'" << timeinterval << "'" << "," <<
+				"'values':" << "'" << parameterValues << "'" << "}";
+
+			loopIndex++;
+		}
+	}
+	cout << "}";
+	return in.good();
+}
+
+
+string PGUtil::createInputBinFile(string csvFileName) {
+	PGFileImport File;
+	string binfilename = "";
+	if (File.ImportFromFile(csvFileName, false, 0)) {
+		binfilename = File.GetFileName();
+		File.CloseFile();
+	}
+	return binfilename;
 }

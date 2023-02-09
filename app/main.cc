@@ -192,7 +192,6 @@ int main(int argc, char *argv[])
     buff = _getcwd(nullptr, 0);
     path = buff; path += "\\";
     simFilePath = path + "Main_000000.Sim";
-    simFilePath = path + "\\Main_000000.Sim";
     SimInputsFileNameJson = path + "\\par.json";
 #else
     path = get_current_dir_name();

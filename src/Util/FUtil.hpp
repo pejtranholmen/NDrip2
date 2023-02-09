@@ -1,7 +1,10 @@
 #pragma once
-#include "../std.h"
+#include <vector>
 #include <cmath>
 #include "Register.hpp"
+#ifndef MISSING
+#define MISSING -1.1E38f
+#endif
 
 
 struct rgb_color

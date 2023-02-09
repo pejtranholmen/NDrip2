@@ -1,4 +1,3 @@
-#include "../../../std.h"
 #include "../../../NewBase/PhysFunc.h"
 class SurfaceRunOff {
 public: SurfaceRunOff(double SurfaceCoef, double SurfacePoolMax): Threshold(SurfacePoolMax), RateCoef(SurfaceCoef) {}

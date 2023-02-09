@@ -1,6 +1,5 @@
 
 #include "SimArchive.h"
-#include "../std.h"
 #ifndef COUPSTD
 #include "../CoupModelDoc.h"
 #endif

@@ -1,6 +1,6 @@
 
 using namespace std;
-#include "std.h"
+
 #include "NewBase/CommonModelInfo.h"
 #include "ModelCompNames.hpp"
 //#include <pqxx/pqxx>
@@ -13,6 +13,6 @@ int main(int argc, char *argv[]) {
     CommonModelInfo mm;
 	auto a=Fix::DENSA;
 	auto b = ModelCompNames::TypNames[11];
-//	 D z();
-//	 X x();
+     D z();
+	 X x();
 }

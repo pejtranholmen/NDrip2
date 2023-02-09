@@ -1,8 +1,8 @@
 #pragma once
+#include <vector>
 
 namespace ModelFunctions
 {
-
 	struct PlantInterp {
 		std::vector<double> Start;
 		std::vector<double> Opt;
@@ -13,9 +13,6 @@ namespace ModelFunctions
 		std::vector<double> OptValue;
 		std::vector<double> EndValue;
 	};
-
-
-
 
 	double SteadyStateSol_BoundaryTemp(double Upperheight, double UpperTh, double Lowerheight, double LowerTh, double  Tempabove, double Tempbelow);
 	double SVP(double temp);

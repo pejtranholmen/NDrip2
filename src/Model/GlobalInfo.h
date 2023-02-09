@@ -1,7 +1,6 @@
 #pragma once
-
-#include "../std.h"
-
+#include <string>
+#include <map>
 
 class GlobalInfo {
 	public:

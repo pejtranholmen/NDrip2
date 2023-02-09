@@ -1,4 +1,3 @@
-#include "..//std.h"
 #include "DefineModel.h"
 #include "../NewBase/Doc.h"
 #include "../SoilData/GetSoilStorage.h"

@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../../std.h"
+#include <vector>
 class RootDensity {
 public:
 	RootDensity(vector<double> LayerThickness) : LayerThickness(LayerThickness) {};

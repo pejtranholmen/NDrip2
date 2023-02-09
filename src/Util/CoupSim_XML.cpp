@@ -1,8 +1,7 @@
 
 
-#include "../std.h"
 using namespace std;
-
+#include <vector>
 #include "CoupSim_XML.h"
 
 #include "../NewBase/CH.h"

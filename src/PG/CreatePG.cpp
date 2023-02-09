@@ -1,9 +1,7 @@
 // CreatePG.cpp : implementation file
 //
 
-#include "../stdafx.h"	
-#include "../std.h"
-#include "../Util.h"
+#include "../FUtil.hpp"
 
 #ifndef PGONLY
 #include "../CoupModel.h"

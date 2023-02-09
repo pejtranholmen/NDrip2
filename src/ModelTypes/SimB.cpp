@@ -1,7 +1,6 @@
-#include "../std.h"
 #include "./SimB.h"
 #include "../Util/FUtil.hpp"
-#include "../ModelCompNames.hpp"
+#include "../NewBase/ModelCompNames.hpp"
 #include "../NewBase/NewMap.h"
 #include "./Sw.h"
 

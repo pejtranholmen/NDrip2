@@ -1,5 +1,4 @@
 //#include "../stdafx.h"
-#include "../std.h"
 #include "./Sim.h"
 #include "../Util/FUtil.hpp"
 #include <ctime>

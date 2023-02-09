@@ -1,6 +1,5 @@
 
 using namespace std;
-#include "std.h"
 #include "NewBase/Doc.h"
 #include "Simulator/ModelInfo.h"
 #include "Util/FUtil.hpp"

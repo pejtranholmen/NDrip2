@@ -1,5 +1,4 @@
 #pragma once
-#include "../std.h"
 #include "PG.H"
 struct DOUBLEMATCHVAR {int main_source_var; int main_scaling_var; int second_source_var;int second_scaling_var;};
 struct MONTHPAIR {float value; long minute; size_t orgindex;};

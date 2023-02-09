@@ -1,5 +1,4 @@
 #pragma once
-#include "../std.h"
 
 class PhysConst {
 	public:

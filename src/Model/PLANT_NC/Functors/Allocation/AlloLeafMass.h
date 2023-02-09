@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../../std.h"
+#include <vector>
 
 class CAlloLeaf_Fixed {
 public: CAlloLeaf_Fixed(vector<double> AlloLeaf1):

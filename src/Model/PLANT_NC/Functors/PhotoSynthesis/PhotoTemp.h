@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../../std.h"
+#include <vector>
 
 class PhoTempResponseDirect {
 public: PhoTempResponseDirect(vector<double> TempResMin, vector<double> TempResOpt1, vector<double> TempResOpt2, vector<double> TempResMax) : TempResMin(TempResMin), TempResOpt1(TempResOpt1),

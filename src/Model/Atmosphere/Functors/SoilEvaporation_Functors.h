@@ -1,5 +1,4 @@
 #pragma once
-#include "../../../std.h"
 #include "../../../NewBase/PhysFunc.h"
 enum class SurEbal_Sw { AirTemperature, PM_equation, E_balance_Solution };
 enum class StabilitySoil_Sw {Richardson_Number,Monin_Obukhov_Length};

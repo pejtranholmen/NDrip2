@@ -1,7 +1,6 @@
 #pragma once
-
-#include "../../../std.h"
-
+#include <vector>
+#include <functional>
 
 enum class InitialMineral_N_Sw {
     Uniform_concentration, Depth_Dependence

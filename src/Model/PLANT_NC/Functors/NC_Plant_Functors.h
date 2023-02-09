@@ -1,6 +1,4 @@
 #pragma once
-#include "../../../std.h"
-
 
 enum class Growth_Sw{ off,Logistic_function,Water_use_efficiency,Radiation_use_efficiency, Farquhar};
 enum class PhotoInput_Sw{Simulated,PG_file};

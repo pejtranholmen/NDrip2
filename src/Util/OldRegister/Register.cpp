@@ -1,7 +1,12 @@
 #include pragma once
 
-#include "..\std.h"
+
 #include <sstream>
+#include <map>
+#include <vector>
+#include <string>
+
+using namespace std;
 
 using namespace Register {
 

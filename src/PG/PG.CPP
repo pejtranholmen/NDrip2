@@ -1,12 +1,10 @@
 //#include "../stdafx.h"
-#include "../std.h"
 #include "../ModelTypes/SimB.h"
 #include "../NewBase/MultiRun/Residuals.h"
 #include "./PG.H"
 #include "../Util/FUtil.h"
 #include "../NewBase/Doc.h"
 #ifndef COUPSTD
-
 #include "../CoupModelDoc.h"
 #include "../CUG/SimDoc\MyCug.h"
 #include "../CoupModelView.h"

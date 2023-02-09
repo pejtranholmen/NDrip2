@@ -1,5 +1,5 @@
 #pragma once
-#include "../std.h"
+#include <vector>
 class Doc;
 class CCoupModelDoc;
 struct SimObject { bool Running; size_t DocType; CCoupModelDoc *pDoc; Doc *pSimDoc;};

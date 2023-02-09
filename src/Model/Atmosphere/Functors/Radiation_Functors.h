@@ -1,5 +1,4 @@
 #pragma once
-#include "../../../std.h"
 #include "../../../NewBase/PhysFunc.h"
 enum class RadiationInput_Sw {No, Yes};
 enum class NetLongRad_Sw{One_Forumula, Two_Formulas};

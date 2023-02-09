@@ -1,6 +1,6 @@
 #pragma once
-#include "../../../std.h"
-
+#include <vector>
+#include <functional>
 enum class DissolvedOrganics_Sw { off, on };
 enum class Microbes_Sw { off,on_substate_dependent,on_microbe_dependent };
 enum class LitterPools_Sw { one,two };

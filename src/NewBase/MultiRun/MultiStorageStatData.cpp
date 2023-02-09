@@ -3,7 +3,6 @@
 #ifndef COUPSTD
 #include "../stdafx.h"
 #endif
-#include "../../std.h"
 #include "../../Util/FUtil.hpp"
 #include "../../Util/StatUtil.h"
 #include "../../Util/ModelUtil.h"

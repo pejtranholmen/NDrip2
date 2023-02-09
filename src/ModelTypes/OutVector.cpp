@@ -1,5 +1,4 @@
 //#include "../stdafx.h"
-#include "../std.h"
 #include "../Util/FUtil.hpp"
 #include "OutVector.h"
 #include "NE.h"

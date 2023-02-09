@@ -1,8 +1,8 @@
-#include "../std.h"
+
 using namespace std;
 
 #include "./CommonModelInfo.h"
-#include "../ModelCompNames.hpp"
+#include "./ModelCompNames.hpp"
 #include "../ModelTypes/SimB.h"
 CommonModelInfo::CommonModelInfo() {
 

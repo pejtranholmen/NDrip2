@@ -1,8 +1,6 @@
 // DB_Plant.cpp : implementation file
 //
 
-#include "../stdafx.h"
-#include "../std.h"
 #include "../Util.h"
 #include "./DB_Plant.h"
 

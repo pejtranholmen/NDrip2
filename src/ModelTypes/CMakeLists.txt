@@ -26,7 +26,6 @@ set(MODELTYPE_SOURCES
 	X.cpp X.h
 	Xs.cpp Xs.h
 	SimB.cpp SimB.h
-	../std.h
 	../NewBase/CommonModelInfo.cpp
 	../NewBase/CommonModelInfo.h
 )

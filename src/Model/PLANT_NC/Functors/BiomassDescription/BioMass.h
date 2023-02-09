@@ -1,5 +1,4 @@
 #pragma once
-#include "../../../../std.h"
 #include "../../../../ModelTypes/SimB.h"
 class CarbonRatio {
 public:

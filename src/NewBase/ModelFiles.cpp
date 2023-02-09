@@ -1,8 +1,6 @@
 #ifndef COUPSTD
 #include "../stdafx.h"
 #include "../util/MFC_Util.h"
-#else
-#include "../std.h"
 #endif
 
 

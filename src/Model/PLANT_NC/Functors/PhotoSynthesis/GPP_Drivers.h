@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../../std.h"
+
 #include "../../NC_Drivings.h"
 class GPPImpact {
 

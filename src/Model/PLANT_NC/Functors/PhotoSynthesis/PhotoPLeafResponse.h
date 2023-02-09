@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../../std.h"
+#include <vector>
 class PhoPLeafResponse {
 public: PhoPLeafResponse(vector<double> CPLeafOpt, vector<double> CPLeafThres) : CPLeafThres(CPLeafThres), CPLeafOpt(CPLeafOpt) {}
 		double operator() (size_t index, double CP_RatioLeaf) {

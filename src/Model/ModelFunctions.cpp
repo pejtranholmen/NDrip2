@@ -1,7 +1,6 @@
-#include "../std.h"
 
 #include "ModelFunctions.h"
-#include "../ModelTypes/SimBConst.h"
+#include "../ModelTypes/SimB.h"
 #include <cmath>
 
 using namespace std;

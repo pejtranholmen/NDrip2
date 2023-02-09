@@ -1,5 +1,6 @@
 #pragma once
-#include "../../../std.h"
+#include <vector>
+#include <functional>
 enum class Methane_Model_Sw { off, on };
 enum class Methane_Plant_Oxidation_Sw { off, on };
 enum class Methane_Soil_Oxidation_Sw { off, on_orignal, New };

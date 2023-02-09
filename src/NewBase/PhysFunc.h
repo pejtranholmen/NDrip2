@@ -1,6 +1,5 @@
 #pragma once
-#include "../std.h"
-#include "../ModelTypes/SimBConst.h"
+#include "../ModelTypes/SimB.h"
 #include "../Model/ModelFunctions.h"
 #include "../Model/Structure/Functors/Technical_Functors.h"
 using namespace ModelFunctions;

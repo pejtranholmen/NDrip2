@@ -3,7 +3,6 @@
 #ifndef COUPSTD
 #include "../stdafx.h"
 #endif
-#include "../../std.h"
 #include "../../Util/FUtil.hpp"
 #include "../../NewBase/NewMap.h"
 #include "SelectedAddEnsembles.h"

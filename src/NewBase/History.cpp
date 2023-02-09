@@ -1,5 +1,4 @@
 
-#include "../std.h"
 #include "../Util/FUtil.hpp"
 #include "./History.h"
 #include <time.h>

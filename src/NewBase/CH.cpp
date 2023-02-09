@@ -1,7 +1,6 @@
 #ifndef COUPSTD
 //#include "../stdafx.h"
 #endif
-#include "../std.h"
 #include "../Util/FUtil.hpp"
 #include "./CH.h"
 //#include "../External.h"

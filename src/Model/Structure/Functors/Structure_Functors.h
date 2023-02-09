@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../std.h"
+
 #include "./Technical_Functors.h"
 
 enum class PlantType_Sw {NoVegetation, Implicit_Big_Leaf, Explicit_Single_Leaf, Explicit_Multi_Leaves};

@@ -1,4 +1,4 @@
-#include "../../std.h"
+
 #include <limits>
 #include <math.h>
 #define PI 3.14159265

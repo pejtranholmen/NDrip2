@@ -63,7 +63,4 @@ namespace Fix {
 	static constexpr double GWP_C_CO2 = 3.6666 * 1. * 3.6525; // to Kg CO2e /ha/yr
 	static constexpr double GWP_C_CH4 = 1.3333 * 28. * 1. * 3.6525;// to CO2e/ha/yr
 	static constexpr double GWP_N_N2O = 1.5714 * 265. * 1. * 3.6525;// tp CO2e/ha/yr
-
-
-
 };

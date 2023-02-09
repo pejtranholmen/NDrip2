@@ -1,4 +1,3 @@
-#include "../std.h"
 #include "P.h"
 #include "NE.h"
 

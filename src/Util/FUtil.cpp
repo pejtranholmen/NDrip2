@@ -1,4 +1,3 @@
-#include "../std.h"
 #include "FUtil.h"
 
 struct rgb_color

@@ -6,7 +6,7 @@
 #define NUM_BAND 16
 #define NUM_TIME 50
 #endif
-#include <vector>
+
 #include <vector>
 #include <string>
 #include <map>

@@ -1,7 +1,6 @@
 #pragma once
-#include "../std.h"
 #include "../ModelTypes/SimB.h"
-#include "../ModelCompNames.hpp"
+#include "./ModelCompNames.hpp"
 
 
 class Sim;

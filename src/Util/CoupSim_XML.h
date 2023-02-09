@@ -1,6 +1,9 @@
 #pragma once
 #include "pugixml.hpp"
-using namespace std;
+#include <vector>
+#include <string>
+#include <fstream>
+
 static vector<string> output_col_names={ "Index", "Initial", "Final", "Min", "Max", "Mean", "Accumulated", "StoreFlag" };
 struct Output_InXml { string name{ "" }; int Index{ -1 }; double dvalues[8]{0.,0.,0.,0.,0.,0.,0.,0.}; int flag{ -1 }; };
 struct Multi_InXml {

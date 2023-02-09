@@ -1,5 +1,5 @@
 #pragma once
-#include "../std.h"
+
 
 struct OUT_SUM
 {

@@ -1,5 +1,6 @@
 #pragma once
-#include "../../../std.h"
+#include <vector>
+#include <functional>
 #include "./../../Basic_Functors.h"
 #include "./BasicGas_Functors.h"
 

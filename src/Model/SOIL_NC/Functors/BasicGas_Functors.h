@@ -1,5 +1,6 @@
 #pragma once
-#include "../../../std.h"
+#include <vector>
+#include <functional>
 enum class Trace_Gas_Emissions_Sw { off, direct_loos, Vertical_fluxes_in_soil };
 enum class CO2_SoilModel_Sw { off, Steady_state, Dynamic };
 enum class Oxygen_Model_Sw { Steady_state, Dynamic };

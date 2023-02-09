@@ -1,5 +1,4 @@
 #pragma once
-#include "../std.h"
 #include "SimB.h"	
 class P;
 class X;

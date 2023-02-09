@@ -1,5 +1,6 @@
 #pragma once
-#include "../../../std.h"
+#include <vector>
+#include <functional>
 
 class N2O_TempResponse {
 public:

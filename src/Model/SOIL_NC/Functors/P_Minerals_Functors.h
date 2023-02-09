@@ -1,5 +1,4 @@
 #pragma once
-#include "../../../std.h"
 #include "../../../ModelTypes/FunctFactory.h"
 
 class PH_Response_Weathering {

@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../../std.h"
+#include <vector>
 enum class PlantComp { NEWMOBILE, LEAF, STEM,GRAIN,MOBILE, OLD_LEAF, OLD_STEM, ROOT, COARSEROOT, OLD_ROOT, OLD_COARSE_ROOT, FUNGI };
 
 

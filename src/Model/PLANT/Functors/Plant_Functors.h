@@ -1,5 +1,4 @@
 #pragma once
-#include "../../../std.h"
 #include "../../../NewBase/PhysFunc.h"
 #include "./InterCeption_Functors.h"
 

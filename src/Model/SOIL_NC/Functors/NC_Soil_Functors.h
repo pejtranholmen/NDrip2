@@ -1,5 +1,4 @@
 #pragma once
-#include "../../../std.h"
 #include "./NC_Minerals_Functors.h"
 #include "./P_Minerals_Functors.h"
 #include "./NC_Organic_Functors.h"

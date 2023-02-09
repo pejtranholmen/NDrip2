@@ -1,6 +1,5 @@
 
 //#include "../stdafx.h"
-#include "../std.h"
 #include "../ModelTypes/SimB.h"
 #include "../Model/SOIL/Functors/Profile_Functors.h"
 #include "../Model/SOIL/Functors/HydFunctors.h"

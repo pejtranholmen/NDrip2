@@ -1,7 +1,6 @@
 #pragma once
-#include "../../std.h"
 #include "../../Util/ReadWriteTypes.h"
-
+#include <map>
 
 struct NEWHEADER
 {	size_t KeyProf;

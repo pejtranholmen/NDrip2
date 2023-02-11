@@ -13,20 +13,20 @@ using namespace pqxx;
 /// Query employees from database.  Return result.
 
 namespace coup_pg {
-static connection initconnection(string password) {
-    password = "pe1950";
-    string init = "dbname = coup user = postgres password = pe1950 port = 5432";
-    connection c(init);
-    if (c.is_open()) {
-        cout << "Opened database successfully: " << c.dbname() << endl;
-    }
-    else {
-        cout << "Can't open database" << endl;
-    }
-    return c;
-}
+    static connection initconnection(string password, string work_to_be) {
+        password = "pe1950";
+        string init = "dbname = coup user = postgres password = pe1950 port = 5432";
+        connection c(init);
+        if (c.is_open()) {
+            cout << "Open database " << c.dbname() <<" : " << work_to_be << endl;
+        }
+        else {
+            cout << "Can't open database" << endl;
+        }
+        return c;
+    };
 
-static connection initconnection() { return initconnection("pe1950"); };
+static connection initconnection() { return initconnection("pe1950","time serie table"); };
 static bool uploadpgFile(std::string filename) {
     CPG pgfile;
     pgfile.Open(filename);
@@ -54,7 +54,7 @@ static bool uploadpgFile(std::string filename) {
 
         }
 
-        connection c = initconnection("pe1950");
+        connection c = initconnection();
 
         pqxx::work W{ c };
         try {
@@ -86,7 +86,7 @@ static bool uploadpgFile(std::string filename) {
             sql += ");";
             W.exec(sql.c_str());
             W.commit();
-            c = initconnection("pe1950");
+            c = initconnection("pe1950","insert data");
             pqxx::work W{ c };
             for (size_t i = 0; i < pgfile.GetNumRecords(); i++) {
                 sql = "INSERT INTO " + tablename + "_data VALUES ( ";
@@ -128,7 +128,7 @@ static bool uploadpgFile(std::string filename) {
 };
 static pqxx::result query(string tablename)
 {
-    connection c = initconnection("pe1950");
+    connection c = initconnection("pe1950","query table");
     pqxx::work txn{ c };
 
     pqxx::result r{ txn.exec("SELECT id_group, vectorname, storeflag, conditions[1] FROM " + tablename + " WHERE id_group > 0 AND id_group < 10\
@@ -151,7 +151,7 @@ static pqxx::result query(string tablename)
     return r;
 }
 static int create_Init_Tables(CommonModelInfo* pinfo) {
-    connection c = initconnection(pinfo->GetPassword());
+    connection c = initconnection(pinfo->GetPassword(), "Basic Tables");
     string sql;
     pqxx::work W{ c };
     try {
@@ -767,7 +767,7 @@ static int create_Init_Tables(CommonModelInfo* pinfo) {
 
 };
 static int create_Main_Tables(CommonModelInfo* pinfo) {
-    connection c = initconnection(pinfo->GetPassword());
+    connection c = initconnection(pinfo->GetPassword(),"output tables");
     string sql;
     pqxx::work W{ c };
     try {
@@ -1150,7 +1150,7 @@ static int create_Main_Tables(CommonModelInfo* pinfo) {
 
 };
 static int create_Additional_Tables(CommonModelInfo* pinfo, unique_ptr<NewMap> pDoc) {
-    connection c = initconnection(pinfo->GetPassword());
+    connection c = initconnection(pinfo->GetPassword(),"Additional Tables");
     string sql;
     pqxx::work W{ c };
     try {
@@ -1170,12 +1170,18 @@ static int create_Additional_Tables(CommonModelInfo* pinfo, unique_ptr<NewMap> p
 
         W.exec(sql.c_str());*/
 
+        sql = "DROP TABLE IF EXISTS ne_vector_outputs CASCADE;";
+        W.exec(sql.c_str());
+
         sql = "CREATE TABLE ne_vector_outputs";
         sql += "( \
              Id_DynamicVector INTEGER REFERENCES NE_vectors(Id_dynamicvector),\
             Id_vectoroutputs INTEGER REFERENCES vectoroutputs(Id_vectoroutputs)\
            ); ";
 
+        W.exec(sql.c_str());
+
+        sql = "DROP TABLE IF EXISTS ne_vector_parameters CASCADE;";
         W.exec(sql.c_str());
 
         sql = "CREATE TABLE ne_vector_parameters";
@@ -1303,7 +1309,7 @@ static int create_Additional_Tables(CommonModelInfo* pinfo, unique_ptr<NewMap> p
 static int query_createtable(enum simtype type, const string str)
 {
     string sql;
-    connection c = initconnection("pe1950");
+    connection c = initconnection("pe1950", "Create Tables and insert data");
     pqxx::work W{ c };
     try {
 
@@ -1451,7 +1457,7 @@ static int query_createtable(enum simtype type, const string str)
 
 }
 static int query_inserttable(enum simtype type, const string str, vector<SimB*> v_simb, CommonModelInfo* pCommonModel) {
-    connection c = initconnection(pCommonModel->GetPassword());
+    connection c = initconnection(pCommonModel->GetPassword(), "insert data ");
     pqxx::work W{ c };
 
     string sql;

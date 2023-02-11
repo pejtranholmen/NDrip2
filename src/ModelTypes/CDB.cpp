@@ -1,5 +1,7 @@
 
 #include "CDB.h"
+using namespace std;
+
 CDB::CDB() :SimB(DB) {
 	
 	ChaDatelong.resize(0);

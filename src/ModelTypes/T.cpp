@@ -1,5 +1,6 @@
  #include "T.h"
 #include "NE.h"
+using namespace std;
 
 T::~T()
 {

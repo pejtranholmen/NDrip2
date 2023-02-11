@@ -10,7 +10,7 @@ public:
 	F(CPG *pPG, enum datatype data, enum elements elem, enum fysprocess fproc, enum bioprocess bproc, enum userlevel ulev);
 	F(definitions def);
 	~F(void);
-	void Def(size_t ModuleNo,string name, string value,string conditions);
+	void Def(size_t ModuleNo,std::string name, std::string value,std::string conditions);
 	bool CheckFileNameAndAssignNameToPGClass() {
         bool res=m_PGPointer->Open(m_FileName, false);
 		if(res) { m_PGPointer->CloseFile(), m_Exist=true;}
@@ -19,17 +19,17 @@ public:
 	};
 	bool IsValNumber(int index);
 	bool m_Exist, m_XBinExist;
-	string GetExtension();
+	std::string GetExtension();
 
-	bool SetValue(string newvalue) {m_FileName=newvalue; return true;};
-	bool SetDBValue(string str) {dbstrvalue=str; return true;};
+	bool SetValue(std::string newvalue) {m_FileName=newvalue; return true;};
+	bool SetDBValue(std::string str) {dbstrvalue=str; return true;};
 
 	bool GetHide() {return m_hide;};
 	void SetHide(bool value) {m_hide=value;};
-	string GetStrValue() const {return m_FileName;};
-	string GetDBStrValue() {return dbstrvalue;};
-	void SetDBStrValue(string str) {dbstrvalue=str;};
-	string GetDataDescription(size_t index) {if(index<m_DataDescription.size())  return m_DataDescription[index]; return "-";};
+	std::string GetStrValue() const {return m_FileName;};
+	std::string GetDBStrValue() {return dbstrvalue;};
+	void SetDBStrValue(std::string str) {dbstrvalue=str;};
+	std::string GetDataDescription(size_t index) {if(index<m_DataDescription.size())  return m_DataDescription[index]; return "-";};
 	bool    RemoveDataDescription(size_t);
 	
 	int		GetValNumber(size_t index) {if(index<m_ValidationNumbers.size())  return m_ValidationNumbers[index]; else return -1;};
@@ -53,21 +53,21 @@ public:
 	void	PushedApply();						//Will allway set tmpvalue to value
 	void	Reset() {};				// resets tmpvalues to values
 	virtual void	SetOriginalValue();		// Sets the original value to the current value
-	string   GetOriginalStrValue();
+	std::string   GetOriginalStrValue();
 	void	 SetPGResPointer(CPG *pPG) {m_pPGRes=pPG;};
 	CPG*	 GetPGResPointer() {return m_pPGRes;};
 protected:
 	CPG *m_PGPointer;
-	vector<string> m_DataDescription;
-	vector<int>	 m_ValidationNumbers;
+	std::vector<std::string> m_DataDescription;
+	std::vector<int>	 m_ValidationNumbers;
 	size_t		 m_ValidationNumbersSelected;
 	long		 m_StartMin,m_EndMin;
 	long		 m_NumVariables, m_NumRecords;		
-	string 	extension;
-	string		tmpvalue, originalValue, dbstrvalue;
+	std::string 	extension;
+	std::string		tmpvalue, originalValue, dbstrvalue;
 	void *m_Ptr;
 	CPG *m_pPGRes;
-	string	m_FileName;
+	std::string	m_FileName;
 	int 		rec, frec, view, optionals;
 	bool		m_hide;
 };

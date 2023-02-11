@@ -46,6 +46,18 @@ CommonModelInfo::CommonModelInfo() {
 			m_BioProcessNamesSorted.push_back((*it).first);
 		}
 
+
+		m_GroupMap.clear();
+		for (size_t i = 0; i < ModelCompNames::NoGroupNames; i++)
+			m_GroupMap[ModelCompNames::GroupNames[i]] = i;
+		m_TypeMap.clear();
+		for (size_t i = 0; i < ModelCompNames::NoTypNames; ++i)
+			m_TypeMap[ModelCompNames::TypNames[i]] = i;
+		m_GroupCategory.clear();
+		for (size_t i = 0; i < ModelCompNames::NoGroupCategoryNames; ++i)
+			m_GroupCategory[ModelCompNames::GroupCategoryNames[i]] = i;
+
+
 		SetUnitMap(UNIT_TYPES::WATERMASS_UNIT, "mm");
 		SetUnitMap(UNIT_TYPES::WATERFLOW_UNIT, "mm/day");
 		SetUnitMap(UNIT_TYPES::INVERSE_WATERFLOW_UNIT, "day/mm");

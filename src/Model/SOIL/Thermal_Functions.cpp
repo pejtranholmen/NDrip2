@@ -354,13 +354,13 @@ bool Thermal_Functions::Def()
 
 
 
-	pP=new P(&ThScaleLog,pNL, SIMPROFILE, HEAT, HEAT_CONDUCTION, NOBPROC, DETAILED);
+	/*pP = new P(&ThScaleLog, pNL, SIMPROFILE, HEAT, HEAT_CONDUCTION, NOBPROC, DETAILED); Dublication discovered Febr 2022
 		for(auto i=initv.begin(); i!=initv.end();++i) *i=0.;
 	mTab_ThScale.push_back(pP);
-	Define(pP, pNL,"ThScaleLog",initv,"-","HeatEq >= 1|Thermal Conductivity Function=0", .0001,30.);
+	Define(pP, pNL,"ThScaleLog",initv,"-","HeatEq >= 1|Thermal Conductivity Function=0", -3., 3., -1., 1., 5);
 
 	functorprop.FuncName = MyFunc::THERMALCOND_KERSTEN; functorprop.Arg = MyArgType::T_D2;
-	funcname = "Thermal Conductivity - Kersten"; functorprop.FunctorInitOption = string::npos;
+	funcname = "Thermal Conductivity - Kersten"; functorprop.FunctorInitOption = string::npos;*/
 
 	pFunc = new Func(SINGLE, HEAT, HEAT_CONDUCTION, NOBPROC, NORMAL);
 	Define(pFunc, functorprop, funcname, ps_vec, p_vec, plotpar); p_vec.clear(); ps_vec.clear();

@@ -24,7 +24,7 @@ public:
 	bool Check_Update_ActHit(size_t ivar, size_t minut);
 	void ResetPos();
 	void* GetRecordPointer(size_t irec, size_t rep=1);
-	vector<float> GetRecordDataVector(size_t irec, size_t rep = 1);
+	std::vector<float> GetRecordDataVector(size_t irec, size_t rep = 1);
 	bool SetWritePosition(size_t irec);
 
 	bool SetPointerToAllData(float *pvar);
@@ -37,26 +37,26 @@ public:
 	
 	void SetVarPointer(float *pvar, size_t ist, size_t num);
 	void SetVarPointer_2Mix(float *pvar1, float* pvar2, size_t ist, size_t num);
-	void SetRecordPointerInterpolate(float *pvar, size_t ist, size_t num, float weight, const vector<float> &vfloat);
-	void SetRecordInterpolated(const vector<float>& vprior, size_t ist, float weight, const vector<float>& vfloat);
+	void SetRecordPointerInterpolate(float *pvar, size_t ist, size_t num, float weight, const std::vector<float> &vfloat);
+	void SetRecordInterpolated(const std::vector<float>& vprior, size_t ist, float weight, const std::vector<float>& vfloat);
 
 	void SetMissingValueRecordPointer(size_t ist, size_t num);
 
 
 
 		
-	string	ExportToFile(bool secondhalf=false);
-	string	ExportToFile(string filename, bool split=false, bool secondhalf=false);
+	std::string	ExportToFile(bool secondhalf=false);
+	std::string	ExportToFile(std::string filename, bool split=false, bool secondhalf=false);
 
 
 
 
 	void	Reset();
-	string	GetDate(size_t);
+	std::string	GetDate(size_t);
 
 
 
-	string GetFileName(bool OnlyTitle=false);
+	std::string GetFileName(bool OnlyTitle=false);
 	bool	IsAddInfoSet();
 
 
@@ -83,35 +83,35 @@ public:
 	bool	SetAllLongTimesFromMinDiff(bool WithMissingAssignment_To_Var=true);
 
 	unsigned int GetLongTimeEnd();
-	string	GetVarDateHourMean(size_t recno, size_t hours);
+	std::string	GetVarDateHourMean(size_t recno, size_t hours);
 	size_t	GetNumRecordsHour(size_t hours);
 	bool	FindKeyValues();
 
-	string	GetVarDes(size_t, size_t repit=1);
-	string	GetVarName(size_t, size_t repit=1);
-	string	GetVarUnit(size_t, size_t repit=1);
-	string	GetVarId(size_t, size_t repit=1);
-	string	GetVarPos(size_t, size_t repit=1);
+	std::string	GetVarDes(size_t, size_t repit=1);
+	std::string	GetVarName(size_t, size_t repit=1);
+	std::string	GetVarUnit(size_t, size_t repit=1);
+	std::string	GetVarId(size_t, size_t repit=1);
+	std::string	GetVarPos(size_t, size_t repit=1);
 	float	GetVarMin(size_t, size_t repit=1);
 	float	GetVarMax(size_t, size_t repit=1);
 	float	GetVarMean(size_t, size_t repit=1);
 
 	bool AdjustSize(size_t irecnumber, size_t varnumber, size_t repit=1);
-	void	SetDate(size_t, string);
+	void	SetDate(size_t, std::string);
 
 	bool	SetLongTime(size_t, size_t, bool WithinBuffer=false);
 	bool	SetRecordMissing(size_t);
 	void	SetVarValue(size_t varno, size_t recno, float v);
 
-	void	SetVarName(size_t, string, size_t repit=1);
-	void	SetVarUnit(size_t, string, size_t repit=1);
-	void	SetVarId(size_t, string, size_t repit=1);
-	void	SetVarPos(size_t, string, size_t repit=1);
+	void	SetVarName(size_t, std::string, size_t repit=1);
+	void	SetVarUnit(size_t, std::string, size_t repit=1);
+	void	SetVarId(size_t, std::string, size_t repit=1);
+	void	SetVarPos(size_t, std::string, size_t repit=1);
 	void	SetVarMin(size_t, float, size_t repit=1);
 	void	SetVarMax(size_t, float, size_t repit=1);
 
 	size_t  GetJumpBacksNum();
-	string  GetJumpBackDates(size_t rec);
+	std::string  GetJumpBackDates(size_t rec);
 
 	size_t	GetNumVariables();
 	size_t	GetNumRecords();
@@ -133,8 +133,8 @@ public:
 	void	SetVarLat(size_t, double, size_t repit=1);
 	void	SetVarLong(size_t, double, size_t repit=1);
 	void	SetVarAlt(size_t, double, size_t repit=1);
-	void	SetVarCountry(size_t, string, size_t repit=1);
-	void	SetVarStation(size_t, string, size_t repit=1);
+	void	SetVarCountry(size_t, std::string, size_t repit=1);
+	void	SetVarStation(size_t, std::string, size_t repit=1);
 	void	SetVarMissing(size_t, size_t value, size_t repit=1);
 	void	SetVarSubstituted(size_t, size_t value, size_t repit=1);
 	void	SetEndPoints_ValidValue();

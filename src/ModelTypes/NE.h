@@ -15,7 +15,7 @@ class NE :public SimB
 public:
 	~NE();
 	NE(size_t *pInt,  size_t def, size_t min, size_t max, size_t wmin, size_t wmax); 
-	void Def(string varname);
+	void Def(std::string varname);
 	void LinkTo(P*);
 	void LinkTo(X*);
 	void LinkTo(T*);
@@ -46,11 +46,11 @@ protected:
 	size_t* _Elem;
 	size_t errormin, errormax, warnmin, warnmax;
 	size_t _orginalvalue;
-	vector<P*> m_LinksToP;
-	vector<X*> m_LinksToX;
-	vector<T*> m_LinksToT;
-	vector<G*> m_LinksToG;
-	vector<D*> m_LinksToD;
+	std::vector<P*> m_LinksToP;
+	std::vector<X*> m_LinksToX;
+	std::vector<T*> m_LinksToT;
+	std::vector<G*> m_LinksToG;
+	std::vector<D*> m_LinksToD;
 
 
 };

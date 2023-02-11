@@ -15,9 +15,9 @@ public:
 	~PGFileImportBase();
 
 	void SetMessage(bool valid=false);
-	bool OpenInputFile(string filename) {
+	bool OpenInputFile(std::string filename) {
 		m_filename = filename;
-		m_FileText.open(filename, ios::in | ios::binary);
+		m_FileText.open(filename, std::ios::in | std::ios::binary);
 		if (m_FileText.is_open()) return true;
 		else return false;
 	};
@@ -33,14 +33,14 @@ public:
 	};
 	void SetStartMinuteWhenImport(size_t min) { m_itimbase = min; m_minst_a = min; };
 
-	vector<string> m_SuccessFullImportedFileNames;
+	std::vector<std::string> m_SuccessFullImportedFileNames;
 
 
 
 
 	bool m_AddFromFile;
 	bool m_ScanningMade;
-	map<size_t, size_t> m_CheckedTimeMap;
+	std::map<size_t, size_t> m_CheckedTimeMap;
 
 
 
@@ -48,8 +48,8 @@ public:
 
 protected:
 	size_t m_MinStartCol;
-	bool ConvColLine(vector<float> *vv, string line, size_t option);
-	bool ConvLine(vector<float> *vv, string line, size_t option);
+	bool ConvColLine(std::vector<float> *vv, std::string line, size_t option);
+	bool ConvLine(std::vector<float> *vv, std::string line, size_t option);
 
 
 	bool CreateNewFileAndDefineSize(FILEINFO, size_t ActualId = 0);
@@ -65,27 +65,27 @@ protected:
 
 
 	size_t m_nprevrec;
-	string m_linebreak;
-	string m_datestring;
+	std::string m_linebreak;
+	std::string m_datestring;
 
 
 protected:
 
-	bool SetTimeVariable(size_t nrec, string varstr, size_t nvar, bool shift=false);
+	bool SetTimeVariable(size_t nrec, std::string varstr, size_t nvar, bool shift=false);
 	bool SetDefinedTime(size_t nrec);
 	void SetPGTimeVar_Minut_To_PG_Var();
-	void SetValidVariable(size_t index, string varstr);
+	void SetValidVariable(size_t index, std::string varstr);
 	void SetMissingVariable(size_t index);
 
 
 
-	size_t GetMinutFromLine(string line);
+	size_t GetMinutFromLine(std::string line);
 	void WriteCompleteRecord();
 
 
 	
 	size_t GetStartMinute();
-	fstream m_FileText;
+	std::fstream m_FileText;
 
 
 	
@@ -105,7 +105,7 @@ protected:
 
 	std::vector <float> m_vmin, m_vmax;
 	size_t m_minst_a, m_minend_a, m_totrec_a;
-	string m_delimiters;
+	std::string m_delimiters;
 	
 
 	bool m_ShowMessage;

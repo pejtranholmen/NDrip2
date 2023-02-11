@@ -1,7 +1,9 @@
 #pragma once
 #include "../ModelTypes/SimB.h"
 #include "./ModelCompNames.hpp"
-
+#include <string>
+#include <vector>
+#include <map>
 
 class Sim;
 
@@ -23,25 +25,25 @@ class CommonModelInfo
 public:
 	CommonModelInfo();
 	~CommonModelInfo();
-	const string GetPassword() { return "pe1950win"; };
+	const std::string GetPassword() { return "pe1950"; };
 	size_t GetTypeIndex(std::string str);
-	size_t GetGroupIndex(string str);
+	size_t GetGroupIndex(std::string str);
 	size_t GetGroupCategoryNo(size_t index) {
 		auto it = ModelCompNames::GroupCategoryNo.find(index);
 		if (it != ModelCompNames::GroupCategoryNo.end())
 			return it->second;
 		else
-			return string::npos;
+			return std::string::npos;
 	};
 
-	std::string GetGroupCategoryNames(size_t index) {if(index< ModelCompNames::NoCategoryNames) return ModelCompNames::GroupCategoryNames[index];return "All Modules";};
+	std::string GetGroupCategoryNames(size_t index) {if(index< ModelCompNames::NoGroupCategoryNames) return ModelCompNames::GroupCategoryNames[index];return "All Modules";};
 	std::string GetGroupNames(size_t index) {if(index<ModelCompNames::NoGroupNames) return ModelCompNames::GroupNames[index];return "";};
 	std::string GetVarType(size_t ityp) { if(ityp<ModelCompNames::NoTypNames) return ModelCompNames::TypNames[ityp]; return "";};
 	std::string GetFysProcName(size_t index) {if(index< ModelCompNames::NoFysProcessNames) return ModelCompNames::FysProcessNames[index]; else return "";};
 	std::string GetBioProcName(size_t index) {if(index<ModelCompNames::NoBioProcessNames) return ModelCompNames::BioProcessNames[index]; else return "";};
 	std::string ElementName(size_t index) {if(index<ModelCompNames::NoElementNames) return ModelCompNames::ElementNames[index]; else return ""; };
 
-	int GetGroupCategory(string str);
+	int GetGroupCategory(std::string str);
 	int GetGroupCategoryNo(int moduleNo) {
 		auto it = ModelCompNames::GroupCategoryNo.find(moduleNo);
 		if (it != ModelCompNames::GroupCategoryNo.end())
@@ -49,7 +51,7 @@ public:
 		else
 			return -1;
 	};
-	void trim_xml(string& str);
+	void trim_xml(std::string& str);
 	void SetCommandLineMode(bool value) {m_CommandInfo=value;};
 	bool GetCommandLineMode() {return m_CommandInfo;};
 	bool IsRunning() {return m_RunInfo.Running;};
@@ -65,18 +67,18 @@ public:
 	void SetViewStatus(int value) {m_RunInfo.ViewStatus=value;};
 	bool GetNoSingleRun() {return m_RunInfo.NoSingleRunSimFile;};
 	void SetNoSingleRun(bool value) {m_RunInfo.NoSingleRunSimFile=value;};
-	string getOrigName(string txt) {
+	std::string getOrigName(std::string txt) {
 		auto it = changed_names.find(txt);
 		if (it != changed_names.end())
 			return (*it).second;
 		else
 			return txt;
 	}
-	void insert_ChangedNames(vector<pair<string, string>>);
+	void insert_ChangedNames(std::vector<std::pair<std::string, std::string>>);
 
 	size_t GetNumUnits() { return m_TypeBasedUnits.size(); };
 
-	string GetUnitString(UNIT_TYPES key, bool withparanthesis = false) {
+	std::string GetUnitString(UNIT_TYPES key, bool withparanthesis = false) {
 		auto it = m_TypeBasedUnits.find(key);
 		if (it != m_TypeBasedUnits.end()) {
 			if (withparanthesis) {
@@ -87,16 +89,16 @@ public:
 		}
 		else return "";
 	};
-	UNIT_TYPES GetUnitType(string key);
-	vector<string> GetAllStringBasedUnits() {
-		vector<string> out;
+	UNIT_TYPES GetUnitType(std::string key);
+	std::vector<std::string> GetAllStringBasedUnits() {
+		std::vector<std::string> out;
 		for (auto it = m_TypeBasedUnits.begin(); it != m_TypeBasedUnits.end(); ++it) {
 			out.push_back((*it).second);
 		};
 		return out;
 	};
-	vector<string> GetSelectedStringBasedUnits(vector<UNIT_TYPES> key) {
-		vector<string> out;
+	std::vector<std::string> GetSelectedStringBasedUnits(std::vector<UNIT_TYPES> key) {
+		std::vector<std::string> out;
 		for_each(key.begin(), key.end(), [&](UNIT_TYPES& key) {
 			auto it = m_TypeBasedUnits.find(key);
 			out.push_back((*it).second);
@@ -114,8 +116,8 @@ public:
 
 	std::vector<std::string> GetSortedListofGroupNames() { return m_GroupNamesSorted; };
 	std::vector<std::string> GetGroupNames() {
-		vector<string> out;
-		for (string name : ModelCompNames::GroupNames) {
+		std::vector<std::string> out;
+		for (std::string name : ModelCompNames::GroupNames) {
 			out.push_back(name);
 		}
 		return out;
@@ -125,47 +127,47 @@ public:
 	elements GetElementFromString(std::string str);
 	fysprocess GetPhysProcFromString(std::string str);
 	bioprocess GetBioProcFromString(std::string str);
-	bool DefineSwitchMap(vector<SimB*> allSwitches);
-	int GetSwitchId(string name);
-	string GetSwitchName(int id);
+	bool DefineSwitchMap(std::vector<SimB*> allSwitches);
+	int GetSwitchId(std::string name);
+	std::string GetSwitchName(int id);
 
-	bool DefineSingleParMap(vector<SimB*> allSinglePar) ;
-	int GetSingleParId(string name);
-	string GetSingleParameterName(int id);
+	bool DefineSingleParMap(std::vector<SimB*> allSinglePar) ;
+	int GetSingleParId(std::string name);
+	std::string GetSingleParameterName(int id);
 
 
-	bool DefineVectorParMap(vector<SimB*> allVectorPar) ;
-	int GetVectorParId(string name);
-	bool DefineNEVectorMap(vector<SimB*> allVectorPar);
-	string GetVectorParameterName(int id);
+	bool DefineVectorParMap(std::vector<SimB*> allVectorPar) ;
+	int GetVectorParId(std::string name);
+	bool DefineNEVectorMap(std::vector<SimB*> allVectorPar);
+	std::string GetVectorParameterName(int id);
 	
-	int GetNEVectorId(string name);
+	int GetNEVectorId(std::string name);
 
-	bool DefineSingleOutputMap(vector<SimB*> allVectorPar);
-	int GetSingleOutputId(string name);
-	string GetSingleOutputName(int id);
+	bool DefineSingleOutputMap(std::vector<SimB*> allVectorPar);
+	int GetSingleOutputId(std::string name);
+	std::string GetSingleOutputName(int id);
 
-	bool DefineVectorOutputMap(vector<SimB*> allVectorPar);
-	int GetVectorOutputId(string name);
-	string GetVectorOutputName(int id);
+	bool DefineVectorOutputMap(std::vector<SimB*> allVectorPar);
+	int GetVectorOutputId(std::string name);
+	std::string GetVectorOutputName(int id);
 
-	bool DefineParameterFunctionMap(vector<SimB*> allVectorPar);
-	int GetParameterFunctionId(string name);
-	bool DefineTimeSeriesMap(vector<SimB*> allVectorPar);
-	int GetTimeSeriesId(string name);
-	string GetTimeSeriesName(int id);
+	bool DefineParameterFunctionMap(std::vector<SimB*> allVectorPar);
+	int GetParameterFunctionId(std::string name);
+	bool DefineTimeSeriesMap(std::vector<SimB*> allVectorPar);
+	int GetTimeSeriesId(std::string name);
+	std::string GetTimeSeriesName(int id);
 
 
 	Sim *GetRunDoc() {return m_pRunDoc;};
-	std::vector<SimB*> SortSimB_ByGroup(vector<SimB*> v);
-	std::vector<SimB*> SortSimB_ByCategory(vector<SimB*> v);
+	std::vector<SimB*> SortSimB_ByGroup(std::vector<SimB*> v);
+	std::vector<SimB*> SortSimB_ByCategory(std::vector<SimB*> v);
 	std::map<std::string, std::string> changed_names;
 
 
 private:
-	void SetUnitMap(UNIT_TYPES type, string str) {
-		m_TypeBasedUnits.insert(pair<UNIT_TYPES, string>(type, str));
-		m_StringBasedUnits.insert(pair<string, UNIT_TYPES>(str, type));
+	void SetUnitMap(UNIT_TYPES type, std::string str) {
+		m_TypeBasedUnits.insert(std::pair<UNIT_TYPES, std::string>(type, str));
+		m_StringBasedUnits.insert(std::pair<std::string, UNIT_TYPES>(str, type));
 	};
 
 	std::map <std::string, size_t> m_TypeMap, m_GroupMap;
@@ -187,8 +189,8 @@ private:
 	std::map <bioprocess, std::string> m_BioProcNamesMap;
 	std::map <std::string, bioprocess> m_NamesBioProcMap;
 
-	std::map<UNIT_TYPES, string> m_TypeBasedUnits;
-	std::map<string, UNIT_TYPES> m_StringBasedUnits;
+	std::map<UNIT_TYPES, std::string> m_TypeBasedUnits;
+	std::map<std::string, UNIT_TYPES> m_StringBasedUnits;
 
 
 

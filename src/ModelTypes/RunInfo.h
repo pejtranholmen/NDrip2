@@ -5,11 +5,11 @@ public:
 	CRunInfo();
 	~CRunInfo();
 	CRunInfo(int);
-	string GetName();
-	string GetGroup();
+	std::string GetName();
+	std::string GetGroup();
 protected:
-	string m_Group;
-	string m_Name;
+	std::string m_Group;
+	std::string m_Name;
 	int m_Format; // 0=Int, 1=Date, 2=String
 	
 };

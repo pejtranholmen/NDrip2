@@ -14,14 +14,14 @@ ModelInfo::~ModelInfo()
 
 
 }
-void ModelInfo::AddModel(string name, void* ptr)
+void ModelInfo::AddModel(std::string name, void* ptr)
 {
-	ptrModule.insert(pair<string, void*>(name, ptr));
+	ptrModule.insert(std::pair<std::string, void*>(name, ptr));
 }
-void* ModelInfo::GetModelPtr(string name) 
+void* ModelInfo::GetModelPtr(std::string name)
 {
 
-	map<string, void*>::iterator it;
+	std::map<std::string, void*>::iterator it;
 	it=ptrModule.find(name);
 	if(it!=ptrModule.end())
 		return it->second;
@@ -60,7 +60,7 @@ double ModelInfo::GetRemainingTime(bool Multi)
 	else
 		return double(m_UsedTime)/CLOCKS_PER_SEC/RelRunTimeSingle*(1-RelRunTimeSingle);
 }
-string ModelInfo::GetRemainingTimeString(bool Multi)
+std::string ModelInfo::GetRemainingTimeString(bool Multi)
 {
 	if(RelRunTimeSingle<=0.0001) return "";
 	double rem=GetRemainingTime(Multi);
@@ -80,7 +80,7 @@ string ModelInfo::GetRemainingTimeString(bool Multi)
 	else 
 		n=snprintf(buffer,50, "%d minutes and %d sec left", imin, isec);
 
-	string str;
+	std::string str;
 	str.assign(&buffer[0], n );
 	return str;
 
@@ -89,7 +89,7 @@ double ModelInfo::GetTimeUsed()
 {
 		return double(m_UsedTime)/CLOCKS_PER_SEC;
 }
-string ModelInfo::GetTimeUsedString()
+std::string ModelInfo::GetTimeUsedString()
 {
 	double rem=GetTimeUsed();
 	int iday, ihour, imin, isec, imsec;
@@ -109,7 +109,7 @@ string ModelInfo::GetTimeUsedString()
 		n=snprintf(buffer,60, "Time used  %d minutes %d sec and %d millisec",imin, isec, imsec);
 	else 
 		n=snprintf(buffer,50, "Time used %d sec and %d millisec", isec, imsec);
-	string str;
+	std::string str;
 	str.assign(&buffer[0], n );
 	return str;
 }

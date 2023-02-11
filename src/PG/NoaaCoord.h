@@ -3,7 +3,7 @@
 #include "PG.H"
 struct NOASTAT
 {	int ID;
-	string Name;
+std::string Name;
 	double Long;
 	double Lat;
 	double Alt;
@@ -24,7 +24,7 @@ class NoaaCoord
 public:
 	NoaaCoord(void);
 	~NoaaCoord(void);
-	bool ReadStation(string filename, CPG *pPG=nullptr);
+	bool ReadStation(std::string filename, CPG *pPG=nullptr);
 	bool MergeSimilarStation(CPG *pPG);
 
 	bool TemporalCorrelation(CPG *pPG);
@@ -39,17 +39,17 @@ public:
 	
 	float NewInterpolatedValue(int varno, long rec_no);
 	bool EstimateWeightforInterpolation(double Lat1, double Long1);
-	string m_DestFileName;
-	vector<SUBSTAT> m_statsub;
-	vector<string> m_ResRandomSub;
+	std::string m_DestFileName;
+	std::vector<SUBSTAT> m_statsub;
+	std::vector<std::string> m_ResRandomSub;
 	CPG *m_pPGSourceReg;
 
 protected:
 
 	CPG *m_pPGSource;
-	vector<double> m_distance;
-	vector<double> m_weight;
-	vector<int> m_disindex;
+	std::vector<double> m_distance;
+	std::vector<double> m_weight;
+	std::vector<int> m_disindex;
 
 	double m_sumweight;
 	int m_Min_Involvedstations;

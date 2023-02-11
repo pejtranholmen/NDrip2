@@ -4,7 +4,7 @@
 D::~D()
 {
 }
-D::D(vector<double> *target,NE *ne,datatype data, elements elem, fysprocess fproc, bioprocess bproc, userlevel ulev)
+D::D(std::vector<double> *target,NE *ne,datatype data, elements elem, fysprocess fproc, bioprocess bproc, userlevel ulev)
 	:OutVector(data, elem, fproc, bproc, ulev)
 {
 	_ptarget=target;
@@ -12,7 +12,7 @@ D::D(vector<double> *target,NE *ne,datatype data, elements elem, fysprocess fpro
 	pNE=ne;
 	;
 }
-void D::Def(int ModuleNo, string name, vector<double> init, string unit, string conditions)
+void D::Def(int ModuleNo, std::string name, std::vector<double> init, std::string unit, std::string conditions)
 {
 
 	SetValue(init);

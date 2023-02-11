@@ -50,7 +50,7 @@ class Func;
 class FCSV;
 class FlexVal{
 public:
-    vector<float> val;
+    std::vector<float> val;
 };
 
 //#include "../ModelTypes/FunctFactory.h"
@@ -63,36 +63,36 @@ class ModelMap  {
 	bool SetModelMap(ModelMap* setmap);
 
 	R RunOpt;
-	multimap<string, SimB*> GlobalMap;
-	map<string, NE*> NE_Map;
-	map<string, Sw*> MapSw[NUMGROUP];
-	map<string, Ps*> MapP[NUMGROUP];
-	map<string, P*>  MapPt[NUMGROUP];
-	map<string, Tab*> MapTab[NUMGROUP];
-	map<string, OutSingle*> MapXs[NUMGROUP], MapTs[NUMGROUP], MapGs[NUMGROUP], MapDs[NUMGROUP];
-	map<string, OutVector*> MapX[NUMGROUP], MapT[NUMGROUP], MapG[NUMGROUP], MapD[NUMGROUP];
-	map<string, F*> MapF[NUMGROUP];
-	map<string, FCSV*>  MapCSV;
-	map<string, Func*> MapFunc[NUMGROUP];
-	map<enum   MyFunc, Func*> MapMyFunc;
-	map<int, Func*> MapPhysFunc;
+	std::multimap<std::string, SimB*> GlobalMap;
+	std::map<std::string, NE*> NE_Map;
+	std::map<std::string, Sw*> MapSw[NUMGROUP];
+	std::map<std::string, Ps*> MapP[NUMGROUP];
+	std::map<std::string, P*>  MapPt[NUMGROUP];
+	std::map<std::string, Tab*> MapTab[NUMGROUP];
+	std::map<std::string, OutSingle*> MapXs[NUMGROUP], MapTs[NUMGROUP], MapGs[NUMGROUP], MapDs[NUMGROUP];
+	std::map<std::string, OutVector*> MapX[NUMGROUP], MapT[NUMGROUP], MapG[NUMGROUP], MapD[NUMGROUP];
+	std::map<std::string, F*> MapF[NUMGROUP];
+	std::map<std::string, FCSV*>  MapCSV;
+	std::map<std::string, Func*> MapFunc[NUMGROUP];
+	std::map<enum   MyFunc, Func*> MapMyFunc;
+	std::map<int, Func*> MapPhysFunc;
 
-	map<string, int> MapErrors;
+	std::map<std::string, int> MapErrors;
 
-	map<size_t, size_t> MapFlexVal[8];
-	map<string, size_t> MapFlexId[8];
+	std::map<size_t, size_t> MapFlexVal[8];
+	std::map<std::string, size_t> MapFlexId[8];
 
-	NE* GetNEPointer(string name); 
-	vector<SimB*> GetAll_NEPointers();
+	NE* GetNEPointer(std::string name); 
+	std::vector<SimB*> GetAll_NEPointers();
 
-	vector<string> GetNameOfNEPointers();
-	vector<string> GetNameOfFuncPointers();
-	Func* GetFuncPointer(string name, size_t ModuleNo);
+	std::vector<std::string> GetNameOfNEPointers();
+	std::vector<std::string> GetNameOfFuncPointers();
+	Func* GetFuncPointer(std::string name, size_t ModuleNo);
 	Func* GetFuncPointer(MyFunc);
-	SimB* GetP_Pointer(string name);
-	Ps* GetPsPointer(string name);
-	P* GetPPointer(string name);
-    Gs* GetGsPointer(string name);
+	SimB* GetP_Pointer(std::string name);
+	Ps* GetPsPointer(std::string name);
+	P* GetPPointer(std::string name);
+    Gs* GetGsPointer(std::string name);
 	bool IsMapSet();      
 	CommonModelInfo* m_pCommonModelInfo;
 

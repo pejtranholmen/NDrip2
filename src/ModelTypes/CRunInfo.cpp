@@ -82,11 +82,11 @@ CRunInfo::CRunInfo(int index)
 			break;
 	}
 }
-string CRunInfo::GetName()
+std::string CRunInfo::GetName()
 {
 	return m_Name;
 }
-string CRunInfo::GetGroup()
+std::string CRunInfo::GetGroup()
 {
 	return m_Group;
 }

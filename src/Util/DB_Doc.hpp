@@ -85,7 +85,7 @@ struct pgfile_set {
 
 int transfer_Document(struct sim_doc_simulation str) {
     try {
-        connection c = initconnection("pe1950win");
+        connection c = initconnection("pe1950");
         pqxx::work W{ c };
 
         string sql = "INSERT INTO Simulations VALUES ( ";

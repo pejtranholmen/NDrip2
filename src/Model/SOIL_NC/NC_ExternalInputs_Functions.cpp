@@ -32,7 +32,7 @@ bool NC_ExternalInputs_Functions::Def()
 	pSw= new Sw(&N_Fertilization, ATMBOUNDARY, NITROGEN, TRANSPORT, FORCING_BIOLOGY, NORMAL);
 		Define(pSw,   "N Fertilization", 0, "off|Parameters|PG-file|Plant Stage Table|Year Based Table - 1 app|Year Based Table - 3 app","Nitrogen and Carbon >0", 117);
 	pSw= new Sw(&FertilizationIndexFileName, ATMBOUNDARY,  CLIMATE, NOFPROC, NOBPROC, NORMAL);
-	Define(pSw, "Dynamic indexed input file",0,"off|Using Single PG file|Using Multi PG file","N Fertilization=2");
+	Define(pSw, "Dynamic indexed fertilization file",0,"off|Using Single PG file|Using Multi PG file","N Fertilization=2");
 	pSw= new Sw(&DepositionIndexFileName, ATMBOUNDARY,  CLIMATE, NOFPROC, NOBPROC, NORMAL);
 	Define(pSw, "Dynamic indexed deposition file",0,"off|Using Single PG file|Using Multi PG file","N Deposition=2");	
 		

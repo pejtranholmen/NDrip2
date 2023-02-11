@@ -120,7 +120,7 @@ void SimB::Decode(string ConditionString) {
 	while (i < lenght) {
 		Condition	store;
 		//temporary strings
-		string		var, oper, val;
+		std::string		var, oper, val;
 		// Erase unwanted spaces
 		while (i < lenght && ConditionString[i] == ' ') i++;
 		//Jump over the sign |

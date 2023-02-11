@@ -200,7 +200,7 @@ namespace ModelCompNames {
 	 "External P Inputs",
 	 "Validation"
 	};
-	static const int NoCategoryNames = 9;
+	static const int NoGroupCategoryNames = 9;
 	static const std::string GroupCategoryNames[9]{
 	 "All Modules",
 	 "Atmospheric Related Processes",

@@ -21,7 +21,7 @@ struct LINKED_FILEINFO {
 	size_t Records;
 	size_t RecordsSelected;
 	size_t Ids;
-	vector<string> FilterItems;
+	std::vector<std::string> FilterItems;
 	TIMECHECK TimeCheck;
 };
 struct DEC_COORD
@@ -32,7 +32,7 @@ struct DEC_COORD
 };
 struct FILEINFO
 {	
-	string InputfileName;
+	std::string InputfileName;
 	bool CopyMode;
 	size_t MaxVar;
 	size_t NumHeads;
@@ -49,14 +49,14 @@ struct FILEINFO
 	size_t TimeColumn;
 	size_t HourColumn;
 	size_t MinuteColumn;
-	vector<bool> ValidVariables;
-	vector<size_t> ValidVariableIndex;
-	vector<string> FirstValidHeads;
+	std::vector<bool> ValidVariables;
+	std::vector<size_t> ValidVariableIndex;
+	std::vector<std::string> FirstValidHeads;
 	DESCRIPTIONS Des;
-	vector<string> UnitsFromHead;
-	vector<string> IdFromHead;
-	vector<string> PosFromHead;
-	vector<LINKED_FILEINFO> LinkedSites;
+	std::vector<std::string> UnitsFromHead;
+	std::vector<std::string> IdFromHead;
+	std::vector<std::string> PosFromHead;
+	std::vector<LINKED_FILEINFO> LinkedSites;
 	bool EqualSizeOfSiteRecords;
 	size_t IdentifiedDelimiter;
 	size_t IdentifiedLineEnd;
@@ -64,12 +64,12 @@ struct FILEINFO
 	size_t IdentifiedMinDiff;
 	formats IdentifiedFormat;
 	dateformats IdentifiedDateFormat;
-	string StatNo;
-	string StatName;
+	std::string StatNo;
+	std::string StatName;
 	DEC_COORD dec_cord;
 	size_t FilterColumnToUse;
-	vector<string> GlobalFilterItems;
-	string FilterItemToUse;
+	std::vector<std::string> GlobalFilterItems;
+	std::string FilterItemToUse;
 };
 struct SWISSCORD
 {
@@ -90,30 +90,30 @@ public:
 	PGUtil(void);
 	virtual ~PGUtil(void);
 	
-	static float AtoFloat(string str);
-	static string DateConv(enum dateformats, string instr);
-	static string ItoNumAscii(int);
-	static string	STD_FtoAscii(float v) ;
-	static string STD_FtoAsciiPane(float v);
-	static string	STD_DtoAscii(double v) ;
-	static string	STD_ItoAscii(int v) ;
-	static string	STD_ItoAsciiHex(int v);
-	static int	AtoInt(string str);
+	static float AtoFloat(std::string str);
+	static std::string DateConv(enum dateformats, std::string instr);
+	static std::string ItoNumAscii(int);
+	static std::string	STD_FtoAscii(float v) ;
+	static std::string STD_FtoAsciiPane(float v);
+	static std::string	STD_DtoAscii(double v) ;
+	static std::string	STD_ItoAscii(int v) ;
+	static std::string	STD_ItoAsciiHex(int v);
+	static int	AtoInt(std::string str);
 	static unsigned int cminutx(int, int,int, int,int);
-	static IPGTID Ato_IPGTID(string str);
+	static IPGTID Ato_IPGTID(std::string str);
 	static IPGTID MinToPGTID(unsigned int min);
 	static unsigned int MinutConv(IPGTID);
-	static unsigned int MinutConv(string str, bool daily=false, bool hourly=false);  
-	//static string StringDatum(unsigned int min) { return StringDatum(unsigned int(min)); };
-	static string StringDatum(unsigned int);
-	static string StringDatumSec(double);
-	static string StringDatumStart(unsigned int, unsigned int range);
-	static string StringDatumStartEstimate(unsigned int, unsigned int end);
-	static string StringDatumEnd(unsigned int, unsigned int start, int step=0);
-	static string STD_StringDatum(unsigned int) ;
-	static string STD_StringDatumStart(unsigned int min, unsigned int range) ;
-	static string STD_StringDatumStartEstimate(unsigned int min, unsigned int end);
-	static string STD_StringDatumEnd(unsigned int min, unsigned int start, int step=0);
+	static unsigned int MinutConv(std::string str, bool daily=false, bool hourly=false);  
+	//static std::string StringDatum(unsigned int min) { return StringDatum(unsigned int(min)); };
+	static std::string StringDatum(unsigned int);
+	static std::string StringDatumSec(double);
+	static std::string StringDatumStart(unsigned int, unsigned int range);
+	static std::string StringDatumStartEstimate(unsigned int, unsigned int end);
+	static std::string StringDatumEnd(unsigned int, unsigned int start, int step=0);
+	static std::string STD_StringDatum(unsigned int) ;
+	static std::string STD_StringDatumStart(unsigned int min, unsigned int range) ;
+	static std::string STD_StringDatumStartEstimate(unsigned int min, unsigned int end);
+	static std::string STD_StringDatumEnd(unsigned int min, unsigned int start, int step=0);
 	static size_t YearFunction(unsigned int);
 	static double DayNumFunction(unsigned int);
 	static int YearNumFunction(unsigned int);
@@ -122,12 +122,12 @@ public:
 	static int HourFunction(unsigned int);
 	static int MinOfHourFunction(unsigned int);
 	static unsigned int cminut(char *date);
-	static string cdatum(unsigned int &julian);
+	static std::string cdatum(unsigned int &julian);
 	static int LengthOfMonth(unsigned int min);
-	static string CheckedForExistingBinFileName(string filename);
-	static bool CheckForPossiblePGDateString(string str);
-	static bool CreateOutputCSVFile(string filename, string filenameinput, Doc* pDoc);
-	static string createInputBinFile(string csvFileName);
+	static std::string CheckedForExistingBinFileName(std::string filename);
+	static bool CheckForPossiblePGDateString(std::string str);
+	static bool CreateOutputCSVFile(std::string filename, std::string filenameinput, Doc* pDoc);
+	static std::string createInputBinFile(std::string csvFileName);
 
 };
 

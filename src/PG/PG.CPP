@@ -2,7 +2,7 @@
 #include "../ModelTypes/SimB.h"
 #include "../NewBase/MultiRun/Residuals.h"
 #include "./PG.H"
-#include "../Util/FUtil.h"
+#include "../Util/FUtil.hpp"
 #include "../NewBase/Doc.h"
 #ifndef COUPSTD
 #include "../CoupModelDoc.h"

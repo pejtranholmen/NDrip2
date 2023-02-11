@@ -35,7 +35,7 @@ class CPG : public CPGView
 
 public:
 	CPG();	
-	CPG(string filename);						// Default constructor
+	CPG(std::string filename);						// Default constructor
 
 	virtual ~CPG();
 
@@ -50,18 +50,18 @@ public:
 	void AddDummyTimeVector(DoubleArray Time);
 	void AddTimeVector(DoubleArray Time);
 	void AddVariableVector(DoubleArray Variable, size_t i);
-	void AddVariableVector(vector<float> *VarVector, size_t i);
+	void AddVariableVector(std::vector<float> *VarVector, size_t i);
 	bool AddNewRepititionDescriptions(size_t add);
 
 	size_t GetNumberofMissing(size_t varno=-1, size_t repit=1);
 	size_t	 GetNumberofVariablesWithMissings();
 
 	bool SetCommonPeriod(size_t,size_t);
-	bool SetCommonPeriod(string,string);
+	bool SetCommonPeriod(std::string, std::string);
 
 
-	size_t GetVarIndex(string str, size_t irep=1);
-	size_t GetVarIndex(string str, string str_id, size_t irep=1);
+	size_t GetVarIndex(std::string str, size_t irep=1);
+	size_t GetVarIndex(std::string str, std::string str_id, size_t irep=1);
 
 	void ResetSelections();
 	void RemoveSelection(size_t);
@@ -88,8 +88,8 @@ public:
 	double	GetVarLat(size_t, size_t repit=1);
 	double	GetVarLong(size_t, size_t repit=1);
 	double	GetVarAlt(size_t, size_t repit=1);
-	string	GetVarCountry(size_t, size_t repit=1);
-	string	GetVarStation(size_t, size_t repit=1);
+	std::string	GetVarCountry(size_t, size_t repit=1);
+	std::string	GetVarStation(size_t, size_t repit=1);
 
 	elements GetVarElement(size_t, size_t repit = 1);
 	UNIT_TYPES GetVarUnitType(size_t, size_t repit = 1);
@@ -115,7 +115,7 @@ public:
 		else
 			return false;
 	};
-	vector<IF_CONDITIONS> GetIfConditions() {return m_IfVector;	};
+	std::vector<IF_CONDITIONS> GetIfConditions() {return m_IfVector;	};
 	size_t GetNumOfIfConditions() { return m_IfVector.size(); };
 	void   SetApplyConditions(bool value) { m_ApplyConditionCheck = value; };
 	bool   IsApplyConditions() { return m_ApplyConditionCheck; };
@@ -126,7 +126,7 @@ public:
 	void*	GetVarValuePointer(size_t varno);
 	float*  GetMeanPointer(size_t MeanOption);
 
-	vector<float> Get_AllRep_VarValue(size_t varno, size_t var_rec);
+	std::vector<float> Get_AllRep_VarValue(size_t varno, size_t var_rec);
 	void	SetMeanReset(size_t MeanOption);
 
 	
@@ -136,11 +136,11 @@ public:
 	float	GetVarValueMonthsMean(size_t varno, size_t recno, size_t months);
 	float	GetVarValueYearsMean(size_t varno, size_t recno, size_t years);
 	
-	string	GetVarDateMinuteMean(size_t recno, size_t minutes);
-	string	GetVarDateHourMean(size_t recno, size_t hours);
-	string	GetVarDateDaysMean(size_t recno, size_t days);
-	string	GetVarDateMonthsMean(size_t recno, size_t months);
-	string	GetVarDateYearsMean(size_t recno, size_t years);
+	std::string	GetVarDateMinuteMean(size_t recno, size_t minutes);
+	std::string	GetVarDateHourMean(size_t recno, size_t hours);
+	std::string	GetVarDateDaysMean(size_t recno, size_t days);
+	std::string	GetVarDateMonthsMean(size_t recno, size_t months);
+	std::string	GetVarDateYearsMean(size_t recno, size_t years);
 
 	float	GetVarValue_WithinYearMean(size_t varno, size_t recno, bool res=false);
 	float	GetVarValue_WithinYearSD(size_t varno, size_t recno, bool res=false);
@@ -219,8 +219,8 @@ public:
 	size_t     GetDayNumber(size_t);
 	size_t		GetMinuteNumber(size_t);
 
-	string	GetStartDate();
-	string	GetEndDate();
+	std::string	GetStartDate();
+	std::string	GetEndDate();
 
 
 	double  GetFloatTime(size_t);
@@ -235,10 +235,10 @@ public:
 	bool    Write(CFile);
 #endif
 	bool	WriteSelectionToExcel();
-	string  WriteExcelFile();
+	std::string  WriteExcelFile();
 	bool	GetOutFileStatus();
-	string GetOutFileStart();
-	string GetOutFileEnd();
+	std::string GetOutFileStart();
+	std::string GetOutFileEnd();
 	size_t	GetOutFileRecords();
 	size_t	GetOutFileVar();
 	size_t		GetColor(size_t);
@@ -276,7 +276,7 @@ public:
 	bool	EstimateWithinYearStatistics(Doc *pDoc=nullptr);
 	void	EstimateWithinYearClear(size_t rep);
 	bool	EstimateWithinDayStatistics();
-	bool	EstimateMultiStatistics(bool all=false, vector<size_t> *acceptedruns=nullptr);
+	bool	EstimateMultiStatistics(bool all=false, std::vector<size_t> *acceptedruns=nullptr);
 	bool	GetReplaceMode();
 
 
@@ -284,9 +284,9 @@ public:
 
 protected:
 
-	vector<size_t> m_Selected, m_Color;
-	vector<bool> m_Picked, m_PickedMin, m_PickedMax, m_PickedMean;
-	vector<float> m_SelectedCoef;
+	std::vector<size_t> m_Selected, m_Color;
+	std::vector<bool> m_Picked, m_PickedMin, m_PickedMax, m_PickedMean;
+	std::vector<float> m_SelectedCoef;
 
 	size_t m_expression, m_expression_type,m_time_unit;
 	size_t m_time_base;
@@ -304,7 +304,7 @@ protected:
 	size_t m_withinYearAllocated;
 	bool m_WithinYearForResiduals;
 private:
-	vector<IF_CONDITIONS> m_IfVector;
+	std::vector<IF_CONDITIONS> m_IfVector;
 	bool CheckConditions(size_t var_rec);
 	bool m_ApplyConditionCheck;
 

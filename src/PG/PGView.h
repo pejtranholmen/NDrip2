@@ -10,7 +10,7 @@ struct DataView
 struct RecordViewSplit
 {
 	size_t Period;
-	vector<size_t> SplitStops;
+	std::vector<size_t> SplitStops;
 	size_t Length;
 };
 
@@ -41,7 +41,7 @@ public:
 	size_t GetCurrentPeriodToView() { return m_RecordSplit.Period; };
 	
 protected:
-	vector<DataView> m_DataView;
+	std::vector<DataView> m_DataView;
 	bool m_RepetitionsFirst;
 	RecordViewSplit m_RecordSplit;
 

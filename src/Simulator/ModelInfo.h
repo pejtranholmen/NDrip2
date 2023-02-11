@@ -11,16 +11,16 @@ class ModelInfo: public ModelConst{
 	ModelInfo();
 	~ModelInfo();
 	
-	void AddModel(string, void*);
-	void* GetModelPtr(string);
+	void AddModel(std::string, void*);
+	void* GetModelPtr(std::string);
 
 	void SetAbioticTimeSteps(size_t TimeResolutionOption);
 	
 	
 	double GetRemainingTime(bool Multi=false);
-	string GetRemainingTimeString(bool Multi=false);
+	std::string GetRemainingTimeString(bool Multi=false);
 	double GetTimeUsed();
-	string GetTimeUsedString();
+	std::string GetTimeUsedString();
 	void SetPause() {m_Run_Pause=true;} ;
 	void SetGoSim() {m_Run_Pause=false;} ;
 	bool IsPause() {return m_Run_Pause;};
@@ -32,7 +32,7 @@ class ModelInfo: public ModelConst{
 	
 
 	 bool StartStateValue;
-	 map<string, void*> ptrModule;
+	 std::map<std::string, void*> ptrModule;
 	 double XFMAX,CAPILMAX;	
 	 size_t NumMethod;
 	 double XNLev;

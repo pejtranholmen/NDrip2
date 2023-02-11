@@ -13,15 +13,17 @@ set(EXECUTABLE_NAME Executable)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 include(AddGitSubmodule)
+option(USE_POSTGRES "To include the link to a local Postgres Database" ON)
 
-#FetchContent_Declare(
- # libpqxx
- # GIT_REPOSITORY https://github.com/jtv/libpqxx.git
- # GIT_TAG a6b1d60e74c1427c8ac2324b85cd4a0dc2068332
-#)
-#set(PQXX_LIBRARIES pqxx_static)
 
-#FetchContent_MakeAvailable(libpqxx)
+if(USE_POSTGRES) 
+
+    find_package(libpqxx CONFIG REQUIRED)
+    message("libpq will be used")
+    add_compile_definitions(COUP_POSTGRES)
+
+endif()
+
 
 
 FetchContent_Declare(

@@ -7,7 +7,7 @@
 #include "../NewBase/NewMap.h"
 
 //using namespace Aws;
-using namespace std;
+
 
 using namespace pqxx;
 /// Query employees from database.  Return result.
@@ -15,7 +15,7 @@ using namespace pqxx;
 namespace coup_pg {
 static connection initconnection(string password) {
     password = "pe1950";
-    string init = "dbname = postgres user = postgres password = pe1950 port = 5432";
+    string init = "dbname = coup user = postgres password = pe1950 port = 5432";
     connection c(init);
     if (c.is_open()) {
         cout << "Opened database successfully: " << c.dbname() << endl;
@@ -26,12 +26,8 @@ static connection initconnection(string password) {
     return c;
 }
 
-static connection initconnection() { return initconnection("pe1950win"); };
-
-
+static connection initconnection() { return initconnection("pe1950"); };
 static bool uploadpgFile(std::string filename) {
-
-
     CPG pgfile;
     pgfile.Open(filename);
     if (pgfile.IsGood()) {
@@ -58,7 +54,7 @@ static bool uploadpgFile(std::string filename) {
 
         }
 
-        connection c = initconnection("pe1950win");
+        connection c = initconnection("pe1950");
 
         pqxx::work W{ c };
         try {
@@ -90,7 +86,7 @@ static bool uploadpgFile(std::string filename) {
             sql += ");";
             W.exec(sql.c_str());
             W.commit();
-            c = initconnection("pe1950win");
+            c = initconnection("pe1950");
             pqxx::work W{ c };
             for (size_t i = 0; i < pgfile.GetNumRecords(); i++) {
                 sql = "INSERT INTO " + tablename + "_data VALUES ( ";
@@ -132,7 +128,7 @@ static bool uploadpgFile(std::string filename) {
 };
 static pqxx::result query(string tablename)
 {
-    connection c = initconnection("pe1950win");
+    connection c = initconnection("pe1950");
     pqxx::work txn{ c };
 
     pqxx::result r{ txn.exec("SELECT id_group, vectorname, storeflag, conditions[1] FROM " + tablename + " WHERE id_group > 0 AND id_group < 10\
@@ -188,12 +184,12 @@ static int create_Init_Tables(CommonModelInfo* pinfo) {
 
         auto group = pinfo->GetGroupNames();
 
-        for (size_t i = 0; i < 38; i++) {
+        for (size_t i = 0; i < ModelCompNames::NoGroupNames; i++) {
             sql = "INSERT INTO Groups VALUES (";
             sql += FUtil::STD_ItoAscii(i);
-            sql += ",'" + group[i] + "',";
-            int testv = pinfo->GetGroupCategory(group[i]);
-            if (testv > 0) {
+            sql += ",'" + ModelCompNames::GroupNames[i] + "',";
+            int testv = pinfo->GetGroupCategoryNo(i);
+            if (testv >= 0) {
                 sql += FUtil::STD_ItoAscii(testv) + ");";
                 W.exec(sql.c_str());
             }
@@ -1307,7 +1303,7 @@ static int create_Additional_Tables(CommonModelInfo* pinfo, unique_ptr<NewMap> p
 static int query_createtable(enum simtype type, const string str)
 {
     string sql;
-    connection c = initconnection("pe1950win");
+    connection c = initconnection("pe1950");
     pqxx::work W{ c };
     try {
 
@@ -1440,7 +1436,7 @@ static int query_createtable(enum simtype type, const string str)
         }
 
 
-        cout << "Records created successfully" << endl;
+        cout << "Records created successfully from " <<str<< endl;
 
     }
 

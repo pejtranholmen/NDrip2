@@ -17,8 +17,6 @@
 #include <memory>
 #include <functional>
 
-
-using namespace std;
 struct OUTPUT_SUMMARY_RESULTS
 {
 	double Initial;
@@ -67,8 +65,8 @@ enum class TimeResolution { WITHIN_DAY, DAILY_MEAN, HOURLY, TEN_MIN };
 enum class SIMB_COMP{NOVALUE, LE, LT, GE, GT, EQ, NEQ, ON, OFF};
 enum class HIST_INFO {RUN_INFO, DATA_BASE_INFO, SWITCH_INFO, PARSINGLE_INFO, PARTABLE_INFO,NUMBER_ELEMENTS, MODELFILE_INFO};
 struct OUTPUT {size_t LocalIndex; float Initial; float Final; float Min; float Max; float Mean; float Accumulated; size_t ValidFlagIndex; float OptInitial; size_t PgFileIndex; size_t PgMultiFileIndex;int StoreFlag;}	;
-static vector<string> simType_StringId = { "Ps","X","T","G","D","Sw","F", "Ps", "Xs","Ts", "Gs", "Ds", "P", "Table","DB","Func","CSV" };
-static vector<string> Sw_StringOptions = { "O1","O2","O3", "O4", "O5", "O6", "O7", "O8","O9","O10","O11", "O12", "O13", "O14", "O15", "O16" , "O17", "O18" };
+static std::vector<std::string> simType_StringId = { "Ps","X","T","G","D","Sw","F", "Ps", "Xs","Ts", "Gs", "Ds", "P", "Table","DB","Func","CSV" };
+static std::vector<std::string> Sw_StringOptions = { "O1","O2","O3", "O4", "O5", "O6", "O7", "O8","O9","O10","O11", "O12", "O13", "O14", "O15", "O16" , "O17", "O18" };
 enum simtype {PAR, STATE, FLOW, AUX, DRIVE, SWITCH, PGFILE, PAR_SINGLE, STATE_SINGLE, FLOW_SINGLE,AUX_SINGLE, DRIVE_SINGLE, PAR_TABLE, TABLE, DB, FUNCTION, CSVFILE, NUM_ELEMENTS_VECTOR};
 enum datatype{SINGLE, SIMPROFILE, MPROFILE,SINGLEPLANT, PLANT, MYCON,OTHER, WATERPIPE, HEATBOX, ATMBOUNDARY, SURFACEPOOL, WATERPOND, 
 	IRRIGATIONCONTAINER,ROADSURFACE, SOILSURFACE,SOILBOTTOM, OBSERVED, TOTPROFILE,ALL_SOIL_LAYERS,ALL_SOIL_BOUNDARIES, ALLPLANTS,ACCUMULATOR, FILEDEFINEDPARAMETERS};
@@ -116,7 +114,7 @@ enum class ENSEMBLE_TYPE { NO, ALL, ACCEPTED };
 class SimB;
 class CommonModelInfo;
 struct SIMB {SimB* pBase=nullptr;
-	size_t TabIndex=string::npos;
+	size_t TabIndex=std::string::npos;
 };
 struct MR_PAR{
 	int Dimension=0;
@@ -137,21 +135,21 @@ struct PLOT_PARAM {
 	int Y_ScalingCoef = 0;
 	double X_Min=0.;
 	double X_Max=0.;
-	string X_MaxPar;
-	string X_Label;
-	string Y_Label;
+	std::string X_MaxPar;
+	std::string X_Label;
+	std::string Y_Label;
 	size_t Num_Of_X=0;
 	size_t Num_Of_Opt=0;
-	vector<string> LegendsVec;
-	vector<size_t> Opt_Vec;
-	vector<float> X2_Vec;
-	vector<float> X3_Vec;
-	vector<float> X4_Vec;
-	vector<float> X5_Vec;
+	std::vector<std::string> LegendsVec;
+	std::vector<size_t> Opt_Vec;
+	std::vector<float> X2_Vec;
+	std::vector<float> X3_Vec;
+	std::vector<float> X4_Vec;
+	std::vector<float> X5_Vec;
 };
 struct PLOT_PARAM_DEP {
-	vector<string> Ps_Names;
-	vector<string> P_Names;
+	std::vector<std::string> Ps_Names;
+	std::vector<std::string> P_Names;
 };
 enum DB_types
 {
@@ -189,9 +187,9 @@ class SimB
 		void SetEnable(bool value) {_enabled=value;};
 		void SetDBEnable(bool value) {_DBenabled=value;};
 		void SetModuleNo(size_t value) {_ModuleNo=value;};
-		void SetName(string str) {_name=str;};
-		void SetConditions(string str) {cond=str;};
-		void SetUnit(string str) {_unit=str;};
+		void SetName(std::string str) {_name=str;};
+		void SetConditions(std::string str) {cond=str;};
+		void SetUnit(std::string str) {_unit=str;};
 		//void SetDefValue(double value) { _orgFValue=value;};
 		virtual bool IsEnabled() {if(_enabled) return false; return true;};
 		bool IsDBEnabled() {return _DBenabled;};
@@ -206,8 +204,8 @@ class SimB
 		size_t  GetGroupNo() const {return _ModuleNo;};
 		virtual bool IsOldValue() {return false;};
 		virtual int GetIntValue() {return -1;};
-		virtual string GetOption(size_t ) {return "";};
-		virtual string GetName() {return _name;};
+		virtual std::string GetOption(size_t ) {return "";};
+		virtual std::string GetName() {return _name;};
 		virtual void SetDBIntValue(size_t value) {_DBIntValue=value;};
 		virtual size_t GetDBIntValue() {return _DBIntValue;}; 
 		virtual int MR_Get_Dim() {return -1;};
@@ -228,8 +226,8 @@ class SimB
 		virtual double GetDBValue(size_t) {return MISSING;};
 		virtual size_t GetPgFileIndex(size_t ) {return 0;};
 
-		virtual size_t GetValidFlagIndex(size_t ) const {return string::npos;};
-		virtual size_t GetValidFlagIndex() const {return string::npos;};
+		virtual size_t GetValidFlagIndex(size_t ) const {return std::string::npos;};
+		virtual size_t GetValidFlagIndex() const {return std::string::npos;};
 
 		virtual void SetStoreFlag(bool) {};
 		virtual void SetMultiStoreFlag(bool) {};
@@ -249,17 +247,17 @@ class SimB
 		//int GetGroupCategory() {return ::GetGroupCategory(GetGroup());};
 		size_t GetFysProcess() {return _def.fproc;};
 		size_t GetBioProcess() {return _def.bproc;};
-		string GetFysProcessName() const;
-		string GetBioProcessName() const;
+		std::string GetFysProcessName() const;
+		std::string GetBioProcessName() const;
 
 		enum elements GetElement() { return _def.elem; };
 		enum datatype GetDataType() {return _def.data;};
 
-		string GetDepName(size_t) const;
-		virtual string GetUnit() const {return _unit;};		
-		string GetDepUnit(size_t) const;	   			// Get name of dependent variables 
-		string GetProcessName() const;
-		string GetElementName() const;
+		std::string GetDepName(size_t) const;
+		virtual std::string GetUnit() const {return _unit;};		
+		std::string GetDepUnit(size_t) const;	   			// Get name of dependent variables 
+		std::string GetProcessName() const;
+		std::string GetElementName() const;
 
 		enum simtype GetSim() {return _stype;};
 		void SetSimType(enum simtype value) {_stype=value;};
@@ -268,12 +266,12 @@ class SimB
 		virtual void	SetIsOriginalValue(){m_IsNotOriginal=false;};	
 		virtual void	SetNotOriginalValue(){m_IsNotOriginal=true;};			// Sets the original value to the current value
 		virtual void SetOriginalValue(double ) {;};
-		void SetOriginalValue(vector<double> value) {_orgFVector.resize(value.size()); for(size_t i=0; i<value.size();i++) {_orgFVector[i]=value[i];};};
+		void SetOriginalValue(std::vector<double> value) {_orgFVector.resize(value.size()); for(size_t i=0; i<value.size();i++) {_orgFVector[i]=value[i];};};
 
 		virtual bool	IsNotOriginalValue() const {return m_IsNotOriginal;};	
 		void SetBackOriginalValue() {m_IsNotOriginal=false;};
 
-		string GetCondition(size_t) const;
+		std::string GetCondition(size_t) const;
 		void	AddToNoticeList(SimB*); 
 		void	BuildDependencies(NewMap*);
 
@@ -291,13 +289,13 @@ class SimB
 		virtual bool SetAnnimateChart(size_t , int , int) {return false;};
 		CommonModelInfo* getCommonModelPointer() { return m_pCommonModelInfo; };
 		void setCommonModelPointer(CommonModelInfo* p) { m_pCommonModelInfo = p; };
-		vector<Condition> GetArrayConditions() { return conditions_Array; };
+		std::vector<Condition> GetArrayConditions() { return conditions_Array; };
 	protected:
 
 		SimB*	GetDepPtr(size_t) const;
 		void	SendNotice() const;	
 		NewMap	*pfMap; 
-		string	_unit;
+		std::string	_unit;
 		size_t _DBIntValue;
 		int _orgIntValue;
 		CommonModelInfo* m_pCommonModelInfo;
@@ -307,17 +305,17 @@ class SimB
 		bool m_ReadOnly;
 		bool _enabled, _DBenabled;
 
-		string _name;
+		std::string _name;
 	
 		definitions _def;
 		enum simtype _stype;
 		size_t _ModuleNo;
-		string	cond;	
-		vector<Condition> conditions_Array;		// Array of conditions
-		vector<SimB*>	noticelist_Array;
-		vector<size_t>m_HistoryIndex[100];
-		void Decode(string);		 	// Decodes condition string
-		SIMB_COMP OpDecode(string,bool*) const;		// Decodes operators
-		int	ValDecode(string) const;	  	// Decodes string to integer number
+		std::string	cond;	
+		std::vector<Condition> conditions_Array;		// Array of conditions
+		std::vector<SimB*>	noticelist_Array;
+		std::vector<size_t>m_HistoryIndex[100];
+		void Decode(std::string);		 	// Decodes condition string
+		SIMB_COMP OpDecode(std::string,bool*) const;		// Decodes operators
+		int	ValDecode(std::string) const;	  	// Decodes string to integer number
 	};
 

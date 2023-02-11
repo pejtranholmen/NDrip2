@@ -8,20 +8,20 @@ class FunctionProperties
 public:
 	FunctionProperties(void);
 	~FunctionProperties(void);
-	bool Init(string filename);
+	bool Init(std::string filename);
 	PLOT_PARAM GetParam(size_t index) {if(index<m_FuncProp.size()) return m_FuncProp[index]; else {
 		PLOT_PARAM out;
 		return out;	
 		} };
-	size_t GetIndex(string str) {
-		map<string,size_t>:: iterator it;
+	size_t GetIndex(std::string str) {
+		std::map<std::string,size_t>:: iterator it;
 		it=m_FuncIndex.find(str);
 		if(it!=m_FuncIndex.end())
 			return it->second;
 		else
-			return string::npos;
+			return std::string::npos;
 	};
-	PLOT_PARAM GetParam(string str) {
+	PLOT_PARAM GetParam(std::string str) {
 		size_t index=GetIndex(str);
 		return GetParam(index);
 	};
@@ -30,19 +30,19 @@ public:
 		PLOT_PARAM_DEP out;
 		return out;
 	}};
-	PLOT_PARAM_DEP GetParamDep(string str) { size_t index=GetIndex(str); 
+	PLOT_PARAM_DEP GetParamDep(std::string str) { size_t index=GetIndex(str); 
 		return GetParamDep(index);};
 	size_t GetNumFunctions() { return m_FuncIndex.size();};
 
 	
-	bool SetParamDep(vector<Ps*> PsVector, vector<P*> PVector, size_t index);
-	bool SetParamDep(vector<Ps*> PsVector, size_t index);
-	bool SetParamDep(vector<P*> PVector, size_t index);
+	bool SetParamDep(std::vector<Ps*> PsVector, std::vector<P*> PVector, size_t index);
+	bool SetParamDep(std::vector<Ps*> PsVector, size_t index);
+	bool SetParamDep(std::vector<P*> PVector, size_t index);
 	bool IsFileRead() {return m_FileRead;};
 private:
 	bool m_FileRead;
-	map<string, size_t> m_FuncIndex;
-	vector<PLOT_PARAM> m_FuncProp;
-	vector<PLOT_PARAM_DEP> m_FuncPar;
+	std::map<std::string, size_t> m_FuncIndex;
+	std::vector<PLOT_PARAM> m_FuncProp;
+	std::vector<PLOT_PARAM_DEP> m_FuncPar;
 };
 

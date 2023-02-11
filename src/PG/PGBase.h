@@ -8,7 +8,7 @@ struct DistStat;
 
 struct InPGFiles
 {
-	string StatNo;
+	std::string StatNo;
 	size_t NumRec;
 	size_t RecStart;
 	size_t MinSt;
@@ -21,8 +21,8 @@ struct AddInfo
 	double Lat;
 	double Long;
 	double Alt;
-	string CountryCode;
-	string StationName;
+	std::string CountryCode;
+	std::string StationName;
 	size_t	num_missing;
 	size_t	num_substituted;
 	elements Element;
@@ -52,12 +52,12 @@ struct DATASHAPE {
 };
 
 struct DATACONTENT {
-	vector<float> v;
-	vector<float> vv;
+	std::vector<float> v;
+	std::vector<float> vv;
 };
 struct BaseInfo {
 
-	vector<string> Name, Unit, Id, Pos;
+	std::vector<std::string> Name, Unit, Id, Pos;
 	std::vector <float>  var_min, var_max;
 
 };
@@ -69,17 +69,17 @@ struct DATATYPES {
 };
 struct DESCRIPTIONS {
 	BaseInfo base;
-	vector<AddInfo> addinfo;
-	vector<DATATYPES> data;
+	std::vector<AddInfo> addinfo;
+	std::vector<DATATYPES> data;
 	AddInfo defaultAddInfo;
 	std::vector <size_t> var_missing;
 	std::vector <size_t> JumpBack;
 };
 
 struct PGACTIONS {
-	vector<size_t> ToBeSaved;
-	vector<size_t> ToBeCalc;
-	vector<size_t> ToBeViewed;
+	std::vector<size_t> ToBeSaved;
+	std::vector<size_t> ToBeCalc;
+	std::vector<size_t> ToBeViewed;
 	size_t OutRecordStart, OutRecordEnd;
 	size_t LocalStartRecord;
 	size_t LocalStartIndex;
@@ -110,8 +110,8 @@ struct PGFILE_STATUS {
 	bool AllInMemory;
 	bool RecordsToView;
 	size_t FileVersion;
-	string FileName;
-	string NewFileName;
+	std::string FileName;
+	std::string NewFileName;
 	unsigned long long SizeOfFileInMainStream;
 };
 struct ALLPGSTRUCT {

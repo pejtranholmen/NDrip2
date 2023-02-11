@@ -1,5 +1,6 @@
 #include "PG_MEMORY.h"
 #include <cmath>
+using namespace std;
 
 
 PG_Memory::PG_Memory()

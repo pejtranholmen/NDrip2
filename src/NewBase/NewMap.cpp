@@ -136,23 +136,6 @@ NewMap::~NewMap()
 
 }
 
-// Function that processes the parameters lists that comes from the 
-// FORTRAN part and places pointers to the objects in these lists into the structure 
-// wmap. 
-//
-// OBSERVE that the lists from the FORTRAN part are completely 
-// destroyed by this routine and if they are to be reused they 
-// must be restored.
-
-
-// This function calls BuildVariable for each map in wmap.
-// The BuildVariable function in SimB for E_map is special and 
-// not the same as it is for the other maps.
-//
-// One important question is what the variable xtret does.
-// It seems to me as if it does nothing at all; it isn"t used 
-// anywhere except outside this function.
-
 string NewMap::WriteEntireModelToXmlFile(doc_enabled enable_level)
 {
 	if (m_pCommonModelInfo == nullptr) {

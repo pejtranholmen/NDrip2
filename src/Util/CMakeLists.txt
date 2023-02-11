@@ -11,10 +11,11 @@ set(LIBUTIL_SOURCES
        ModelUtil.h
        pugixml.cpp
        pugixml.hpp
-       
+       FUtil.hpp
        Register.hpp
        CoupSim_XML.cpp
        CoupSim_XML.h
+       CoupModel_DB_Link.hpp
 )
 
 add_library(${LIBUTIL_NAME} STATIC ${LIBUTIL_SOURCES})

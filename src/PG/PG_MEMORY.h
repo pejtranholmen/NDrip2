@@ -23,7 +23,7 @@ protected :
 	float* m_varx_minute;
 	float* m_varx_hour;
 	float* m_varx_days;
-	vector<float> m_varx_months;
+	std::vector<float> m_varx_months;
 	float* m_varx_years;
 
 

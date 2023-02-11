@@ -21,27 +21,27 @@ public:
 
 	bool SetFileDescriptionFromLinkedFileDataBase();
 
-	vector<size_t> AddInfoLinkIndex;
+	std::vector<size_t> AddInfoLinkIndex;
 	bool m_ExtraFileScanning;
 	bool m_CollectedFile;
 	InPGFiles m_CurrentFile;
 	size_t m_countf;
-	string m_ExtraInfoFileName;	
-	vector <InPGFiles> m_ImportedFileVector;
+	std::string m_ExtraInfoFileName;
+	std::vector <InPGFiles> m_ImportedFileVector;
 	FILEINFO m_CurrentFileInfo, m_ExtraFileInfo;
-	vector<FILEINFO> AllFileInfos;
+	std::vector<FILEINFO> AllFileInfos;
 	size_t m_RecordsExtraInfoFile;
 	size_t m_NumToImport;
-	vector<int> m_NewVarIndexSelected;
+	std::vector<int> m_NewVarIndexSelected;
 	enum formats m_format;
-	string m_filename;
+	std::string m_filename;
 
 protected:	
 	bool m_SwissCoord;
 	bool m_CoordMapExist;
-	map<size_t,SWISSCORD> m_SwissMap;
-	map<size_t,DEC_COORD> m_CoordMap;
-	map<size_t, AddInfo> m_AddInfoMap;
+	std::map<size_t,SWISSCORD> m_SwissMap;
+	std::map<size_t,DEC_COORD> m_CoordMap;
+	std::map<size_t, AddInfo> m_AddInfoMap;
 
 };
 

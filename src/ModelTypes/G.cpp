@@ -4,7 +4,7 @@
 G::~G()
 {
 }
-G::G(vector<double> *target,NE *ne, datatype data, elements elem, fysprocess fproc, bioprocess bproc,  userlevel ulev)
+G::G(std::vector<double> *target,NE *ne, datatype data, elements elem, fysprocess fproc, bioprocess bproc,  userlevel ulev)
 	:OutVector(data, elem, fproc, bproc, ulev)
 {
 	_ptarget=target;
@@ -12,7 +12,7 @@ G::G(vector<double> *target,NE *ne, datatype data, elements elem, fysprocess fpr
 	pNE=ne;
 	;
 }
-void G::Def(int ModuleNo, string name, vector<double> init, string unit, string conditions)
+void G::Def(int ModuleNo, std::string name, std::vector<double> init, std::string unit, std::string conditions)
 {
 
 	SetValue(init);

@@ -5,6 +5,7 @@
 #include <pqxx/pqxx>
 
 #include "../NewBase/NewMap.h"
+#include "ModelTypes/SimB.h"
 
 //using namespace Aws;
 
@@ -150,117 +151,63 @@ static pqxx::result query(string tablename)
     // Connection object goes out of scope here.  It closes automatically.
     return r;
 }
-static int create_Init_Tables(CommonModelInfo* pinfo) {
+vector<string> create_Init_Tables(CommonModelInfo* pinfo) {
     connection c = initconnection(pinfo->GetPassword(), "Basic Tables");
-    string sql;
     pqxx::work W{ c };
+    string sql;
+    string tablename;
+    auto drop = [&](pqxx::work &W, string name) {; string s = "DROP TABLE IF EXISTS " + name + " CASCADE;"; return W.exec(s.c_str()); };
+    auto create = [&](string name) { string s = "CREATE TABLE " + name; return s; };
+    auto ins_v = [&](pqxx::work& W, string name, vector<string> vstr) { string s; for (int i = 0; i < vstr.size(); i++) { s = "INSERT INTO " + name + " VALUES (" + std::to_string(i) + ",'" + vstr[i] + "');"; W.exec(s); } return name; };
+    vector<string> tablenames;
+   
     try {
-        sql = "DROP TABLE IF EXISTS GroupCategories CASCADE;";
+        tablename = "GroupCategories";
+        drop(W,tablename);
+        sql = create(tablename);
+        sql += "( Id_GroupCategory SERIAL PRIMARY KEY, Name VarChar(34) ); ";
         W.exec(sql.c_str());
-        sql = "CREATE TABLE GroupCategories";
-        sql += "( "\
-            "Id_GroupCategory SERIAL PRIMARY KEY,  \
-            Name VarChar(34) ); ";
+        auto vv = pinfo->GetGroupCategoryNames();
+        auto name=ins_v(W, tablename, vv);
+        tablenames.push_back(tablename);
 
+        tablename = "Groups";
+        drop(W, tablename);
+        sql=create(tablename);
+        sql += "(Id_Group SERIAL PRIMARY KEY, Name VarChar(34),Id_GroupCategory Integer REFERENCES GroupCategories(Id_GroupCategory)); ";
         W.exec(sql.c_str());
-
-        for (size_t i = 0; i < 9; i++) {
-            sql = "INSERT INTO GroupCategories VALUES (";
-            sql += FUtil::STD_ItoAscii(i);
-            sql += ",'" + pinfo->GetGroupCategoryNames(i) + "');";
-            W.exec(sql.c_str());
-        }
-
-        sql = "DROP TABLE IF EXISTS Groups CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE Groups";
-        sql += "( "\
-            "Id_Group SERIAL PRIMARY KEY,  \
-            Name VarChar(34),\
-            Id_GroupCategory Integer REFERENCES GroupCategories(Id_GroupCategory)); ";
-
-        W.exec(sql.c_str());
-
         auto group = pinfo->GetGroupNames();
-
-        for (size_t i = 0; i < ModelCompNames::NoGroupNames; i++) {
-            sql = "INSERT INTO Groups VALUES (";
-            sql += FUtil::STD_ItoAscii(i);
-            sql += ",'" + ModelCompNames::GroupNames[i] + "',";
-            int testv = pinfo->GetGroupCategoryNo(i);
-            if (testv >= 0) {
-                sql += FUtil::STD_ItoAscii(testv) + ");";
-                W.exec(sql.c_str());
-            }
-        }
-
-        sql = "DROP TABLE IF EXISTS PhysProcNames CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE PhysProcNames";
-        sql += "( "\
-            "Id_PhysProc SERIAL PRIMARY KEY,  \
-            Name VarChar(34) \
-            ); ";
-
-        W.exec(sql.c_str());
+        ins_v(W, tablename, group);
+        tablenames.push_back(tablename);
 
 
-        for (size_t i = 0; i < 46; i++) {
-            sql = "INSERT INTO PhysProcNames VALUES (";
-            sql += FUtil::STD_ItoAscii(i);
-            sql += ",'" + pinfo->GetFysProcName(i);
-            sql += "');";
-            W.exec(sql.c_str());
-        }
+        tablename="PhysProcNames";
+        drop(W, tablename);
+        sql = create(tablename); sql += "(Id_PhysProc SERIAL PRIMARY KEY, Name VarChar(34) ); "; W.exec(sql.c_str());
 
-        sql = "DROP TABLE IF EXISTS BioProcNames CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE BioProcNames";
-        sql += "( "\
-            "Id_BioProc SERIAL PRIMARY KEY,  \
-            Name VarChar(34) \
-            ); ";
-
-        W.exec(sql.c_str());
+        vv = pinfo->GetFysProcName();
+        ins_v(W, tablename, vv);
+        tablenames.push_back(tablename);
 
 
-        for (size_t i = 0; i < 40; i++) {
-            sql = "INSERT INTO BioProcNames VALUES (";
-            sql += FUtil::STD_ItoAscii(i);
-            sql += ",'" + pinfo->GetBioProcName(i);
-            sql += "');";
-            W.exec(sql.c_str());
-        }
+        tablename = "BioProcNames";
+        drop(W, tablename);
+        sql = create(tablename);  sql += "(Id_BioProc SERIAL PRIMARY KEY,Name VarChar(34) ); "; W.exec(sql.c_str());
+        vv = pinfo->GetBioProcName();
+        ins_v(W, tablename, vv);
+        tablenames.push_back(tablename);
 
-        sql = "DROP TABLE IF EXISTS ElementNames CASCADE;";
-        W.exec(sql.c_str());
+        tablename="ElementNames";
+        drop(W, tablename);
+        sql = create(tablename); sql += "(Id_Element SERIAL PRIMARY KEY,  Name VarChar(34) ); "; W.exec(sql.c_str());
+        vv = pinfo->GetElementName();
+        ins_v(W, tablename, vv);
+        tablenames.push_back(tablename);
 
-        sql = "CREATE TABLE ElementNames";
-        sql += "( "\
-            "Id_Element SERIAL PRIMARY KEY,  \
-            Name VarChar(34) \
-            ); ";
-
-        W.exec(sql.c_str());
-
-
-        for (size_t i = 0; i < 46; i++) {
-            sql = "INSERT INTO ElementNames VALUES (";
-            sql += FUtil::STD_ItoAscii(i);
-            sql += ",'" + pinfo->ElementName(i);
-            sql += "');";
-            W.exec(sql.c_str());
-        }
-
-        sql = "DROP TABLE IF EXISTS FileNameArchive CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE ";
-        sql += "FileNameArchive (";
-        sql += "Id_FileName SERIAL PRIMARY KEY,";
+        tablename="FileNameArchive";
+        drop(W, tablename);
+        sql = create(tablename);
+        sql += " (Id_FileName SERIAL PRIMARY KEY,";
         sql += "FileName varchar(132) UNIQUE,";
         sql += "ShortName varchar(32),";
         sql += "NumVar Integer,";
@@ -283,12 +230,14 @@ static int create_Init_Tables(CommonModelInfo* pinfo) {
 
         sql = "DROP TABLE IF EXISTS simulations CASCADE;";
         W.exec(sql.c_str());
+        tablenames.push_back(tablename);
 
 
 
-        sql = "CREATE TABLE ";
-        sql += "Simulations (";
-        sql += "Id_Simulations SERIAL PRIMARY KEY,";
+        tablename="Simulations";
+        drop(W, tablename);
+        sql = create(tablename);
+        sql += "(Id_Simulations SERIAL PRIMARY KEY,";
         sql += "name Varchar(36) UNIQUE,";
         sql += "creator Varchar(36) Default '-',";
         sql += "runno Integer,";
@@ -296,24 +245,25 @@ static int create_Init_Tables(CommonModelInfo* pinfo) {
         W.exec(sql.c_str());
         sql = "INSERT INTO Simulations VALUES( ";
         sql += "Default, 'first_test','PEJ',1,'When using Default of everything');";
-
         W.exec(sql.c_str());
 
-        sql = "DROP TABLE IF EXISTS FileNameArchive_Uses CASCADE;";
-        W.exec(sql.c_str());
+        tablenames.push_back(tablename);
 
-        sql = "CREATE TABLE ";
-        sql += "FileNameArchive_Uses (";
-        sql += "Id_Simulations Integer References Simulations(Id_Simulations),";
+        tablename="FileNameArchive_Uses";
+        drop(W, tablename);
+
+        sql = create(tablename);
+        sql += "(Id_Simulations Integer References Simulations(Id_Simulations),";
         sql += "Id_FileName Integer References FileNameArchive(Id_FileName));";
         W.exec(sql.c_str());
+        tablenames.push_back(tablename);
 
-        sql = "DROP TABLE IF EXISTS Validation CASCADE;";
-        W.exec(sql.c_str());
 
-        sql = "CREATE TABLE ";
-        sql += "Validation (";
-        sql += "Id_Simulations Integer References Simulations(Id_Simulations),";
+        tablename = "Validation";
+        drop(W, tablename);
+
+        sql = create(tablename);
+        sql += "(Id_Simulations Integer References Simulations(Id_Simulations),";
         sql += "ValFileIndex Integer ,";
         sql += "output_type Integer ,";
         sql += "groupname varchar(36),";
@@ -338,13 +288,12 @@ static int create_Init_Tables(CommonModelInfo* pinfo) {
         sql += "LogLi Real,";
         sql += "NSE Real);";
         W.exec(sql.c_str());
+        tablenames.push_back(tablename);
 
-        sql = "DROP TABLE IF EXISTS Dynamic_Parameters CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE ";
-        sql += "Dynamic_Parameters (";
-        sql += "Id_Simulations Integer References Simulations(Id_Simulations),";
+        tablename = "Dynamic_Parameters";
+        drop(W, tablename);
+        sql = create(tablename);
+        sql += "(Id_Simulations Integer References Simulations(Id_Simulations),";
         sql += "ItemType Integer,";
         sql += "Id_Group Integer References Groups(id_group),";
         sql += "name Varchar(36),";
@@ -354,13 +303,12 @@ static int create_Init_Tables(CommonModelInfo* pinfo) {
         sql += "FloatValues Real[],";
         sql += "StringValue  Varchar[24][]);";
         W.exec(sql.c_str());
+        tablenames.push_back(tablename);
 
-        sql = "DROP TABLE IF EXISTS FileNameArchive_Descriptions CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE ";
-        sql += "FileNameArchive_Descriptions (";
-        sql += "Id_FileName Integer References FileNameArchive(Id_FileName),";
+        tablename = "FileNameArchive_Descriptions";
+        drop(W, tablename);
+        sql = create(tablename);
+        sql += "(Id_FileName Integer References FileNameArchive(Id_FileName),";
         sql += "VarNo Integer ,";
         sql += "Name Varchar(24),";
         sql += "Unit Varchar(12),";
@@ -372,411 +320,44 @@ static int create_Init_Tables(CommonModelInfo* pinfo) {
         sql += "Longitude double precision,";
         sql += "Altitude double precision);";
         W.exec(sql.c_str());
+        tablenames.push_back(tablename);
 
 
-        sql = "DROP TABLE IF EXISTS FileNameArchive_Data CASCADE;";
-        W.exec(sql.c_str());
-
-
-        sql = "CREATE TABLE ";
-        sql += "FileNameArchive_Data (";
-        sql += "Id_FileName Integer References FileNameArchive(Id_FileName),";
+        tablename="FileNameArchive_Data";
+        drop(W, tablename);
+        sql = create(tablename);
+        sql += "(Id_FileName Integer References FileNameArchive(Id_FileName),";
         sql += "PGMinTime Integer,";
         sql += "PGVarValues Real[]);";
         W.exec(sql.c_str());
-        W.commit();
-
-
-
-
-    /*        sql = "DROP TABLE IF EXISTS singleoutputs_results;";
-            W.exec(sql.c_str());
-
-            sql = "CREATE TABLE ";
-            sql += "singleoutputs_results (";
-            sql += "Id_Resultsobtained SERIAL PRIMARY KEY,";
-            sql += "Id_Simulations Integer References Simulations(id_Simulations),";
-            sql += "Id_singleoutputs integer References singleoutputs(id_singleoutputs),";
-            sql += "initial REAL,";
-            sql += "final REAL,";
-            sql += "min REAL,";
-            sql += "max REAL,";
-            sql += "mean REAL,";
-            sql += "accumulated REAL);";
-            W.exec(sql.c_str());
-
-
-            sql = "DROP TABLE IF EXISTS timeseries_outputs_results;";
-            W.exec(sql.c_str());
-            sql = "CREATE TABLE ";
-            sql += "timeseries_outputs_results (";
-            sql += "Id_Simulations Integer References Simulations(id_Simulations),";
-            sql += "PGminTime Integer,";
-            sql += "outputs REAL[]);";
-
-            W.exec(sql.c_str());
-
-
-            sql = "DROP TABLE IF EXISTS vectoroutputs_results;";
-            W.exec(sql.c_str());
-
-            sql = "CREATE TABLE ";
-            sql += "vectoroutputs_results (";
-            sql += "Id_Resultsobtained SERIAL PRIMARY KEY,";
-            sql += "Id_Simulations Integer References Simulations(id_Simulations),";
-            sql += "Id_vectoroutputs integer References vectoroutputs(id_vectoroutputs),";
-            sql += "NumIndexOut Integer,";
-            sql += "IndexOut Integer[],";
-            sql += "initial REAL[],";
-            sql += "final REAL[],";
-            sql += "min REAL[],";
-            sql += "max REAL[],";
-            sql += "mean REAL[],";
-            sql += "accumulated REAL[]);";
-            W.exec(sql.c_str());
-
-
-
-            sql = "DROP TABLE IF EXISTS modified_switch_values;";
-            W.exec(sql.c_str());
-
-            sql = "CREATE TABLE ";
-            sql += "modified_switch_values (";
-            sql += "modifactions SERIAL PRIMARY KEY,";
-            sql += "Id_Simulations Integer References Simulations(id_Simulations),";
-            sql += "Id_Switch integer References switches(id_switch),";
-            sql += "value Integer);";
-
-            W.exec(sql.c_str());
-
-
-            sql = "DROP TABLE IF EXISTS modified_singleparameter_values;";
-            W.exec(sql.c_str());
-
-            sql = "CREATE TABLE ";
-            sql += "modified_singleparameter_values (";
-            sql += "modifactions SERIAL PRIMARY KEY,";
-            sql += "Id_Simulations Integer References Simulations(id_Simulations),";
-            sql += "Id_singlepar integer References singleparameters(id_singlepar),";
-            sql += "value real);";
-
-            W.exec(sql.c_str());
-            sql = "DROP TABLE IF EXISTS modified_vectorparameter_values;";
-            W.exec(sql.c_str());
-
-            sql = "CREATE TABLE ";
-            sql += "modified_vectorparameter_values (";
-            sql += "modifactions SERIAL PRIMARY KEY,";
-            sql += "Id_Simulations Integer References Simulations(id_Simulations),";
-            sql += "Id_vectorpar integer References vectorparameters(id_vectorpar),";
-            sql += "ArraySize Integer,";
-            sql += "values real[]);";
-
-            W.exec(sql.c_str());
-
-
-
-            sql = "DROP TABLE IF EXISTS modified_singleoutputs_Storevalues CASCADE;";
-            W.exec(sql.c_str());
-
-            sql = "CREATE TABLE ";
-            sql += "modified_singleoutputs_Storevalues (";
-            sql += "results SERIAL PRIMARY KEY,";
-            sql += "Id_Simulations Integer References Simulations(id_Simulations),";
-            sql += "Id_singleoutputs integer References singleoutputs(id_singleoutputs),";
-            sql += "StoreFlag Integer)";
-
-            W.exec(sql.c_str());
-
-            sql = "DROP TABLE IF EXISTS modified_vectoroutputs_Storevalues CASCADE;";
-            W.exec(sql.c_str());
-
-            sql = "CREATE TABLE ";
-            sql += "modified_vectoroutputs_Storevalues (";
-            sql += "results SERIAL PRIMARY KEY,";
-            sql += "Id_Simulations Integer References Simulations(id_Simulations),";
-            sql += "Id_vectoroutputs integer References vectoroutputs(id_vectoroutputs),";
-            sql += "NumberStoreFlag Integer,";
-            sql += "StoreFlags Integer[])";
-
-            W.exec(sql.c_str());
-
-            sql = "DROP TABLE IF EXISTS modified_singleoutputs_resultvalues CASCADE;";
-            W.exec(sql.c_str());
-
-            sql = "CREATE TABLE ";
-            sql += "modified_singleoutputs_resultvalues (";
-            sql += "results SERIAL PRIMARY KEY,";
-            sql += "Id_Simulations Integer References Simulations(id_Simulations),";
-            sql += "Id_singleoutputs integer References singleoutputs(id_singleoutputs),";
-            sql += "initial Real,";
-            sql += "final Real,";
-            sql += "min Real,";
-            sql += "max Real,";
-            sql += "mean Real,";
-            sql += "accumulated Real,";
-            sql += "singlerun_out_index Integer,";
-            sql += "multirun_out_index Integer);";
-
-            W.exec(sql.c_str());
-
-            sql = "DROP TABLE IF EXISTS modified_vectoroutputs_resultvalues CASCADE;";
-            W.exec(sql.c_str());
-
-            sql = "CREATE TABLE ";
-            sql += "modified_vectoroutputs_resultvalues (";
-            sql += "modifications SERIAL PRIMARY KEY,";
-            sql += "Id_Simulations Integer References Simulations(id_Simulations),";
-            sql += "Id_vectoroutputs integer References vectoroutputs(id_vectoroutputs),";
-            sql += "NumIndexOut Integer,";
-            sql += "IndexOut Integer[],";
-            sql += "Initial REAL[],";
-            sql += "final REAL[],";
-            sql += "min REAL[],";
-            sql += "max REAL[],";
-            sql += "mean REAL[],";
-            sql += "accumulated REAL[],";
-            sql += "singlerun_out_index Integer[],";
-            sql += "multirun_out_index Integer[]);";
-            W.exec(sql.c_str());
-
-            sql = "DROP TABLE IF EXISTS modified_timeseries_inputs CASCADE;";
-            W.exec(sql.c_str());
-
-            sql = "CREATE TABLE ";
-            sql += "modified_timeseries_inputs (";
-            sql += "modifications SERIAL PRIMARY KEY,";
-            sql += "Id_Simulations Integer References Simulations(id_Simulations),";
-            sql += "Id_timeserie integer References timeseriesinputs(id_timeserie),";
-            sql += "filename varchar(96));";
-
-            W.exec(sql.c_str());
-
-
-
-
-            sql = "DROP TABLE IF EXISTS runinfo_categories CASCADE;";
-            W.exec(sql.c_str());
-
-            sql = "CREATE TABLE ";
-            sql += "runinfo_categories (";
-            sql += "id_runinfo_cat SERIAL PRIMARY KEY,";
-            sql += "name varchar(64));";
-
-            W.exec(sql.c_str());
-            sql = "INSERT INTO runinfo_categories VALUES( ";
-            sql += "Default, 'General Information');";
-
-            W.exec(sql.c_str());
-            sql = "INSERT INTO runinfo_categories VALUES( ";
-            sql += "Default, 'Simulation Period');";
-
-            W.exec(sql.c_str());
-            sql = "INSERT INTO runinfo_categories VALUES( ";
-            sql += "Default, 'Time Resolution');";
-            W.exec(sql.c_str());
-
-            sql = "INSERT INTO runinfo_categories VALUES( ";
-            sql += "Default, 'Numerical Options');";
-            W.exec(sql.c_str());
-
-            sql = "DROP TABLE IF EXISTS runinfo;";
-            W.exec(sql.c_str());
-
-            sql = "INSERT INTO runinfo_categories VALUES( ";
-            sql += "Default, 'Additional Details');";
-            W.exec(sql.c_str());
-
-            sql = "DROP TABLE IF EXISTS runinfo CASCADE;";
-            W.exec(sql.c_str());
-
-            sql = "CREATE TABLE runinfo (";
-            sql += "id_simulations Integer REFERENCES simulations(id_simulations), ";
-            sql += "FileVersionNumber Integer ,";
-            sql += "OriginalFileName varchar(64) Default '-',";
-            sql += "ExeFileDate varchar(64) Default '-',";
-            sql += "MultiSimulation bool,";
-            sql += "Finished bool,";
-            sql += "Date_Created Integer Default 0,";
-            sql += "Date_Modified Integer Default 0,";
-            sql += "SimStartMin Integer,";
-            sql += "SimEndMin Integer,";
-            sql += "SimPeriodScaling Integer,";
-            sql += "PriorSimPeriod Integer,";
-            sql += "PostSimPeriod Integer,";
-            sql += "TimeResolution Integer,";
-            sql += "OutputInterval_minutes Integer,";
-            sql += "OutputInterval_days Integer,";
-            sql += "NumberofIterations Integer,";
-            sql += "LockedMultiStore bool);";
-            W.exec(sql.c_str());
-
-            sql = "DROP TABLE IF EXISTS multirun_settings CASCADE;";
-            W.exec(sql.c_str());
-
-            sql = "DROP TABLE IF EXISTS multirun_methods CASCADE;";
-            W.exec(sql.c_str());
-
-            sql = "CREATE TABLE multirun_methods (";
-            sql += "id_method SERIAL PRIMARY KEY,";
-            sql += "name Varchar(24));";
-            W.exec(sql.c_str());
-
-            sql = "INSERT INTO multirun_methods VALUES(1,'Linear');"; W.exec(sql.c_str());
-            sql = "INSERT INTO multirun_methods VALUES(2,'Log');"; W.exec(sql.c_str());
-            sql = "INSERT INTO multirun_methods VALUES(3,'Stocastic Linear');"; W.exec(sql.c_str());
-            sql = "INSERT INTO multirun_methods VALUES(4,'Stocastic Log');"; W.exec(sql.c_str());
-            sql = "INSERT INTO multirun_methods VALUES(5,'Table');"; W.exec(sql.c_str());
-            sql = "INSERT INTO multirun_methods VALUES(6,'DB_Choice');"; W.exec(sql.c_str());
-            sql = "INSERT INTO multirun_methods VALUES(7,'Same AS');"; W.exec(sql.c_str());
-            sql = "INSERT INTO multirun_methods VALUES(8,'Relative Same As');"; W.exec(sql.c_str());
-            sql = "INSERT INTO multirun_methods VALUES(9,'Oposite Relative Same As');"; W.exec(sql.c_str());
-            sql = "INSERT INTO multirun_methods VALUES(10,'Bayesian Linear');"; W.exec(sql.c_str());
-            sql = "INSERT INTO multirun_methods VALUES(11,'Connected');"; W.exec(sql.c_str());
-            sql = "INSERT INTO multirun_methods VALUES(12,'Bayesian Log');"; W.exec(sql.c_str());
-            sql = "INSERT INTO multirun_methods VALUES(13,'Nelder Mead');"; W.exec(sql.c_str());
-
-
-            sql = "CREATE TABLE multirun_settings (";
-            sql += "id_simulations Integer REFERENCES simulations(id_simulations), ";
-            sql += "Dimension Integer,";
-            sql += "id_Group Integer References Groups(id_group),";
-            sql += "name Varchar(36),";
-            sql += "vectorindex Integer ,";
-            sql += "id_method Integer References multirun_methods(id_method),";
-            sql += "monitoring Integer ,";
-            sql += "min Real,";
-            sql += "Max Real,";
-            sql += "Start Real,";
-            sql += "Dependence_Name Varchar(34),";
-            sql += "Dependence_Index Integer,";
-            sql += "FixedValues Real[],";
-            sql += "FixedKey Varchar(34)[], ";
-            sql += "FixedKeyValue Varchar(34)[],";
-            sql += "numberRepetition Integer); ";
-            W.exec(sql.c_str());
-
-            sql = "DROP TABLE IF EXISTS multirun_Results CASCADE;";
-            W.exec(sql.c_str());
-
-            sql = "CREATE TABLE multirun_Results (";
-            sql += "id_simulations Integer REFERENCES simulations(id_simulations), ";
-            sql += "RunNo Integer,";
-            sql += "Accepted Bool,";
-            sql += "Parameters Real[],";
-            sql += "Performance Real[],";
-            sql += "SumPerformance Real[],";
-            sql += "OutputSum Real[]);";
-            W.exec(sql.c_str());
-
-            sql = "DROP TABLE IF EXISTS Performance_Indicators CASCADE;";
-            W.exec(sql.c_str());
-
-            sql = "CREATE TABLE Performance_Indicators (";
-            sql += "id_Perf_Ind SERIAL PRIMARY KEY,";
-            sql += "name Varchar(48));";
-            W.exec(sql.c_str());
-
-            sql = "INSERT INTO Performance_Indicators VALUES(1,'Coefficient of Determination');"; W.exec(sql.c_str());
-            sql = "INSERT INTO Performance_Indicators VALUES(2,'Intercept');"; W.exec(sql.c_str());
-            sql = "INSERT INTO Performance_Indicators VALUES(3,'Slope');"; W.exec(sql.c_str());
-            sql = "INSERT INTO Performance_Indicators VALUES(4,'Mean Error');"; W.exec(sql.c_str());
-            sql = "INSERT INTO Performance_Indicators VALUES(5,'RMSE');"; W.exec(sql.c_str());
-            sql = "INSERT INTO Performance_Indicators VALUES(6,'LogLikelihood');"; W.exec(sql.c_str());
-            sql = "INSERT INTO Performance_Indicators VALUES(7,'Nash-Sutcliffe R2');"; W.exec(sql.c_str());
-
-            sql = "DROP TABLE IF EXISTS Multirun_Ensemble_Statistics CASCADE;";
-            W.exec(sql.c_str());
-            sql = "CREATE TABLE multirun_Ensemble_Statistics (";
-            sql += "id_simulations Integer REFERENCES simulations(id_simulations), ";
-            sql += "RunNo Integer,";
-            sql += "EnsembleNo Integer,";
-            sql += "Valfilenumber Integer,";
-            sql += "Sum bool,";
-            sql += "ValFile_ResultIndex Integer,";
-            sql += "Id_Perf_Ind Integer References Performance_Indicators(id_Perf_Ind),";
-            sql += "n_points Integer,";
-            sql += "Prior_mean Real,";
-            sql += "Prior_cv Real,";
-            sql += "Prior_min Real,";
-            sql += "Prior_max Real,";
-            sql += "Post_mean Real,";
-            sql += "Post_cv Real,";
-            sql += "Post_min Real,";
-            sql += "Post_max Real,";
-            sql += "LowLimits Real,";
-            sql += "HighLimits Real);";
-            W.exec(sql.c_str());
-
-            sql = "DROP TABLE IF EXISTS multirun_Ensemble_DefinedCriteria CASCADE;";
-            W.exec(sql.c_str());
-            sql = "CREATE TABLE multirun_Ensemble_DefinedCriteria (";
-            sql += "id_simulations Integer REFERENCES simulations(id_simulations), ";
-            sql += "RunNo Integer,";
-            sql += "EnsembleNo Integer,";
-            sql += "VariableName varchar(34),";
-            sql += "Id_Perf_Ind Integer References Performance_Indicators(id_Perf_Ind),";
-            sql += "Min Real,";
-            sql += "Max Real);";
-
-
-
-            sql = "DROP TABLE IF EXISTS multirun_Residuals CASCADE;";
-            W.exec(sql.c_str());
-
-            sql = "CREATE TABLE multirun_Residuals (";
-            sql += "id_simulations Integer REFERENCES simulations(id_simulations), ";
-            sql += "RunNo Integer,";
-            sql += "Valfilenumber Integer,";
-            sql += "ValFile_ResultIndex Integer,";
-            sql += "Residuals Real[]);";
-
-            W.exec(sql.c_str());
-
-
-            sql = "DROP TABLE IF EXISTS multirun_Ensembles CASCADE;";
-            W.exec(sql.c_str());
-
-            sql = "CREATE TABLE multirun_Ensembles (";
-            sql += "id_simulations Integer REFERENCES simulations(id_simulations), ";
-            sql += "RunNo Integer,";
-            sql += "Valfilenumber Integer,";
-            sql += "ValFile_ResultIndex Integer,";
-            sql += "Ensemble Integer,";
-            sql += "NumberofCandidates Integer,";
-            sql += "SelectionFraction Real,";
-            sql += "PGmin Integer[],";
-            sql += "MeanValues Real[],";
-            sql += "Min Real[],";
-            sql += "Max Real[],";
-            sql += "Std Real[],";
-            sql += "P10 Real[],";
-            sql += "P50 Real[],";
-            sql += "P90 Real[]);";
-
-            W.exec(sql.c_str());*/
-           ;
-        return 0;
+        tablenames.push_back(tablename);
+        W.commit();       
+        return tablenames;
 
     }
     catch (const std::exception& e) {
         cerr << sql.c_str() << std::endl;
         cerr << e.what() << std::endl;
-        return 1;
+        return tablenames;
     }
 
 };
-static int create_Main_Tables(CommonModelInfo* pinfo) {
+vector<string> create_Main_Tables(CommonModelInfo* pinfo) {
     connection c = initconnection(pinfo->GetPassword(),"output tables");
     string sql;
+    vector<string> nametables;
     pqxx::work W{ c };
     try {
+        string nametable;
+        auto drop = [&](pqxx::work& W, string name) {; string s = "DROP TABLE IF EXISTS " + name + " CASCADE;"; return W.exec(s.c_str()); };
+        auto create = [&](string name) { string s = "CREATE TABLE " + name; return s; };
 
-        sql = "DROP TABLE IF EXISTS singleoutputs_results;";
-        W.exec(sql.c_str());
 
-        sql = "CREATE TABLE ";
-        sql += "singleoutputs_results (";
+        nametable = "singleoutputs_results";
+        drop(W, nametable);
+
+        sql = create(nametable);
+        sql += " (";
         sql += "Id_Resultsobtained SERIAL PRIMARY KEY,";
         sql += "Id_Simulations Integer References Simulations(id_Simulations),";
         sql += "Id_singleoutputs integer References singleoutputs(id_singleoutputs),";
@@ -787,24 +368,21 @@ static int create_Main_Tables(CommonModelInfo* pinfo) {
         sql += "mean REAL,";
         sql += "accumulated REAL);";
         W.exec(sql.c_str());
+        nametables.push_back(nametable);
 
-
-        sql = "DROP TABLE IF EXISTS timeseries_outputs_results;";
-        W.exec(sql.c_str());
-        sql = "CREATE TABLE ";
-        sql += "timeseries_outputs_results (";
-        sql += "Id_Simulations Integer References Simulations(id_Simulations),";
+        nametable="timeseries_outputs_results";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (Id_Simulations Integer References Simulations(id_Simulations),";
         sql += "PGminTime Integer,";
         sql += "outputs REAL[]);";
-
         W.exec(sql.c_str());
+        nametables.push_back(nametable);
 
-
-        sql = "DROP TABLE IF EXISTS vectoroutputs_results;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE ";
-        sql += "vectoroutputs_results (";
+        nametable= "vectoroutputs_results";
+        drop(W, nametable);
+        sql=create(nametable);
+        sql += " (";
         sql += "Id_Resultsobtained SERIAL PRIMARY KEY,";
         sql += "Id_Simulations Integer References Simulations(id_Simulations),";
         sql += "Id_vectoroutputs integer References vectoroutputs(id_vectoroutputs),";
@@ -817,79 +395,70 @@ static int create_Main_Tables(CommonModelInfo* pinfo) {
         sql += "mean REAL[],";
         sql += "accumulated REAL[]);";
         W.exec(sql.c_str());
+        nametables.push_back(nametable);
 
 
-
-        sql = "DROP TABLE IF EXISTS modified_switch_values;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE ";
-        sql += "modified_switch_values (";
-        sql += "modifactions SERIAL PRIMARY KEY,";
+        nametable = "modified_switch_values";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (modifactions SERIAL PRIMARY KEY,";
         sql += "Id_Simulations Integer References Simulations(id_Simulations),";
         sql += "Id_Switch integer References switches(id_switch),";
         sql += "value Integer);";
-
         W.exec(sql.c_str());
+        nametables.push_back(nametable);
 
 
-        sql = "DROP TABLE IF EXISTS modified_singleparameter_values;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE ";
-        sql += "modified_singleparameter_values (";
-        sql += "modifactions SERIAL PRIMARY KEY,";
+        nametable = "modified_singleparameter_values";
+        drop(W, nametable);
+        
+        sql = create(nametable);
+        sql += " (modifactions SERIAL PRIMARY KEY,";
         sql += "Id_Simulations Integer References Simulations(id_Simulations),";
         sql += "Id_singlepar integer References singleparameters(id_singlepar),";
         sql += "value real);";
-
-        W.exec(sql.c_str());
-        sql = "DROP TABLE IF EXISTS modified_vectorparameter_values;";
         W.exec(sql.c_str());
 
-        sql = "CREATE TABLE ";
-        sql += "modified_vectorparameter_values (";
-        sql += "modifactions SERIAL PRIMARY KEY,";
+        nametables.push_back(nametable);
+
+
+        nametable = "modified_vectorparameter_values";
+        drop(W, nametable);
+        sql =create(nametable);
+        sql += " (modifactions SERIAL PRIMARY KEY,";
         sql += "Id_Simulations Integer References Simulations(id_Simulations),";
         sql += "Id_vectorpar integer References vectorparameters(id_vectorpar),";
         sql += "ArraySize Integer,";
         sql += "values real[]);";
 
         W.exec(sql.c_str());
+        nametables.push_back(nametable);
 
-
-
-        sql = "DROP TABLE IF EXISTS modified_singleoutputs_Storevalues CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE ";
-        sql += "modified_singleoutputs_Storevalues (";
-        sql += "results SERIAL PRIMARY KEY,";
+        nametable = "modified_singleoutputs_Storevalues";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += "(results SERIAL PRIMARY KEY,";
         sql += "Id_Simulations Integer References Simulations(id_Simulations),";
         sql += "Id_singleoutputs integer References singleoutputs(id_singleoutputs),";
         sql += "StoreFlag Integer)";
-
         W.exec(sql.c_str());
+        nametables.push_back(nametable);
 
-        sql = "DROP TABLE IF EXISTS modified_vectoroutputs_Storevalues CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE ";
-        sql += "modified_vectoroutputs_Storevalues (";
-        sql += "results SERIAL PRIMARY KEY,";
+        nametable = "modified_vectoroutputs_Storevalues";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += "(results SERIAL PRIMARY KEY,";
         sql += "Id_Simulations Integer References Simulations(id_Simulations),";
         sql += "Id_vectoroutputs integer References vectoroutputs(id_vectoroutputs),";
         sql += "NumberStoreFlag Integer,";
         sql += "StoreFlags Integer[])";
-
         W.exec(sql.c_str());
+        nametables.push_back(nametable);
 
-        sql = "DROP TABLE IF EXISTS modified_singleoutputs_resultvalues CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE ";
-        sql += "modified_singleoutputs_resultvalues (";
-        sql += "results SERIAL PRIMARY KEY,";
+        nametable = "modified_singleoutputs_resultvalues";
+        drop(W,nametable);
+        sql = create(nametable);
+        sql += " (results SERIAL PRIMARY KEY,";
         sql += "Id_Simulations Integer References Simulations(id_Simulations),";
         sql += "Id_singleoutputs integer References singleoutputs(id_singleoutputs),";
         sql += "initial Real,";
@@ -900,15 +469,13 @@ static int create_Main_Tables(CommonModelInfo* pinfo) {
         sql += "accumulated Real,";
         sql += "singlerun_out_index Integer,";
         sql += "multirun_out_index Integer);";
-
         W.exec(sql.c_str());
+        nametables.push_back(nametable);
 
-        sql = "DROP TABLE IF EXISTS modified_vectoroutputs_resultvalues CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE ";
-        sql += "modified_vectoroutputs_resultvalues (";
-        sql += "modifications SERIAL PRIMARY KEY,";
+        nametable = "modified_vectoroutputs_resultvalues";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (modifications SERIAL PRIMARY KEY,";
         sql += "Id_Simulations Integer References Simulations(id_Simulations),";
         sql += "Id_vectoroutputs integer References vectoroutputs(id_vectoroutputs),";
         sql += "NumIndexOut Integer,";
@@ -922,31 +489,26 @@ static int create_Main_Tables(CommonModelInfo* pinfo) {
         sql += "singlerun_out_index Integer[],";
         sql += "multirun_out_index Integer[]);";
         W.exec(sql.c_str());
+        nametables.push_back(nametable);
 
-        sql = "DROP TABLE IF EXISTS modified_timeseries_inputs CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE ";
-        sql += "modified_timeseries_inputs (";
-        sql += "modifications SERIAL PRIMARY KEY,";
+        nametable = "modified_timeseries_inputs";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (modifications SERIAL PRIMARY KEY,";
         sql += "Id_Simulations Integer References Simulations(id_Simulations),";
         sql += "Id_timeserie integer References timeseriesinputs(id_timeserie),";
         sql += "filename varchar(96));";
-
         W.exec(sql.c_str());
+        nametables.push_back(nametable);
 
+        nametable = "runinfo_categories";
+        drop(W, nametable);
 
-
-
-        sql = "DROP TABLE IF EXISTS runinfo_categories CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE ";
-        sql += "runinfo_categories (";
-        sql += "id_runinfo_cat SERIAL PRIMARY KEY,";
+        sql = create(nametable);
+        sql += "(id_runinfo_cat SERIAL PRIMARY KEY,";
         sql += "name varchar(64));";
-
         W.exec(sql.c_str());
+
         sql = "INSERT INTO runinfo_categories VALUES( ";
         sql += "Default, 'General Information');";
 
@@ -969,12 +531,12 @@ static int create_Main_Tables(CommonModelInfo* pinfo) {
         sql = "INSERT INTO runinfo_categories VALUES( ";
         sql += "Default, 'Additional Details');";
         W.exec(sql.c_str());
+        nametables.push_back(nametable);
 
-        sql = "DROP TABLE IF EXISTS runinfo CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE runinfo (";
-        sql += "id_simulations Integer REFERENCES simulations(id_simulations), ";
+        nametable = "runinfo";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (id_simulations Integer REFERENCES simulations(id_simulations), ";
         sql += "FileVersionNumber Integer ,";
         sql += "OriginalFileName varchar(64) Default '-',";
         sql += "ExeFileDate varchar(64) Default '-',";
@@ -993,15 +555,12 @@ static int create_Main_Tables(CommonModelInfo* pinfo) {
         sql += "NumberofIterations Integer,";
         sql += "LockedMultiStore bool);";
         W.exec(sql.c_str());
+        nametables.push_back(nametable);
 
-        sql = "DROP TABLE IF EXISTS multirun_settings CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "DROP TABLE IF EXISTS multirun_methods CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE multirun_methods (";
-        sql += "id_method SERIAL PRIMARY KEY,";
+        nametable= "multirun_methods";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (id_method SERIAL PRIMARY KEY,";
         sql += "name Varchar(24));";
         W.exec(sql.c_str());
 
@@ -1018,10 +577,14 @@ static int create_Main_Tables(CommonModelInfo* pinfo) {
         sql = "INSERT INTO multirun_methods VALUES(11,'Connected');"; W.exec(sql.c_str());
         sql = "INSERT INTO multirun_methods VALUES(12,'Bayesian Log');"; W.exec(sql.c_str());
         sql = "INSERT INTO multirun_methods VALUES(13,'Nelder Mead');"; W.exec(sql.c_str());
+       
+        nametables.push_back(nametable);
 
 
-        sql = "CREATE TABLE multirun_settings (";
-        sql += "id_simulations Integer REFERENCES simulations(id_simulations), ";
+        nametable = "multirun_settings";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (id_simulations Integer REFERENCES simulations(id_simulations), ";
         sql += "Dimension Integer,";
         sql += "id_Group Integer References Groups(id_group),";
         sql += "name Varchar(36),";
@@ -1038,12 +601,12 @@ static int create_Main_Tables(CommonModelInfo* pinfo) {
         sql += "FixedKeyValue Varchar(34)[],";
         sql += "numberRepetition Integer); ";
         W.exec(sql.c_str());
+        nametables.push_back(nametable);
 
-        sql = "DROP TABLE IF EXISTS multirun_Results CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE multirun_Results (";
-        sql += "id_simulations Integer REFERENCES simulations(id_simulations), ";
+        nametable = "multirun_Results";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (id_simulations Integer REFERENCES simulations(id_simulations), ";
         sql += "RunNo Integer,";
         sql += "Accepted Bool,";
         sql += "Parameters Real[],";
@@ -1051,14 +614,15 @@ static int create_Main_Tables(CommonModelInfo* pinfo) {
         sql += "SumPerformance Real[],";
         sql += "OutputSum Real[]);";
         W.exec(sql.c_str());
+        nametables.push_back(nametable);
 
-        sql = "DROP TABLE IF EXISTS Performance_Indicators CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE Performance_Indicators (";
-        sql += "id_Perf_Ind SERIAL PRIMARY KEY,";
+        nametable= "Performance_Indicators";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (id_Perf_Ind SERIAL PRIMARY KEY,";
         sql += "name Varchar(48));";
         W.exec(sql.c_str());
+        nametables.push_back(nametable);
 
         sql = "INSERT INTO Performance_Indicators VALUES(1,'Coefficient of Determination');"; W.exec(sql.c_str());
         sql = "INSERT INTO Performance_Indicators VALUES(2,'Intercept');"; W.exec(sql.c_str());
@@ -1067,11 +631,12 @@ static int create_Main_Tables(CommonModelInfo* pinfo) {
         sql = "INSERT INTO Performance_Indicators VALUES(5,'RMSE');"; W.exec(sql.c_str());
         sql = "INSERT INTO Performance_Indicators VALUES(6,'LogLikelihood');"; W.exec(sql.c_str());
         sql = "INSERT INTO Performance_Indicators VALUES(7,'Nash-Sutcliffe R2');"; W.exec(sql.c_str());
+        nametables.push_back(nametable);
 
-        sql = "DROP TABLE IF EXISTS Multirun_Ensemble_Statistics CASCADE;";
-        W.exec(sql.c_str());
-        sql = "CREATE TABLE multirun_Ensemble_Statistics (";
-        sql += "id_simulations Integer REFERENCES simulations(id_simulations), ";
+        nametable = "Multirun_Ensemble_Statistics";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (id_simulations Integer REFERENCES simulations(id_simulations), ";
         sql += "RunNo Integer,";
         sql += "EnsembleNo Integer,";
         sql += "Valfilenumber Integer,";
@@ -1090,38 +655,36 @@ static int create_Main_Tables(CommonModelInfo* pinfo) {
         sql += "LowLimits Real,";
         sql += "HighLimits Real);";
         W.exec(sql.c_str());
-
-        sql = "DROP TABLE IF EXISTS multirun_Ensemble_DefinedCriteria CASCADE;";
-        W.exec(sql.c_str());
-        sql = "CREATE TABLE multirun_Ensemble_DefinedCriteria (";
-        sql += "id_simulations Integer REFERENCES simulations(id_simulations), ";
+        nametables.push_back(nametable);
+        
+        nametable = "multirun_Ensemble_DefinedCriteria";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (id_simulations Integer REFERENCES simulations(id_simulations), ";
         sql += "RunNo Integer,";
         sql += "EnsembleNo Integer,";
         sql += "VariableName varchar(34),";
         sql += "Id_Perf_Ind Integer References Performance_Indicators(id_Perf_Ind),";
         sql += "Min Real,";
         sql += "Max Real);";
+        nametables.push_back(nametable);
 
-
-
-        sql = "DROP TABLE IF EXISTS multirun_Residuals CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE multirun_Residuals (";
-        sql += "id_simulations Integer REFERENCES simulations(id_simulations), ";
+        nametable = "multirun_Residuals";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (id_simulations Integer REFERENCES simulations(id_simulations), ";
         sql += "RunNo Integer,";
         sql += "Valfilenumber Integer,";
         sql += "ValFile_ResultIndex Integer,";
         sql += "Residuals Real[]);";
-
         W.exec(sql.c_str());
+        nametables.push_back(nametable);
 
 
-        sql = "DROP TABLE IF EXISTS multirun_Ensembles CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE multirun_Ensembles (";
-        sql += "id_simulations Integer REFERENCES simulations(id_simulations), ";
+        nametable = "multirun_Ensembles";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (id_simulations Integer REFERENCES simulations(id_simulations), ";
         sql += "RunNo Integer,";
         sql += "Valfilenumber Integer,";
         sql += "ValFile_ResultIndex Integer,";
@@ -1136,179 +699,24 @@ static int create_Main_Tables(CommonModelInfo* pinfo) {
         sql += "P10 Real[],";
         sql += "P50 Real[],";
         sql += "P90 Real[]);";
-
         W.exec(sql.c_str());
+        nametables.push_back(nametable);
         W.commit();
-        return 0;
+        return nametables;
 
     }
     catch (const std::exception& e) {
         cerr << sql.c_str() << std::endl;
         cerr << e.what() << std::endl;
-        return 1;
-    }
-
-};
-static int create_Additional_Tables(CommonModelInfo* pinfo, unique_ptr<NewMap> pDoc) {
-    connection c = initconnection(pinfo->GetPassword(),"Additional Tables");
-    string sql;
-    pqxx::work W{ c };
-    try {
-     /*   sql = "CREATE TABLE vectorpar_functions";
-        sql += "( \
-             Id_VectorPar INTEGER REFERENCES vectorparameters(Id_vectorpar),\
-            Id_Functions INTEGER REFERENCES parameterfunctions(Id_parameterfunctions)\
-           ); ";
-
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE SinglePar_Functions";
-        sql += "(    \
-            Id_SinglePar INTEGER REFERENCES singleparameters(Id_singlepar),\
-            Id_Functions INTEGER REFERENCES parameterfunctions(Id_parameterfunctions)\
-          ); ";
-
-        W.exec(sql.c_str());*/
-
-        sql = "DROP TABLE IF EXISTS ne_vector_outputs CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE ne_vector_outputs";
-        sql += "( \
-             Id_DynamicVector INTEGER REFERENCES NE_vectors(Id_dynamicvector),\
-            Id_vectoroutputs INTEGER REFERENCES vectoroutputs(Id_vectoroutputs)\
-           ); ";
-
-        W.exec(sql.c_str());
-
-        sql = "DROP TABLE IF EXISTS ne_vector_parameters CASCADE;";
-        W.exec(sql.c_str());
-
-        sql = "CREATE TABLE ne_vector_parameters";
-        sql += "(    \
-            Id_DynamicVector INTEGER REFERENCES NE_vectors(Id_dynamicvector),\
-            Id_vectorpar INTEGER REFERENCES vectorparameters(Id_vectorpar)\
-          ); ";
-
-        W.exec(sql.c_str());
-
-      vector<SimB*> v_Allsimb;
-        auto sumsimb = [&](simtype t) {
-            for (size_t groupno = 0; groupno < 38; groupno++) {
-                vector<SimB*> v_simb = pDoc->GetPtrVector(t, groupno, true);
-                for (size_t i = 0; i < v_simb.size(); i++)
-                    v_Allsimb.push_back(v_simb[i]);
-
-            }
-        };
-
-      //  string sql;
-        v_Allsimb.clear();
-        sumsimb(PAR_SINGLE);
-        pinfo->DefineSingleParMap(v_Allsimb);
-
-        v_Allsimb.clear();    sumsimb(PAR_TABLE);
-        pinfo->DefineVectorParMap(v_Allsimb);
-        v_Allsimb.clear();    sumsimb(FUNCTION);
-        pinfo->DefineParameterFunctionMap(v_Allsimb);
-
-        v_Allsimb.clear();
-        sumsimb(STATE); sumsimb(FLOW); sumsimb(AUX); sumsimb(DRIVE);
-        pinfo->DefineVectorOutputMap(v_Allsimb);
-        v_Allsimb = pDoc->GetAll_NEPointers();
-        pinfo->DefineNEVectorMap(v_Allsimb);
-
-        size_t countout = 0, countp=0;
-
-         for (size_t i = 0; i < v_Allsimb.size(); ++i) {
-              auto ip_NE = pinfo->GetNEVectorId(v_Allsimb[i]->GetName());
-                for (size_t j = 0; j < static_cast<NE*>(v_Allsimb[i]) ->GetNumLinks_P(); j++) {
-                   P* pP=static_cast<NE*>(v_Allsimb[i])->Get_PLink(j);
-                    countp++;
-                    sql = "INSERT INTO ne_vector_parameters VALUES";
-                    sql += "( ";// +FUtil::STD_ItoAscii(countp) + ",";
-                    auto ip_id=pinfo->GetVectorParId(pP->GetName());
-                    sql += FUtil::STD_ItoAscii(ip_NE) + "," + FUtil::STD_ItoAscii(ip_id)+");";
-                    W.exec(sql.c_str());
-                }
-                for (size_t j = 0; j < static_cast<NE*>(v_Allsimb[i])->GetNumLinks_X(); j++) {
-                    X* pX= static_cast<NE*>(v_Allsimb[i])->Get_XLink(j);
-                    countout++;
-                    sql = "INSERT INTO ne_vector_outputs VALUES";
-                    sql += "( ";// +FUtil::STD_ItoAscii(countps) + ",";
-                    auto ip_id = pinfo->GetVectorOutputId(pX->GetName());
-                    sql += FUtil::STD_ItoAscii(ip_NE) + "," + FUtil::STD_ItoAscii(ip_id) + ");";
-                    W.exec(sql.c_str());
-                }
-                for (size_t j = 0; j < static_cast<NE*>(v_Allsimb[i])->GetNumLinks_T(); j++) {
-                    T* pT = static_cast<NE*>(v_Allsimb[i])->Get_TLink(j);
-                    countout++;
-                    sql = "INSERT INTO ne_vector_outputs VALUES";
-                    sql += "( ";// +FUtil::STD_ItoAscii(countps) + ",";
-                    auto ip_id = pinfo->GetVectorOutputId(pT->GetName());
-                    sql += FUtil::STD_ItoAscii(ip_NE) + "," + FUtil::STD_ItoAscii(ip_id) + ");";
-                    W.exec(sql.c_str());
-                }
-                for (size_t j = 0; j < static_cast<NE*>(v_Allsimb[i])->GetNumLinks_G(); j++) {
-                    G* pG = static_cast<NE*>(v_Allsimb[i])->Get_GLink(j);
-                    countout++;
-                    sql = "INSERT INTO ne_vector_outputs VALUES";
-                    sql += "( ";// +FUtil::STD_ItoAscii(countps) + ",";
-                    auto ip_id = pinfo->GetVectorOutputId(pG->GetName());
-                    sql += FUtil::STD_ItoAscii(ip_NE) + "," + FUtil::STD_ItoAscii(ip_id) + ");";
-                    W.exec(sql.c_str());
-                }
-                for (size_t j = 0; j < static_cast<NE*>(v_Allsimb[i])->GetNumLinks_D(); j++) {
-                    D* pD = static_cast<NE*>(v_Allsimb[i])->Get_DLink(j);
-                    countout++;
-                    sql = "INSERT INTO ne_vector_outputs VALUES";
-                    sql += "( ";// +FUtil::STD_ItoAscii(countps) + ",";
-                    auto ip_id = pinfo->GetVectorOutputId(pD->GetName());
-                    sql += FUtil::STD_ItoAscii(ip_NE) + "," + FUtil::STD_ItoAscii(ip_id) + ");";
-                    W.exec(sql.c_str());
-                }
-            }
-
-         size_t countps = 0;
-         countp = 0;
-/*
-            for (size_t i = 0; i < v_Allsimb.size(); ++i) {
-                vector<string> Pnames= static_cast<Func*>(v_Allsimb[i])->GetParDep_P_Names();
-                auto ip_func = pinfo->GetParameterFunctionId(v_Allsimb[i]->GetName());
-                for (size_t j = 0; j < Pnames.size(); j++) {
-                    countp++;
-                    sql = "INSERT INTO vectorpar_functions VALUES";
-                    sql += "( ";// +FUtil::STD_ItoAscii(countp) + ",";
-                    auto ip_id=pinfo->GetVectorParId(Pnames[j]);
-                    sql += FUtil::STD_ItoAscii(ip_id) + "," + FUtil::STD_ItoAscii(ip_func)+");";
-                    W.exec(sql.c_str());
-                }
-                Pnames = static_cast<Func*>(v_Allsimb[i])->GetParDep_Ps_Names();
-                ip_func = pinfo->GetParameterFunctionId(v_Allsimb[i]->GetName());
-                for (size_t j = 0; j < Pnames.size(); j++) {
-                    countp++;
-                    sql = "INSERT INTO SinglePar_Functions VALUES";
-                    sql += "( ";// +FUtil::STD_ItoAscii(countps) + ",";
-                    auto ip_id = pinfo->GetSingleParId(Pnames[j]);
-                    sql += FUtil::STD_ItoAscii(ip_id) + "," + FUtil::STD_ItoAscii(ip_func) + ");";
-                    W.exec(sql.c_str());
-                }
-            }
-  */
-        W.commit();
-        return 0;
-
-    }
-    catch (const std::exception& e) {
-        cerr << sql.c_str() << std::endl;
-        cerr << e.what() << std::endl;
-        return 1;
+        return nametables;
     }
 
 };
 static int query_createtable(enum simtype type, const string str)
 {
     string sql;
+
+
     connection c = initconnection("pe1950", "Create Tables and insert data");
     pqxx::work W{ c };
     try {
@@ -1442,7 +850,7 @@ static int query_createtable(enum simtype type, const string str)
         }
 
 
-        cout << "Records created successfully from " <<str<< endl;
+        cout << "Records created successfully from " << str << endl;
 
     }
 
@@ -1807,10 +1215,212 @@ static int query_inserttable(enum simtype type, const string str, vector<SimB*> 
         }
     }
     W.commit();
-
     return 0;
 
-}
+};
+
+vector<string> create_Additional_Tables(CommonModelInfo* pinfo, unique_ptr<NewMap> pDoc) {
+    connection c = initconnection(pinfo->GetPassword(),"Additional Tables");
+    string sql;
+    pqxx::work W{ c };
+    vector<string> nametables;
+    try {
+        string nametable;
+        auto drop = [&](pqxx::work& W, string name) {; string s = "DROP TABLE IF EXISTS " + name + " CASCADE;"; return W.exec(s.c_str()); };
+        auto create = [&](string name) { string s = "CREATE TABLE " + name; return s; };
+     /*   sql = "CREATE TABLE vectorpar_functions";
+        sql += "( \
+             Id_VectorPar INTEGER REFERENCES vectorparameters(Id_vectorpar),\
+            Id_Functions INTEGER REFERENCES parameterfunctions(Id_parameterfunctions)\
+           ); ";
+
+        W.exec(sql.c_str());
+
+        sql = "CREATE TABLE SinglePar_Functions";
+        sql += "(    \
+            Id_SinglePar INTEGER REFERENCES singleparameters(Id_singlepar),\
+            Id_Functions INTEGER REFERENCES parameterfunctions(Id_parameterfunctions)\
+          ); ";
+
+        W.exec(sql.c_str());*/
+
+        nametable = "ne_vector_outputs";
+        drop(W, nametable);
+
+        sql = create(nametable);
+        sql += "(Id_DynamicVector INTEGER REFERENCES NE_vectors(Id_dynamicvector),\
+            Id_vectoroutputs INTEGER REFERENCES vectoroutputs(Id_vectoroutputs)\
+           ); ";
+
+        W.exec(sql.c_str());
+        nametables.push_back(nametable);
+
+        nametable = "ne_vector_parameters";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (    \
+            Id_DynamicVector INTEGER REFERENCES NE_vectors(Id_dynamicvector),\
+            Id_vectorpar INTEGER REFERENCES vectorparameters(Id_vectorpar)\
+          ); ";
+        W.exec(sql.c_str());
+
+        nametables.push_back(nametable);
+
+       vector<SimB*> v_Allsimb;
+        auto sumsimb = [&](simtype t) {
+            for (size_t groupno = 0; groupno < 38; groupno++) {
+                vector<SimB*> v_simb = pDoc->GetPtrVector(t, groupno, true);
+                for (size_t i = 0; i < v_simb.size(); i++)
+                    v_Allsimb.push_back(v_simb[i]);
+
+            }
+        };
+
+      //  string sql;
+        v_Allsimb.clear();
+        sumsimb(PAR_SINGLE);
+        pinfo->DefineSingleParMap(v_Allsimb);
+
+        v_Allsimb.clear();    sumsimb(PAR_TABLE);
+        pinfo->DefineVectorParMap(v_Allsimb);
+        v_Allsimb.clear();    sumsimb(FUNCTION);
+        pinfo->DefineParameterFunctionMap(v_Allsimb);
+
+        v_Allsimb.clear();
+        sumsimb(STATE); sumsimb(FLOW); sumsimb(AUX); sumsimb(DRIVE);
+        pinfo->DefineVectorOutputMap(v_Allsimb);
+        v_Allsimb = pDoc->GetAll_NEPointers();
+        pinfo->DefineNEVectorMap(v_Allsimb);
+
+        size_t countout = 0, countp=0;
+
+         for (size_t i = 0; i < v_Allsimb.size(); ++i) {
+              auto ip_NE = pinfo->GetNEVectorId(v_Allsimb[i]->GetName());
+                for (size_t j = 0; j < static_cast<NE*>(v_Allsimb[i]) ->GetNumLinks_P(); j++) {
+                   P* pP=static_cast<NE*>(v_Allsimb[i])->Get_PLink(j);
+                    countp++;
+                    sql = "INSERT INTO ne_vector_parameters VALUES";
+                    sql += "( ";// +FUtil::STD_ItoAscii(countp) + ",";
+                    auto ip_id=pinfo->GetVectorParId(pP->GetName());
+                    sql += FUtil::STD_ItoAscii(ip_NE) + "," + FUtil::STD_ItoAscii(ip_id)+");";
+                    W.exec(sql.c_str());
+                }
+                for (size_t j = 0; j < static_cast<NE*>(v_Allsimb[i])->GetNumLinks_X(); j++) {
+                    X* pX= static_cast<NE*>(v_Allsimb[i])->Get_XLink(j);
+                    countout++;
+                    sql = "INSERT INTO ne_vector_outputs VALUES";
+                    sql += "( ";// +FUtil::STD_ItoAscii(countps) + ",";
+                    auto ip_id = pinfo->GetVectorOutputId(pX->GetName());
+                    sql += FUtil::STD_ItoAscii(ip_NE) + "," + FUtil::STD_ItoAscii(ip_id) + ");";
+                    W.exec(sql.c_str());
+                }
+                for (size_t j = 0; j < static_cast<NE*>(v_Allsimb[i])->GetNumLinks_T(); j++) {
+                    T* pT = static_cast<NE*>(v_Allsimb[i])->Get_TLink(j);
+                    countout++;
+                    sql = "INSERT INTO ne_vector_outputs VALUES";
+                    sql += "( ";// +FUtil::STD_ItoAscii(countps) + ",";
+                    auto ip_id = pinfo->GetVectorOutputId(pT->GetName());
+                    sql += FUtil::STD_ItoAscii(ip_NE) + "," + FUtil::STD_ItoAscii(ip_id) + ");";
+                    W.exec(sql.c_str());
+                }
+                for (size_t j = 0; j < static_cast<NE*>(v_Allsimb[i])->GetNumLinks_G(); j++) {
+                    G* pG = static_cast<NE*>(v_Allsimb[i])->Get_GLink(j);
+                    countout++;
+                    sql = "INSERT INTO ne_vector_outputs VALUES";
+                    sql += "( ";// +FUtil::STD_ItoAscii(countps) + ",";
+                    auto ip_id = pinfo->GetVectorOutputId(pG->GetName());
+                    sql += FUtil::STD_ItoAscii(ip_NE) + "," + FUtil::STD_ItoAscii(ip_id) + ");";
+                    W.exec(sql.c_str());
+                }
+                for (size_t j = 0; j < static_cast<NE*>(v_Allsimb[i])->GetNumLinks_D(); j++) {
+                    D* pD = static_cast<NE*>(v_Allsimb[i])->Get_DLink(j);
+                    countout++;
+                    sql = "INSERT INTO ne_vector_outputs VALUES";
+                    sql += "( ";// +FUtil::STD_ItoAscii(countps) + ",";
+                    auto ip_id = pinfo->GetVectorOutputId(pD->GetName());
+                    sql += FUtil::STD_ItoAscii(ip_NE) + "," + FUtil::STD_ItoAscii(ip_id) + ");";
+                    W.exec(sql.c_str());
+                }
+            }
+
+         size_t countps = 0;
+         countp = 0;
+/*
+            for (size_t i = 0; i < v_Allsimb.size(); ++i) {
+                vector<string> Pnames= static_cast<Func*>(v_Allsimb[i])->GetParDep_P_Names();
+                auto ip_func = pinfo->GetParameterFunctionId(v_Allsimb[i]->GetName());
+                for (size_t j = 0; j < Pnames.size(); j++) {
+                    countp++;
+                    sql = "INSERT INTO vectorpar_functions VALUES";
+                    sql += "( ";// +FUtil::STD_ItoAscii(countp) + ",";
+                    auto ip_id=pinfo->GetVectorParId(Pnames[j]);
+                    sql += FUtil::STD_ItoAscii(ip_id) + "," + FUtil::STD_ItoAscii(ip_func)+");";
+                    W.exec(sql.c_str());
+                }
+                Pnames = static_cast<Func*>(v_Allsimb[i])->GetParDep_Ps_Names();
+                ip_func = pinfo->GetParameterFunctionId(v_Allsimb[i]->GetName());
+                for (size_t j = 0; j < Pnames.size(); j++) {
+                    countp++;
+                    sql = "INSERT INTO SinglePar_Functions VALUES";
+                    sql += "( ";// +FUtil::STD_ItoAscii(countps) + ",";
+                    auto ip_id = pinfo->GetSingleParId(Pnames[j]);
+                    sql += FUtil::STD_ItoAscii(ip_id) + "," + FUtil::STD_ItoAscii(ip_func) + ");";
+                    W.exec(sql.c_str());
+                }
+            }
+  */
+        W.commit();
+
+
+    }
+    catch (const std::exception& e) {
+        cerr << sql.c_str() << std::endl;
+        cerr << e.what() << std::endl;
+    }
+
+    vector<string> newtables;
+    auto ikoll = query_createtable(SWITCH, "Switches");
+    vector<SimB*> v_Allsimb = pDoc->GetAllPtr(SWITCH);
+
+    pinfo->DefineSwitchMap(v_Allsimb);
+    ikoll = query_inserttable(SWITCH, "Switches", v_Allsimb, pDoc->m_pCommonModelInfo);
+
+
+    ikoll = query_createtable(PAR_SINGLE, "singleparameters");
+    v_Allsimb = pDoc->GetAllPtr(PAR_SINGLE);
+    pinfo->DefineSingleParMap(v_Allsimb);
+    ikoll = query_inserttable(PAR_SINGLE, "singleparameters", v_Allsimb, pDoc->m_pCommonModelInfo);
+
+    ikoll = query_createtable(NUM_ELEMENTS_VECTOR, "NE_Vectors");
+    v_Allsimb = pDoc->GetAll_NEPointers();
+    pinfo->DefineNEVectorMap(v_Allsimb);
+
+    ikoll = query_inserttable(NUM_ELEMENTS_VECTOR, "NE_Vectors", v_Allsimb, pDoc->m_pCommonModelInfo);
+
+    ikoll = query_createtable(PAR_TABLE, "vectorparameters");
+    v_Allsimb = pDoc->GetAllPtr(PAR_TABLE);
+    pinfo->DefineVectorParMap(v_Allsimb);
+    ikoll = query_inserttable(PAR_TABLE, "vectorparameters", v_Allsimb, pDoc->m_pCommonModelInfo);
+
+    ikoll = query_createtable(STATE, "VectorOutputs");
+    v_Allsimb = pDoc->GetAllPtr(STATE, FLOW, AUX, DRIVE);
+    pinfo->DefineVectorOutputMap(v_Allsimb);
+    ikoll = query_inserttable(STATE, "VectorOutputs", v_Allsimb, pDoc->m_pCommonModelInfo);
+
+
+    ikoll = query_createtable(STATE_SINGLE, "SingleOutputs");
+    v_Allsimb = pDoc->GetAllPtr(STATE_SINGLE, FLOW_SINGLE, AUX_SINGLE, DRIVE_SINGLE);
+    pinfo->DefineSingleOutputMap(v_Allsimb);
+    ikoll = query_inserttable(STATE_SINGLE, "SingleOutputs", v_Allsimb, pDoc->m_pCommonModelInfo);
+
+    ikoll = query_createtable(PGFILE, "TimeSeriesInputs");
+    v_Allsimb = pDoc->GetAllPtr(PGFILE);
+    pinfo->DefineTimeSeriesMap(v_Allsimb);
+    ikoll = query_inserttable(PGFILE, "TimeSeriesInputs", v_Allsimb, pDoc->m_pCommonModelInfo);
+
+    return nametables;
+
+};
 };
 using namespace coup_pg;
 #endif

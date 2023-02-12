@@ -37,10 +37,23 @@ public:
 	};
 
 	std::string GetGroupCategoryNames(size_t index) {if(index< ModelCompNames::NoGroupCategoryNames) return ModelCompNames::GroupCategoryNames[index];return "All Modules";};
+
+	std::vector<std::string> GetGroupCategoryNames() { std::vector<std::string> s; for(size_t i = 0; i < ModelCompNames::NoGroupCategoryNames; i++) 
+		s.push_back(ModelCompNames::GroupCategoryNames[i]);  return s; };
+
 	std::string GetGroupNames(size_t index) {if(index<ModelCompNames::NoGroupNames) return ModelCompNames::GroupNames[index];return "";};
 	std::string GetVarType(size_t ityp) { if(ityp<ModelCompNames::NoTypNames) return ModelCompNames::TypNames[ityp]; return "";};
+	
+	std::vector<std::string> GetFysProcName() { std::vector<std::string> s; for (size_t i = 0; i < ModelCompNames::NoFysProcessNames;i++) s.push_back(ModelCompNames::FysProcessNames[i]); return s; };
 	std::string GetFysProcName(size_t index) {if(index< ModelCompNames::NoFysProcessNames) return ModelCompNames::FysProcessNames[index]; else return "";};
+
+
+
+
+	std::vector<std::string> GetBioProcName() { std::vector<std::string> s; for (size_t i = 0; i < ModelCompNames::NoBioProcessNames; i++) s.push_back(ModelCompNames::BioProcessNames[i]); return s; };
 	std::string GetBioProcName(size_t index) {if(index<ModelCompNames::NoBioProcessNames) return ModelCompNames::BioProcessNames[index]; else return "";};
+
+	std::vector<std::string> GetElementName() { std::vector<std::string> s; for (size_t i = 0; i < ModelCompNames::NoElementNames; i++) s.push_back(ModelCompNames::ElementNames[i]); return s; };
 	std::string ElementName(size_t index) {if(index<ModelCompNames::NoElementNames) return ModelCompNames::ElementNames[index]; else return ""; };
 
 	int GetGroupCategory(std::string str);

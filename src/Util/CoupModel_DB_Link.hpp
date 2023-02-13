@@ -15,8 +15,9 @@ using namespace pqxx;
 
 namespace coup_pg {
     static connection initconnection(string password, string work_to_be) {
-        password = "pe1950";
-        string init = "dbname = coup user = postgres password = pe1950 port = 5432";
+        //string init = "dbname = coup user = postgres password = pe1950 port = 5432";
+        //lzigAYICibNNBU - Aefp4PszeBl9DkMEs
+        string init ="dbname = teyojvga  user = teyojvga password = lzigAYICibNNBU-Aefp4PszeBl9DkMEs host = balarama.db.elephantsql.com";
         connection c(init);
         if (c.is_open()) {
             cout << "Open database " << c.dbname() <<" : " << work_to_be << endl;

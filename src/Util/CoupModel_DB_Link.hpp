@@ -1746,7 +1746,7 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
                 work W{ c };
 
             }
-            if (id_fileName == 0 && r.NumVar != 0) {
+            if (id_fileName >= 0 && r.NumVar != 0) {
 
                 auto insertvector = [&sql](vector<string> s) {
                     int count = 0;

@@ -5657,7 +5657,30 @@ void NewMap::RemoveOriginalValues(string typ, string GroupSet, bool original, si
 					}
 
 			}
-		}			
+		}	
+		else if (typ == "Parameter Tables") {
+			if (m_Pt_Array.size() > 0)			m_Pt_Array.clear();
+			vp = GetPtrVector(PAR_TABLE, false);
+			for (auto it = vp.begin(); it != vp.end(); it++) {
+				P* pP = dynamic_cast<P*>(*it);
+
+				if (original) {
+					if ((m_GroupEnabled[pP->GetGroupNo()] || GroupSet == "ALL")) {
+						m_Pt_Array.push_back(pP);
+					}
+					else if (pP->IsNotOriginalValue(0)) m_Pt_Array.push_back(pP);
+				}
+				else if (pP->IsNotOriginalValue(0)) {
+					if ((m_GroupEnabled[pP->GetGroupNo()] || GroupSet == "ALL"))
+						m_Pt_Array.push_back(pP);
+				}
+				else {
+					if (m_GroupEnabled[pP->GetGroupNo()])
+						m_Pt_Array.push_back(pP);
+				}
+
+			}
+		}
 		else if(typ=="Switches") {
 				Sw *pSw;
 				if(m_Sw_Array.size()>0)          m_Sw_Array.clear();

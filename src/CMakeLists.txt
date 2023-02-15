@@ -13,7 +13,7 @@ add_subdirectory(Model)
 
 if(USE_POSTGRES) 
 		add_executable(main main.cpp)
-		target_link_libraries(main libpqxx::pqxx documentlib ${SIMULATOR_LIBNAME})
+		target_link_libraries(main documentlib ${SIMULATOR_LIBNAME})
 endif()
 
 

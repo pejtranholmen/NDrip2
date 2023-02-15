@@ -1,3 +1,4 @@
+#include "NewMap.h"
 
 
 
@@ -13,6 +14,8 @@
 #include "../ModelTypes/NewModelType.h"
 #include "../SoilData/GetSoilStorage.h"
 #include "../Util/CoupSim_XML.h"
+#include "../Util/CoupModel_DB_Link.hpp"
+#include "../PG/PG.H"
 
 #ifndef COUPSTD
 
@@ -2299,6 +2302,725 @@ bool NewMap::WriteDocFile()
 
 
 }
+bool NewMap::SelectDoc_From_Postgres(int pkey) {
+    try {
+		pqxx::connection c = initconnection("Select from postgres");
+		pqxx::work txn{ c };
+		{
+			bool keyfind = false;
+			pqxx::result r{ txn.exec("SELECT * FROM simulations WHERE id_simulations = " + to_string(pkey)) };
+			for (auto row : r) {
+				if (pkey == row[0].as<int>()) {
+					keyfind = true;
+				};
+			};
+			if (!keyfind) return false;
+		}
+
+		pqxx::result r = txn.exec("SELECT * FROM runinfo  WHERE id_simulations = " + to_string(pkey));
+		auto row = r.begin();
+		if (pkey == row["id_simulations"].as<int>()) {
+			m_DocFile.m_MultiRunning = row["multisimulation"].as<bool>();
+			m_DocFile.m_FinishedSimulation = row["finished"].as<bool>();
+			RunOpt.longMinStart = row["simstartmin"].as<int>();
+			RunOpt.longMinEnd = row["simendmin"].as<int>();
+			m_DocFile.m_TimePeriodScaleFactor = row["simperiodscaling"].as<int>();
+			RunOpt.longMinPreStart = row["priorsimperiod"].as<int>();
+			RunOpt.longMinPostEnd = row["postsimperiod"].as<int>();
+			auto pSw = dynamic_cast<Sw*>(GetPtr(SWITCH, "TimeResolution"));
+			pSw->SetIntValue(row["timeresolution"].as<int>());
+			RunOpt.oidays = row["outputinterval_days"].as<int>();
+			RunOpt.oiminutes = row["outputinterval_minutes"].as<int>();
+			RunOpt.noofiter = row["numberofiterations"].as<int>();
+			m_DocFile.m_MultiStoragelocked = row["lockedmultistore"].as<bool>();
+			m_DocFile.m_TimeCreated = row["date_created"].as<int>();
+			m_DocFile.m_TimeModified = row["date_modified"].as<int>();
+			m_FileVersionNumberRead = row["fileversionnumber"].as<int>();
+			m_DocFile2.m_OriginFileName = row["originalfilename"].as<string>();
+			m_ExeFileDate = row["exefiledate"].as<string>();
+		}
+
+		r = txn.exec("SELECT id_switch, value FROM modified_switch_values  WHERE id_simulations = " + to_string(pkey));
+
+		vector<string> names1, names2;
+		vector<int> ints1, ints2;
+		vector<float> floats1, floats2;
+		for (auto row : r) {
+			string name = p_ModelInfo->GetSwitchName(row["id_switch"].as<int>());
+			Sw* pSw = GetSw(name);
+			if (pSw != nullptr) pSw->SetIntValue(row[1].as<int>());
+			names1.push_back(name);
+			ints1.push_back(row["id_switch"].as<int>());
+		}
+		r = txn.exec("SELECT S.name,M.id_switch, M.value FROM switches AS S JOIN modified_switch_values AS M ON S.id_switch = M.id_Switch WHERE M.id_simulations = " + to_string(pkey));
+		for (auto row : r) {
+			string name = row[0].as<string>();
+			Sw* pSw = GetSw(name);
+			if (pSw != nullptr) pSw->SetIntValue(row[2].as<int>());
+			names2.push_back(name);
+			ints2.push_back(row["id_switch"].as<int>());
+		}
+
+		r = txn.exec("SELECT id_singlepar, value FROM modified_singleparameter_values  WHERE id_simulations = " + to_string(pkey));
+
+		for (auto row : r) {
+			string name = p_ModelInfo->GetSingleParameterName(row["id_singlepar"].as<int>());
+			Ps* pPs = GetPs(name);
+			if (pPs != nullptr) pPs->SetValue(row[1].as<float>());
+			names1.push_back(name);
+			floats1.push_back(row["id_singlepar"].as<float>());
+		}
+		r = txn.exec("SELECT S.name,M.id_singlepar, M.value FROM singleparameters AS S JOIN modified_singleparameter_values AS M ON S.id_singlepar = M.id_singlepar WHERE M.id_simulations = " + to_string(pkey));
+		for (auto row : r) {
+			string name = row[0].as<string>();
+			Ps* pPs = GetPs(name);
+			if (pPs != nullptr) pPs->SetValue(row[2].as<float>());
+			names2.push_back(name);
+			floats2.push_back(row["id_singlepar"].as<float>());
+		}
+
+		//vector par
+		r = txn.exec("SELECT id_vectorpar, arraysize, values FROM modified_vectorparameter_values  WHERE id_simulations = " + to_string(pkey));
+
+		for (auto row : r) {
+			string name = p_ModelInfo->GetVectorParameterName(row["id_vectorpar"].as<int>());
+			P* pP = GetP(name);
+			int number_elements = row[1].as<int>();
+			if (pP != nullptr) {
+				if (pP->GetSize() != number_elements) {
+					pP->SetSize(number_elements);
+				}
+				auto pvector = row[2].as_array();
+
+				auto next = pvector.get_next();
+				next = pvector.get_next();
+				size_t count{ 0 }; double value;
+
+				while (next.second.size() > 0) {
+					value = stod(string(next.second));
+					pP->SetValue(count, value);
+					next = pvector.get_next();
+					count++;
+				}
+			}
+
+		}
+		r = txn.exec("SELECT S.id_vectorname,M.id_vectorpar,M.arraysize, M.values FROM vectorparameters AS S JOIN modified_vectorparameter_values AS M ON S.id_vectorpar = M.id_vectorpar WHERE M.id_simulations = " + to_string(pkey));
+		for (auto row : r) {
+			string name = row[0].as<string>();
+			P* pP = GetP(name);
+			int number_elements = row[1].as<int>();
+			if (pP != nullptr) {
+				if (pP->GetSize() != number_elements) {
+					pP->SetSize(number_elements);
+				}
+				auto pvector = row[2].as_array();
+				auto next = pvector.get_next();
+				next = pvector.get_next();
+				size_t count{ 0 }; double value;
+				while (next.second.size() > 0) {
+					value = stod(string(next.second));
+					pP->SetValue(count, value);
+					next = pvector.get_next();
+					count++;
+				}
+			}
+		}
+
+
+
+
+		// outputs
+		r = txn.exec("SELECT id_singleoutputs, storeflag FROM modified_singleoutputs_storevalues  WHERE id_simulations = " + to_string(pkey));
+
+		for (auto row : r) {
+			string name = p_ModelInfo->GetSingleOutputName(row["id_singleoutputs"].as<int>());
+			OutSingle* pP = GetSingleOutputPtr(name);
+			if (pP != nullptr) pP->SetStoreFlag(row[1].as<int>());
+		}
+		r = txn.exec("SELECT S.name,M.id_singleoutputs, M.storeflag FROM singleoutputs AS S JOIN modified_singleoutputs_storevalues AS M ON S.id_singleoutputs = M.id_singleoutputs WHERE M.id_simulations = " + to_string(pkey));
+		for (auto row : r) {
+			string name = row[0].as<string>();
+			OutSingle* pP = GetSingleOutputPtr(name);
+			if (pP != nullptr) pP->SetStoreFlag(row[2].as<int>());
+		}
+		r = txn.exec("SELECT id_singleoutputs, initial, final, min, max, mean, accumulated,singlerun_out_index, multirun_out_index  FROM modified_singleoutputs_resultvalues  WHERE id_simulations = " + to_string(pkey));
+
+		for (auto row : r) {
+			string name = p_ModelInfo->GetSingleOutputName(row["id_singleoutputs"].as<int>());
+			OutSingle* pP = GetSingleOutputPtr(name);
+			if (pP != nullptr) pP->AddSumVar(row[1].as<float>(), row[2].as<float>(), row[3].as<float>(), row[4].as<float>(), row[5].as<float>(), row[6].as<float>(),
+				row[7].as<int>(), row[8].as<int>());
+		}
+
+
+		r = txn.exec("SELECT id_vectoroutputs, numberstoreflag, storeflags FROM modified_vectoroutputs_storevalues  WHERE id_simulations = " + to_string(pkey));
+
+		for (auto row : r) {
+			string name = p_ModelInfo->GetVectorOutputName(row["id_vectoroutputs"].as<int>());
+			OutVector* pP = GetVectorOutputPtr(name);
+			int number_elements = row[1].as<int>();
+			if (pP != nullptr) {
+				if (pP->GetNumVector() != number_elements) {
+					int skallintebli = 0;
+				}
+				auto pvector = row[2].as_array();
+
+				auto next = pvector.get_next();
+				next = pvector.get_next();
+				size_t count{ 0 }; double value;
+
+				while (next.second.size() > 0) {
+					value = stoi(string(next.second));
+					pP->SetStoreFlag(count, value);
+					next = pvector.get_next();
+					count++;
+				}
+			}
+
+
+			//	if (pP != nullptr) pP->SetStoreFlag(row[1].as<int>());
+		}
+		r = txn.exec("SELECT S.name,M.id_singleoutputs, M.storeflag FROM singleoutputs AS S JOIN modified_singleoutputs_storevalues AS M ON S.id_singleoutputs = M.id_singleoutputs WHERE M.id_simulations = " + to_string(pkey));
+		for (auto row : r) {
+			string name = row[0].as<string>();
+			OutSingle* pP = GetSingleOutputPtr(name);
+			if (pP != nullptr) pP->SetStoreFlag(row[2].as<int>());
+		}
+
+		r = txn.exec("SELECT id_vectoroutputs, numindexout,indexout, initial, final, min, max, mean, accumulated,singlerun_out_index, multirun_out_index  FROM modified_vectoroutputs_resultvalues  WHERE id_simulations = " + to_string(pkey));
+
+		for (auto row : r) {
+			string name = p_ModelInfo->GetVectorOutputName(row["id_vectoroutputs"].as<int>());
+			OutVector* pP = GetVectorOutputPtr(name);
+			int numindexout = row[1].as<int>();
+			auto pindexvector = row[2].as_array();
+
+			auto next = pindexvector.get_next();
+			next = pindexvector.get_next();
+			size_t count{ 0 }; int i_value;
+
+			vector<int> index; index.resize(numindexout);
+			while (next.second.size() > 0) {
+				i_value = stoi(string(next.second));
+				index[count] = i_value - 1;
+				next = pindexvector.get_next();
+				count++;
+			}
+
+			vector< vector<double>> fvector;
+			vector<double> finnervector;
+
+			finnervector.resize(numindexout);
+			for (size_t i = 0; i < 6; ++i) {
+				auto item = row[3 + i].as_array();
+				auto next = item.get_next();
+				next = item.get_next();
+				count = 0;
+				while (next.second.size() > 0) {
+					finnervector[count] = stod(string(next.second));
+					next = item.get_next();
+					count++;
+				}
+				fvector.push_back(finnervector);
+			}
+			vector< vector<int>> i_vector;
+			vector<int> i_innervector;
+			i_innervector.resize(numindexout);
+			for (size_t i = 0; i < 2; ++i) {
+				auto item = row[9 + i].as_array();
+				auto next = item.get_next();
+				next = item.get_next();
+				count = 0;
+				while (next.second.size() > 0) {
+					i_innervector[count] = stoi(string(next.second));
+					next = item.get_next();
+					count++;
+				}
+				i_vector.push_back(i_innervector);
+			}
+
+			for (size_t i = 0; i < i_vector[0].size(); i++) {
+				pP->AddSumVar(i, fvector[0][i], fvector[1][i], fvector[2][i], fvector[3][i], fvector[4][i], fvector[5][i], i_vector[0][i], i_vector[1][i]);
+			}
+
+
+		}
+
+		// PG Files
+
+		r = txn.exec("SELECT id_timeserie, filename FROM modified_timeseries_inputs  WHERE id_simulations = " + to_string(pkey));
+
+		for (auto row : r) {
+			int id_timeserie = row["id_timeserie"].as<int>();
+			string name = p_ModelInfo->GetTimeSeriesName(id_timeserie);
+			F* pF = GetF(name);
+			string filename = row["filename"].as<string>();
+			pF->SetValue(filename);
+
+			if (!pF->CheckFileNameAndAssignNameToPGClass()) {
+				int problem = 0; //FileNameDoes not exist
+			}
+
+		}
+
+		r = txn.exec("SELECT id_simulations, id_filename FROM filenamearchive_uses  WHERE id_simulations = " + to_string(pkey));
+
+		for (auto row : r) {
+			int id_timeserie = row["id_simulations"].as<int>();
+			int id_filename = row["id_filename"].as<int>();
+			pqxx::result rr = txn.exec("SELECT id_filename, filename, numvar, numrecords FROM filenamearchive  WHERE id_filename = " + to_string(id_filename));
+
+			for (auto row_inner : rr) {
+				int numvar = row_inner["numvar"].as<int>();
+				int numrec = row_inner["numrecords"].as<int>();
+				string filename = row_inner["filename"].as<string>();
+			}
+
+
+		}
+
+		// Validation
+		r = txn.exec("SELECT * FROM Validation  WHERE id_simulations = " + to_string(pkey));
+		m_Val_Array.clear();
+		VALv vst;
+		for (const auto row : r) {
+			vst.ValidationFileIndex = row[1].as<int>();
+			vst.OutputType = row[2].as<int>();
+			vst.Group = row[3].as<string>();
+			vst.Name = row[4].as<string>();
+			vst.LocalIndex = row[5].as<int>();
+			vst.ValidationFileNumber = row[6].as<int>();
+			vst.Monitoring = row[8].as<int>();
+			vst.P_Error = row[9].as<float>();
+			vst.A_Error = row[10].as<float>();
+			vst.AccTest = row[11].as<bool>();
+			vst.LogTrans = row[12].as<bool>();
+			vst.Duration = row[13].as<int>();
+			vst.nNumber = row[14].as<int>();
+			vst.R2 = row[15].as<float>();
+			vst.A0 = row[16].as<float>();
+			vst.A1 = row[17].as<float>();
+			vst.ME = row[18].as<float>();
+			vst.RMSE = row[19].as<float>();
+			vst.MeanSim = row[20].as<float>();
+			vst.MeanVal = row[21].as<float>();
+			vst.LogLi = row[22].as<float>();
+			vst.NSE = row[23].as<float>();
+			m_Val_Array.push_back(vst);
+		}
+
+
+		return true;
+	}
+	catch (const std::exception& e) {
+		cerr << e.what() << std::endl;
+		return -1;
+	}
+
+};
+
+bool NewMap::WriteDoc_To_Postgres() {
+
+	if (!m_pCommonModelInfo->ID_MapsForPostgresReady) m_pCommonModelInfo->ID_MapsForPostgresReady=DefineUniqueIdMaps(m_pCommonModelInfo, this);
+
+
+	sim_doc_simulation t;
+	t.comment = m_DocFile2.m_Comments;
+	t.simno = m_DocFile.m_SimulationRunNo;
+	t.name = m_DocFileName;
+
+	int pkey = transfer_Document(t);
+	// Runinfo
+	{ //Runinfo
+		run_info_document r;
+		r.key_simulation = pkey;
+		r.fileversionnumber = m_FileVersionNumberRead;
+		r.originalfilename = m_DocFile2.m_OriginFileName;
+		r.exefiledata = m_DocFile2.m_ExeFileDate;
+		r.multisimulation = m_DocFile.m_MultiRunning;
+		r.finished = m_DocFile.m_FinishedSimulation;
+		r.simstartmin = RunOpt.longMinStart;
+		r.simendmin = RunOpt.longMinEnd;
+		r.simperiodscaling = m_DocFile.m_TimePeriodScaleFactor;
+		r.priorsimperiod = RunOpt.longMinPreStart;
+		r.postsimperiod = RunOpt.longMinPostEnd;
+		auto pSw = dynamic_cast<Sw*>(GetPtr(SWITCH, "TimeResolution"));
+		r.timeresolution = pSw->GetIntValue();
+		r.output_interval_days = RunOpt.oidays;
+		r.output_interval_minutes = RunOpt.oiminutes;
+		r.numberofiterations = RunOpt.noofiter;
+		r.lockedmultistore = m_DocFile.m_MultiStoragelocked;
+		r.date_created = m_DocFile.m_TimeCreated;
+		r.date_modified = m_DocFile.m_TimeModified;
+		int koll = transfer_RunInfo_Document(r);
+	}
+
+	// Switches
+	{
+		vector<switch_set> s;
+		RemoveOriginalValues("Switches", "ALL", false);
+		for (Sw* pSw : m_Sw_Array) {
+			switch_set ss;
+			ss.key_simulation = pkey;
+			ss.id_switch = p_ModelInfo->GetSwitchId(pSw->GetName());
+			ss.value = pSw->GetIntValue();
+			s.push_back(ss);
+		}
+
+		transfer_Modified_Switches(s);
+	}
+
+	// Single Par
+	{
+		vector<singlepar_set> s;
+		RemoveOriginalValues("Parameters", "ALL", false);
+		for (Ps* pP : m_P_Array) {
+			singlepar_set ss;
+			ss.key_simulation = pkey;
+			ss.id_singlepar = p_ModelInfo->GetSingleParId(pP->GetName());
+			ss.value = pP->GetValue();
+			s.push_back(ss);
+		}
+		int koll = transfer_Modified_SinglePar(s);
+	}
+	// vector Par
+	{
+		vector<vectorpar_set> s;
+		RemoveOriginalValues("Parameter Tables", "ALL", false);
+		for (P* pPt : m_Pt_Array) {
+			vectorpar_set ss;
+			ss.key_simulation = pkey;
+			ss.id_vectorpar = p_ModelInfo->GetVectorParId(pPt->GetName());
+			for (size_t i = 0; i < pPt->GetSize(); i++) {
+				ss.values.push_back(pPt->GetValue(i));
+			}
+			s.push_back(ss);
+		}
+		int koll = transfer_Modified_VectorPar(s);
+	}
+	// Vector outputs
+	{
+		vector<vectoroutput_set> s;
+		vector<SimB*> outputs;
+
+		vector<SimB*> vall;
+		vall = GetPtrVector(STATE, false);
+
+		outputs = GetPtrVector(FLOW, false);
+		for (SimB* v : outputs) vall.push_back(v);
+
+		outputs = GetPtrVector(AUX, false);
+		for (SimB* v : outputs) vall.push_back(v);
+
+		outputs = GetPtrVector(DRIVE, false);
+		for (SimB* v : outputs) vall.push_back(v);
+
+		vall = ReturnIfSelectionMade(vall);
+
+		for (SimB* pSimB : vall) {
+			OutVector* pP = static_cast<OutVector*>(pSimB);
+			vectoroutput_set ss;
+			ss.key_simulation = pkey;
+			ss.id_vectoroutput = p_ModelInfo->GetVectorOutputId(pP->GetName());
+			for (size_t i = 0; i < pP->GetNumVector(); i++) ss.storeflags.push_back(pP->GetStoreFlag(i));
+			vector<size_t> selected_index = pP->GetAllSelectedLocalIndex();
+			for (size_t i : selected_index) ss.selectedindex.push_back(int(i));
+			for (size_t i : selected_index) ss.initials.push_back(pP->GetInitial(i - 1));
+			for (size_t i : selected_index) ss.finals.push_back(pP->GetFinal(i - 1));
+			for (size_t i : selected_index) ss.mins.push_back(pP->GetMin(i - 1));
+			for (size_t i : selected_index) ss.maxs.push_back(pP->GetMax(i - 1));
+			for (size_t i : selected_index) ss.means.push_back(pP->GetMean(i - 1));
+			for (size_t i : selected_index) ss.cumulateds.push_back(pP->GetAccumulated(i - 1));
+			for (size_t i : selected_index) ss.singlerun_out_index.push_back(pP->GetPgSingleFileIndex(i - 1));
+			for (size_t i : selected_index) ss.multirun_out_index.push_back(pP->GetPgMultiFileIndex(i - 1));
+			s.push_back(ss);
+		}
+		transfer_Modified_VectorOutput(s);
+	}
+	// Single outputs
+	{
+		vector<singleoutput_set> s;
+		vector<SimB*> outputs;
+
+		vector<SimB*> vall;
+		vall = GetPtrVector(STATE_SINGLE, false);
+
+		outputs = GetPtrVector(FLOW_SINGLE, false);
+		for (SimB* v : outputs) vall.push_back(v);
+
+		outputs = GetPtrVector(AUX_SINGLE, false);
+		for (SimB* v : outputs) vall.push_back(v);
+
+		outputs = GetPtrVector(DRIVE_SINGLE, false);
+		for (SimB* v : outputs) vall.push_back(v);
+
+		vall = ReturnIfSelectionMade(vall);
+
+
+		for (SimB* pSimB : vall) {
+			OutSingle* pP = static_cast<OutSingle*>(pSimB);
+			singleoutput_set ss;
+			ss.key_simulation = pkey;
+			ss.id_singleoutput = p_ModelInfo->GetSingleOutputId(pP->GetName());
+			if (ss.id_singleoutput == 495) {
+				int i = 1;
+
+			}
+			ss.storeflagvalue = pP->GetStoreFlag();
+			ss.initial = pP->GetInitial();
+			ss.final = pP->GetFinal();
+			ss.min = pP->GetMin();
+			ss.max = pP->GetMax();
+			ss.mean = pP->GetMean();
+			ss.cumulated = pP->GetAccumulated();
+			ss.singlerun_out_index = pP->GetPgSingleFileIndex();
+			ss.multirun_out_index = pP->GetPgMultiFileIndex();
+			s.push_back(ss);
+		}
+		transfer_Modified_SingleOutput(s);
+	}
+	// Model Files
+	tuple<int, int, vector<float>> record;
+	vector< tuple<int, int, vector<float>>> vrecs;
+	string outputfiledir, outputfilename;
+	{
+		vector<SimB*> vall;
+		vall = GetPtrVector(PGFILE, false);
+		outputfiledir.clear();
+		outputfilename.clear();
+		for (SimB* pSimB : vall) {
+			F* pF = static_cast<F*>(pSimB);
+
+			string name = pF->GetName();
+			string OutputValFile, PGFileName;
+			if (name.find("Validation File") != string::npos) {
+				string strnum = name.substr(15);
+				int ival = FUtil::AtoInt(strnum);
+				OutputValFile = outputfiledir + "V" + FUtil::STD_ItoAscii(ival) + "_";
+				OutputValFile += outputfilename;
+				if (!FUtil::IsFileExisting(OutputValFile)) OutputValFile.clear();
+
+			}
+			PGFileName = pF->GetStrValue();
+
+			if (name == "Output File") {
+				auto pos = PGFileName.rfind("COUP_");
+				outputfilename = PGFileName.substr(pos);
+				outputfiledir = PGFileName.substr(0, pos);
+			}
+
+
+
+			auto set_info_file = [&vrecs, &record](int key, string name, string filename) {
+				timeserie_set ss;
+				ss.key_simulation = key;
+
+				ss.id_timeserie = p_ModelInfo->GetTimeSeriesId(name);
+				ss.filename = filename;
+				CPG* pPG = new CPG();
+				std::string f = ss.filename;
+				pPG->SetFileName(f);
+				auto koll = pPG->Open(f);
+				if (pPG->IsOpen() && koll) {
+					ss.NumVar = pPG->GetNumVariables();
+					ss.NumRec = pPG->GetNumRecords();
+					ss.NumRepetions = pPG->GetNumRepititions();
+					ss.NormalTimeStep = pPG->GetNormalTimeInterval();
+					for (size_t i = 0; i < ss.NumVar; ++i) {
+						string str = pPG->GetVarName(i + 1); FUtil::trim(str);
+						FUtil::trim_xmlstring(str);
+						ss.Name.push_back(str);
+						ss.Units.push_back("x");
+						ss.Id.push_back(pPG->GetVarId(i + 1));
+						ss.Pos.push_back(pPG->GetVarPos(i + 1));
+						ss.Min.push_back(pPG->GetVarMin(i + 1));
+						ss.Max.push_back(pPG->GetVarMax(i + 1));
+						ss.Country.push_back(pPG->GetVarCountry(i + 1));
+						ss.Station.push_back(pPG->GetVarStation(i + 1));
+						ss.Latitude.push_back(pPG->GetVarLat(i + 1));
+						ss.Longitude.push_back(pPG->GetVarLong(i + 1));
+						ss.Altitude.push_back(pPG->GetVarAlt(i + 1));
+					}
+					vrecs.clear();
+					for (size_t i = 0; i < ss.NumRec; i++) {
+						vector<float> var; var.resize(ss.NumVar);
+						for (size_t j = 0; j < ss.NumVar; j++)
+							var[j] = pPG->GetVarValue(j + 1, i + 1);
+
+						record = make_tuple(0, pPG->GetLongTime(i + 1), var);
+						vrecs.push_back(record);
+
+					}
+
+				}
+				else {
+					ss.NumVar = 0;
+					ss.NumRec = 0;
+					ss.NumRepetions = 0;
+					ss.NormalTimeStep = 0;
+				}
+
+				delete pPG;
+				transfer_Modified_TimeSeries(ss, vrecs);
+
+			};
+
+			set_info_file(pkey, name, PGFileName);
+			if (OutputValFile.size() > 0) 	set_info_file(pkey, name, OutputValFile);
+		}
+	}
+	// Validation
+	{
+		vector< vector <string>> v;
+		vector<string> v_inner; v_inner.resize(23);
+		int count = 0;
+		for (VALv vst : m_Val_Array) {
+			count++;
+			v_inner[0] = to_string(vst.ValidationFileIndex); v_inner[1] = to_string(vst.OutputType);
+			v_inner[2] = "'" + vst.Group + "'"; v_inner[3] = +"'" + vst.Name + "'";
+			v_inner[4] = to_string(vst.LocalIndex); v_inner[5] = to_string(vst.ValidationFileNumber); v_inner[6] = to_string(count);
+			v_inner[7] = to_string(vst.Monitoring); v_inner[8] = to_string(vst.P_Error); v_inner[9] = to_string(vst.A_Error);
+			v_inner[10] = to_string(vst.AccTest); v_inner[11] = to_string(vst.LogTrans); v_inner[12] = to_string(vst.Duration);
+			v_inner[13] = to_string(vst.nNumber);	v_inner[14] = to_string(vst.R2); v_inner[15] = to_string(vst.A0); v_inner[16] = to_string(vst.A1);
+			v_inner[17] = to_string(vst.ME); v_inner[18] = to_string(vst.RMSE); v_inner[19] = to_string(vst.MeanSim); v_inner[20] = to_string(vst.MeanVal);
+			v_inner[21] = to_string(vst.LogLi);
+			v_inner[22] = to_string(vst.NSE);
+			v.push_back(v_inner);
+		}
+		transfer_Validation(pkey, v);
+
+
+
+	}
+
+	// Dynamic parameters
+	{
+		tuple<int, int, string, int, int, vector<int>, vector<float>, vector<string>> tp;
+		vector<tuple<int, int, string, int, int, vector<int>, vector<float>, vector<string>> > v_tp;
+		for (CHPARv r : m_P_CH_Array) {
+			get<0>(tp) = r.Type;
+			SimB* pSimB = r.pBase;
+			get<1>(tp) = int(pSimB->GetGroupNo());
+
+			get<2>(tp) = pSimB->GetName();
+			get<3>(tp) = r.TabIndex;
+			get<4>(tp) = r.NumDates;
+			for (size_t i = 0; i < r.NumDates; ++i) {
+				if (r.Type == 0) get<5>(tp).push_back(static_cast<Ps*>(pSimB)->GetChaDate(i));
+				else if (r.Type == 1) get<5>(tp).push_back(static_cast<P*>(pSimB)->GetChaDate(r.TabIndex, i));
+				else if (r.Type == 2) get<5>(tp).push_back(static_cast<CDB*>(pSimB)->GetChaDate(i));
+				if (r.Type == 0) get<6>(tp).push_back(static_cast<Ps*>(pSimB)->GetChaParValue(i));
+				else if (r.Type == 1) get<6>(tp).push_back(static_cast<P*>(pSimB)->GetChaParValue(r.TabIndex, i));
+				else if (r.Type == 2) get<7>(tp).push_back(static_cast<CDB*>(pSimB)->GetChaParValue(i) + ":" +
+					static_cast<CDB*>(pSimB)->GetChaParKey(i));
+			}
+			v_tp.push_back(tp);
+		}
+		transfer_dynamic_parameters(pkey, v_tp);
+	}
+
+	//MultiRuns
+	{
+		vector<tuple<int, int, string, int, int, int, float, float, float, string, int, vector<float>, vector<string>, vector<string>, int>> allmr;
+		tuple<int, int, string, int, int, int, float, float, float, string, int, vector<float>, vector<string>, vector<string>, int> mr;
+		for (size_t i = 0; i < m_MultiRun_Array.size(); i++) {
+			MRv valMr = m_MultiRun_Array[i];
+			size_t numpar = MR_Get_NumberOfParametersWithinDim(i + 1);
+			size_t n = MR_GetNumberOfRepeationsForThisDimension(i);
+			get<14>(mr) = n;
+			for (size_t ii = 0; ii < numpar; ii++) {
+				SimB* pBase = MR_Get_pPar(i + 1, ii + 1);
+				size_t TabIndex = MR_GetTabIndex(i + 1, ii + 1);
+				string group_psw = MR_GetParGroup(i + 1, ii + 1);
+				string name = MR_GetParName(i + 1, ii + 1);
+				get<0>(mr) = i + 1;
+				get<1>(mr) = pBase->GetGroupNo();
+				get<2>(mr) = pBase->GetName();
+				get<3>(mr) = int(TabIndex);
+				int method = int(MR_GetMethod(i + 1, ii + 1));
+				get<4>(mr) = method;
+				get<5>(mr) = int(MR_GetMonitoring(i + 1, ii + 1));
+				get<6>(mr) = float(MR_GetMin(i + 1, ii + 1));
+				get<7>(mr) = float(MR_GetMax(i + 1, ii + 1));
+				get<8>(mr) = float(MR_GetStart(i + 1, ii + 1));
+				SimB* pCP = MR_Get_pPar(i + 1, ii + 1);
+				size_t indpar, ind_dep;
+				SimB* pParDep;
+				indpar = MR_GetTabIndex(i + 1, ii + 1);
+				if (pBase->Is_P()) {
+					pParDep = ((Ps*)pBase)->Get_MR_ParDependence();
+					ind_dep = ((Ps*)pBase)->Get_MR_ParDependenceIndex();
+				}
+				else {
+					pParDep = ((P*)pBase)->Get_MR_ParDependence(indpar);
+					ind_dep = ((P*)pBase)->Get_MR_ParDependenceIndex(indpar);
+				}
+				if (pParDep != nullptr) {
+					string group_psw = pParDep->GetGroup();
+					string name_psw = pParDep->GetName();
+					get<9>(mr) = pParDep->GetName();
+					get<10>(mr) = ind_dep;
+
+				}
+				if (method == 4) {
+					vector<float> fvalues;
+					fvalues.resize(MR_GetNumberOfRepeationsForThisDimension(i));
+					for (size_t iii = 0; iii < MR_GetNumberOfRepeationsForThisDimension(i); iii++) {
+						if (MR_GetTabIndex(i + 1, ii + 1) == -1)
+							fvalues[iii] = float(((Ps*)pCP)->MR_Get_TabValue(iii));
+						else
+							fvalues[iii] = float(((P*)pCP)->MR_Get_TabValue(MR_GetTabIndex(i + 1, ii + 1), iii));
+					}
+					get<11>(mr) = fvalues;
+				}
+				else if (method == 5) {
+					vector<string> key, strvalues;
+					CDB* pCDB = (CDB*)MR_Get_pPar(i + 1, ii + 1);
+
+					key.resize(n); strvalues.resize(n);
+					for (size_t iii = 0; iii < n; iii++) {
+						strvalues[iii] = pCDB->MR_GetSelection(iii);
+						key[iii] = pCDB->MR_GetKeySelection(iii);
+					}
+					get<12>(mr) = key;
+					get<13>(mr) = strvalues;
+				}
+
+			}
+			allmr.push_back(mr);
+			transfer_multirun_setting(pkey, allmr);
+		}
+	}
+
+	//Results from Completed MultiRuns
+	{
+		if (MR_Storage_Open()) {
+
+			transfer_MultiStorage(pkey, this);
+			transfer_Residuals(pkey, this);
+			transfer_ensemble_statistics(pkey, this);
+
+		}
+
+	}
+
+	return true;
+}
+bool NewMap::ReDefinePostgresDataBase()
+{
+
+	// Call to units which construct all necessary tables for Postgres
+	auto init_tables = create_Init_Tables(m_pCommonModelInfo);
+	auto main_tables = create_Main_Tables(m_pCommonModelInfo);
+	auto add_tables = create_Additional_Tables(m_pCommonModelInfo, this);
+
+	ID_MapsForPostgresReady = true;
+
+	return true;
+}
+
+
 bool NewMap::Info_Header(bool reading)
 {
 	size_t iv;

@@ -75,6 +75,7 @@ public:
 	bool SaveTempFile();
 	bool SaveOrgFileSize(unsigned long newnumrun);
 	string GetNewFileName();
+	size_t GetsizeOfSumVar() { return m_NumSum; };
 	bool Close();
 	bool Reset();
 	

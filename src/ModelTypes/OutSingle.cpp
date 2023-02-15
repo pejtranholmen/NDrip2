@@ -27,17 +27,22 @@ OutSingle::~OutSingle(void)
 }
 bool OutSingle::AddSumVar( float initial, float final,float  min,float  max, float mean,float accumulated, int pgindex, int pgMultiIndex, int StoreFlag)
 {
+	if (min > max) {
+		cerr << "Something wrong OutSingle";
 
-		_out.Initial=initial;
-		_out.Final=final;
-		_out.Min=min;
-		_out.Max=max;
-		_out.Mean=mean;
-		_out.Accumulated=accumulated;
-		_out.PgFileIndex=pgindex;
-		_out.PgMultiFileIndex=pgMultiIndex;
-		_out.StoreFlag=StoreFlag;
-		return true;
+	}
+	else {
+		_out.Initial = initial;
+		_out.Final = final;
+		_out.Min = min;
+		_out.Max = max;
+		_out.Mean = mean;
+		_out.Accumulated = accumulated;
+		_out.PgFileIndex = pgindex;
+		_out.PgMultiFileIndex = pgMultiIndex;
+		_out.StoreFlag = StoreFlag;
+	}
+	return true;
 
 }
 

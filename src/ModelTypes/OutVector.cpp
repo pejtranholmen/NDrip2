@@ -79,8 +79,10 @@ bool OutVector::SetPgFileIndex(size_t index, size_t value)
 float OutVector::GetInitial(size_t index) const
 { 
 
-	if(SumList.size()>index)
-		return SumList[index].Initial;
+	if (SumList.size() > index)
+			return SumList[index].Initial;
+		else
+			return float(MISSING);
 
 	return float(MISSING);
 }
@@ -210,19 +212,26 @@ bool OutVector::AddSumVar(size_t index, float initial, float final,float  min,fl
 bool OutVector::AddSumVar(size_t index, double initial, double final,double  min,double  max, double mean,double accumulated, int pgindex, int pgMultiIndex, int StoreFlag)
 {
 	if(SumList.size()>index) {
-		SumList[index].LocalIndex=index;
-		SumList[index].Initial=float(initial);
-		SumList[index].Final=float(final);
-		SumList[index].Min=float(min);
-		SumList[index].Max=float(max);
-		SumList[index].Mean=float(mean);
-		SumList[index].Accumulated=float(accumulated);
-		SumList[index].PgFileIndex=pgindex;
-		SumList[index].PgMultiFileIndex=pgMultiIndex;
-		SumList[index].ValidFlagIndex=0;
-		if(StoreFlag>0)
-			SumList[index].StoreFlag=StoreFlag;
-		return true;
+		if (min > max) {
+
+			cerr << "OutVector Error";
+		}
+		else {
+			SumList[index].LocalIndex = index;
+			SumList[index].Initial = float(initial);
+			SumList[index].Final = float(final);
+			SumList[index].Min = float(min);
+			SumList[index].Max = float(max);
+			SumList[index].Mean = float(mean);
+			SumList[index].Accumulated = float(accumulated);
+			SumList[index].PgFileIndex = pgindex;
+			SumList[index].PgMultiFileIndex = pgMultiIndex;
+			SumList[index].ValidFlagIndex = 0;
+			if (StoreFlag > 0)
+				SumList[index].StoreFlag = StoreFlag;
+		}
+			return true;
+
 	}
 	return false;
 }

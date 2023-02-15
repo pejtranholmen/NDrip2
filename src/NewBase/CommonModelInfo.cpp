@@ -226,6 +226,13 @@ bool CommonModelInfo::DefineSwitchMap(vector<SimB*> allSwitches) {
 	if (m_SwitchMap.size() == allSwitches.size()) return true;
 	return false;
 };
+bool CommonModelInfo::DefineSwitchMap(vector<pair<string, int>> vector_pair) {
+	if (m_SwitchMap.size() > 0)  m_SwitchMap.clear();
+	for (int i = 0; i < vector_pair.size(); ++i) {
+		m_SwitchMap[vector_pair[i].first] = vector_pair[i].second;
+	};
+	if (m_SwitchMap.size() > 0) return true;
+}
 int CommonModelInfo::GetSwitchId(string name) {
 	auto it = m_SwitchMap.find(name);
 	if (it != m_SwitchMap.end())
@@ -248,6 +255,13 @@ bool CommonModelInfo::DefineSingleParMap(vector<SimB*> allSinglePar) {
 	if (m_SingleParMap.size() == allSinglePar.size()) return true;
 	return false;
 };
+bool CommonModelInfo::DefineSingleParMap(vector<pair<string, int>> vector_pair) {
+	if (m_SingleParMap.size() > 0)  m_SingleParMap.clear();
+	for (int i = 0; i < vector_pair.size(); ++i) {
+		m_SingleParMap[vector_pair[i].first] = vector_pair[i].second;
+	};
+	if (m_SingleParMap.size() > 0) return true;
+}
 int CommonModelInfo::GetSingleParId(string name) {
 	auto it = m_SingleParMap.find(name);
 	if (it != m_SingleParMap.end())
@@ -270,6 +284,13 @@ bool CommonModelInfo::DefineVectorParMap(vector<SimB*> allVectorPar) {
 	if (m_VectorParMap.size() == allVectorPar.size()) return true;
 	return false;
 };
+bool CommonModelInfo::DefineVectorParMap(vector<pair<string, int>> vector_pair) {
+	if (m_VectorParMap.size() > 0)  m_VectorParMap.clear();
+	for (int i = 0; i < vector_pair.size(); ++i) {
+		m_VectorParMap[vector_pair[i].first] = vector_pair[i].second;
+	};
+	if (m_VectorParMap.size() > 0) return true;
+}
 int CommonModelInfo::GetVectorParId(string name) {
 	auto it = m_VectorParMap.find(name);
 	if (it != m_VectorParMap.end())
@@ -321,6 +342,13 @@ bool CommonModelInfo::DefineSingleOutputMap(vector<SimB*> allVectorPar) {
 	if (m_SingleOutputMap.size() == allVectorPar.size()) return true;
 	return false;
 };
+bool CommonModelInfo::DefineSingleOutputMap(vector<pair<string, int>> vector_pair) {
+	if (m_SingleOutputMap.size() > 0)  m_SingleOutputMap.clear();
+	for (int i = 0; i < vector_pair.size(); ++i) {
+		m_SingleOutputMap[vector_pair[i].first] = vector_pair[i].second;
+	};
+	if (m_SingleOutputMap.size() > 0) return true;
+}
 int CommonModelInfo::GetSingleOutputId(string name) {
 	auto it = m_SingleOutputMap.find(name);
 	if (it != m_SingleOutputMap.end())
@@ -337,6 +365,13 @@ bool CommonModelInfo::DefineVectorOutputMap(vector<SimB*> allVectorPar) {
 	if (m_VectorOutputMap.size() == allVectorPar.size()) return true;
 	return false;
 };
+bool CommonModelInfo::DefineVectorOutputMap(vector<pair<string, int>> vector_pair) {
+	if (m_VectorOutputMap.size() > 0)  m_VectorOutputMap.clear();
+	for (int i = 0; i < vector_pair.size(); ++i) {
+		m_VectorOutputMap[vector_pair[i].first] = vector_pair[i].second;
+	};
+	if (m_VectorOutputMap.size() > 0) return true;
+}
 int CommonModelInfo::GetVectorOutputId(string name) {
 	auto it = m_VectorOutputMap.find(name);
 	if (it != m_VectorOutputMap.end())

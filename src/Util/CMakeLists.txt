@@ -16,6 +16,7 @@ set(LIBUTIL_SOURCES
        CoupSim_XML.cpp
        CoupSim_XML.h
        CoupModel_DB_Link.hpp
+       FileSystemUtil.hpp
 )
 
 add_library(${LIBUTIL_NAME} STATIC ${LIBUTIL_SOURCES})
@@ -26,6 +27,7 @@ target_include_directories(${LIBUTIL_NAME} PUBLIC
     "${CMAKE_BINARY_DIR}/configured_files/include"
  )
  target_link_libraries(${LIBUTIL_NAME} PUBLIC
+    libpqxx::pqxx   
     cxxopts::cxxopts
     nlohmann_json::nlohmann_json
  )

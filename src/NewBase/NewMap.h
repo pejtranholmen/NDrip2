@@ -42,6 +42,9 @@ public:
 	bool Read_SimB_FromXmlFile(pugi::xml_node node);
 	bool WriteSimB_ToXmlFile(pugi::xml_node node, simtype, doc_enabled def = doc_enabled::ALL);
 
+	bool WriteDoc_To_Postgres();
+	bool ReDefinePostgresDataBase();
+	bool SelectDoc_From_Postgres(int pkey);
 
 	bool CheckStart_EndTime();
 	void UpdateArchiveLists(size_t icat=8);
@@ -56,7 +59,7 @@ public:
 	bool ReadDocFile(string filename="");
 	bool WriteDocFile();
 	bool ReadXmlDocFile(string filename);
-	bool WriteXmlDocFile();
+
 	void Init_BlankDocument();
 	bool CreateMapSvFlexFile(size_t index=0);
 
@@ -85,7 +88,7 @@ public:
 	bool Info_Annim(bool ReadFlag=true);
 	string Sim2XLSX(bool ReadFlag = true, bool AllItems=false);
 	
-
+	bool ID_MapsForPostgresReady = false;
 
 #ifndef COUPSTD
 	CPlotStorage m_PlotStorage;

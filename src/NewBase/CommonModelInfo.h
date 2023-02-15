@@ -143,8 +143,11 @@ public:
 	bool DefineSwitchMap(std::vector<SimB*> allSwitches);
 	int GetSwitchId(std::string name);
 	std::string GetSwitchName(int id);
+	bool DefineSwitchMap(std::vector<std::pair<std::string, int>> vector_pair);
+
 
 	bool DefineSingleParMap(std::vector<SimB*> allSinglePar) ;
+	bool DefineSingleParMap(std::vector<std::pair<std::string, int>> vector_pair);
 	int GetSingleParId(std::string name);
 	std::string GetSingleParameterName(int id);
 
@@ -152,15 +155,22 @@ public:
 	bool DefineVectorParMap(std::vector<SimB*> allVectorPar) ;
 	int GetVectorParId(std::string name);
 	bool DefineNEVectorMap(std::vector<SimB*> allVectorPar);
+	bool DefineVectorParMap(std::vector<std::pair<std::string, int>> vector_pair);
+
 	std::string GetVectorParameterName(int id);
 	
 	int GetNEVectorId(std::string name);
 
 	bool DefineSingleOutputMap(std::vector<SimB*> allVectorPar);
+	bool DefineSingleOutputMap(std::vector<std::pair<std::string, int>> vector_pair);
+
+
 	int GetSingleOutputId(std::string name);
 	std::string GetSingleOutputName(int id);
 
 	bool DefineVectorOutputMap(std::vector<SimB*> allVectorPar);
+	bool DefineVectorOutputMap(std::vector<std::pair<std::string, int>> vector_pair);
+
 	int GetVectorOutputId(std::string name);
 	std::string GetVectorOutputName(int id);
 
@@ -175,6 +185,8 @@ public:
 	std::vector<SimB*> SortSimB_ByGroup(std::vector<SimB*> v);
 	std::vector<SimB*> SortSimB_ByCategory(std::vector<SimB*> v);
 	std::map<std::string, std::string> changed_names;
+
+	bool ID_MapsForPostgresReady=false;
 
 
 private:

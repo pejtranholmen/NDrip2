@@ -3,6 +3,7 @@ using namespace std;
 #include "NewBase/Doc.h"
 #include "Simulator/ModelInfo.h"
 #include "Util/FUtil.hpp"
+#include "Util/FileSystemUtil.hpp"
 #include "Util/StatUtil.h"
 
 #include "NewBase/SimArchive.h"
@@ -30,6 +31,7 @@ using namespace std;
 #include "Model/Structure/StructureModel.h"
 #include <cxxopts.hpp>
 #include <nlohmann/json.hpp>
+
 
 
 void SimProc(size_t i, Doc* pDoc, bool Multi)
@@ -186,19 +188,10 @@ int main(int argc, char *argv[])
     string simFilePath;
     string SimInputsFileNameJson;
 
-#ifdef MS_CODE
-    char* buff;
-    buff = _getcwd(nullptr, 0);
-    path = buff; path += "\\";
-    simFilePath = path + "Main_000000.Sim";
-    SimInputsFileNameJson = path + "\\par.json";
-#else
-    path = get_current_dir_name();
-    path+= "/";
-    simFilePath = path + "Main_000000.Sim";
-    SimInputsFileNameJson = path + "par.json";
-#endif
+    path = FileSystemUtil::GetCurrentPath();
+    auto kolla = FileSystemUtil::GetFileList(".Sim");
 
+    simFilePath = path + "Main_000000.Sim";
 
     // Setting global OPTIONS
     FUtil::WriteProfileStringStd("WorkingDirectory", path);
@@ -220,6 +213,7 @@ int main(int argc, char *argv[])
     SimProc(0, pDoc, false);
 
     pDoc->WriteDocFile();
+    pDoc->WriteDoc_To_Postgres();
 
     //*
     return 0;

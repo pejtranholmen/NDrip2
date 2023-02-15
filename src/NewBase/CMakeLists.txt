@@ -48,5 +48,6 @@ target_include_directories(${DOCUMENT_NAME} PUBLIC
 
 target_link_libraries(${DOCUMENT_NAME} 
 PUBLIC 
+    libpqxx::pqxx
     nlohmann_json::nlohmann_json 
 )

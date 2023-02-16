@@ -38,8 +38,8 @@ public:
 #ifndef COUPSTD
 	Link m_Link;
 #else 
-	bool MakeSingleRun();
-	bool MakeMultiRun();
+	bool MakeSingleRun(bool DB_Source=false);
+	bool MakeMultiRun(bool DB_Source = false);
 	
 #endif
 	Simulator m_Simulator;

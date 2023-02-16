@@ -25,7 +25,7 @@ class CommonModelInfo
 public:
 	CommonModelInfo();
 	~CommonModelInfo();
-	const std::string GetPassword() { return "pe1950"; };
+
 	size_t GetTypeIndex(std::string str);
 	size_t GetGroupIndex(std::string str);
 	size_t GetGroupCategoryNo(size_t index) {
@@ -176,7 +176,11 @@ public:
 
 	bool DefineParameterFunctionMap(std::vector<SimB*> allVectorPar);
 	int GetParameterFunctionId(std::string name);
+
+
+
 	bool DefineTimeSeriesMap(std::vector<SimB*> allVectorPar);
+	bool DefineTimeSeriesMap(std::vector<std::pair<std::string, int>> vector_pair);
 	int GetTimeSeriesId(std::string name);
 	std::string GetTimeSeriesName(int id);
 

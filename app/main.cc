@@ -1,8 +1,7 @@
 
 using namespace std;
-#include "NewBase/Doc.h"
-#include "Simulator/ModelInfo.h"
-#include "Util/FUtil.hpp"
+#include "Util/SimUtil.hpp"
+#include "NewBase/NewMap.h"
 #include "Util/FileSystemUtil.hpp"
 #include "Util/StatUtil.h"
 
@@ -32,59 +31,6 @@ using namespace std;
 #include <cxxopts.hpp>
 #include <nlohmann/json.hpp>
 
-
-
-void SimProc(size_t i, Doc* pDoc, bool Multi)
-{
-    if (Multi) {
-        pDoc->CheckAndUpdateFileName(true);
-        pDoc->MakeMultiRun();
-    }
-    else {
-        pDoc->CheckAndUpdateFileName(false);
-        pDoc->MakeSingleRun();
-    }
-}
-
-Doc* CreateDoc(size_t i, string str) {
-    Doc* pDoc;
-    pDoc = new Doc();
-    pDoc->SetCurrentFileName(str);
-
-    bool makesim;
-    makesim = pDoc->ReadDocFile(pDoc->GetCurrentSimFile());
-
-    if (!makesim) {
-        cout << "\n";
-        cout << "Simulation file not correctly read - Check File !";
-        cin >> str;
-        return NULL;
-    }
-
-    return pDoc;
-}
-
-bool MakeMulti(size_t i, Doc* pDoc) {
-    string str = "N";
-    bool out;
-    out = false;
-    if (i == 0) {
-        if (pDoc->m_MultiRun_Array.size() > 0) {
-            cout << "\n";
-            if ((str.find("Y") != string::npos) || (str.find('y') != string::npos) ) out = true;
-            pDoc->SetMultiSimulation();
-        }
-    }
-    else if (pDoc->m_MultiRun_Array.size() > 0) {
-        Ps* pPs;
-        pPs = pDoc->GetPsPointer("Random Seed");
-        double v = pPs->GetValue() + i + 0.00001;
-        pPs->SetValue(v);
-        out = true;
-        pDoc->SetMultiSimulation();
-    }
-    return out;
-}
 
 void readJson(string jsonFileName, Doc* pDoc) {
 
@@ -190,7 +136,7 @@ int main(int argc, char *argv[])
 
     path = FileSystemUtil::GetCurrentPath();
     auto kolla = FileSystemUtil::GetFileList(".Sim");
-
+    /*
     simFilePath = path + "Main_000000.Sim";
 
     // Setting global OPTIONS
@@ -201,7 +147,7 @@ int main(int argc, char *argv[])
     FUtil::WriteProfileInt("SimulationRunNo", 1);
 
     int i = 0;
-    Doc* pDoc = CreateDoc(i, simFilePath);
+    Doc* pDoc = SimUtil::CreateDoc(i, simFilePath);
 
     string jsonfile = path + "par.json";
     readJson(jsonfile, pDoc);
@@ -210,10 +156,15 @@ int main(int argc, char *argv[])
     koll=PGUtil::createInputBinFile(path + "FERTILIZERS.TXT");
     koll=PGUtil::createInputBinFile(path + "SCIROOT.TXT");
 
-    SimProc(0, pDoc, false);
+    SimUtil::SimProc(0, pDoc, false);
 
     pDoc->WriteDocFile();
-    pDoc->WriteDoc_To_Postgres();
+
+    */
+    Doc* pDoc = new Doc();
+        vector<pair<int,string>> a=pDoc->GetDataBaseSimulations();
+        pDoc->SelectDoc_From_Postgres(2);
+        pDoc->MakeSingleRun(true);
 
     //*
     return 0;

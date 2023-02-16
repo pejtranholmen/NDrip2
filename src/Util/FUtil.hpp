@@ -43,6 +43,7 @@ struct TestAlfaFunctor
 
 namespace FUtil
 {
+	static bool LocalHost = true;
 	static char delimchar=',';
 	static std::string GetProfileStringStd(std::string item, std::string value) {
 

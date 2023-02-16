@@ -11,9 +11,12 @@ using namespace pqxx;
 
 namespace coup_pg {
     static connection initconnection(string work_to_be) {
-        string init = "dbname = coup user = postgres password = pe1950 port = 5432";
-        //lzigAYICibNNBU - Aefp4PszeBl9DkMEs
-       // string init ="dbname = teyojvga  user = teyojvga password = lzigAYICibNNBU-Aefp4PszeBl9DkMEs host = balarama.db.elephantsql.com";
+        string init;
+        if(FUtil::LocalHost)
+            init = "dbname = coup user = postgres password = pe1950 port = 5432";
+        else
+            init ="dbname = teyojvga  user = teyojvga password = lzigAYICibNNBU-Aefp4PszeBl9DkMEs host = balarama.db.elephantsql.com";
+
         connection c(init);
         if (c.is_open()) {
             cout << "Open database " << c.dbname() <<" : " << work_to_be << endl;
@@ -1226,30 +1229,37 @@ bool DefineUniqueIdMaps(CommonModelInfo* pinfo, NewMap* pDoc) {
         for (auto row : r) {
             v_pair.push_back(pair<string, int>(row[1].c_str(), FUtil::AtoInt(row[0].c_str())));
         }
-        pinfo->DefineSingleOutputMap(v_pair);
+        pinfo->DefineSingleOutputMap(v_pair); v_pair.clear();
         r= W.exec("SELECT id_vectoroutputs, name FROM vectoroutputs");
         for (auto row : r) {
             v_pair.push_back(pair<string, int>(row[1].c_str(), FUtil::AtoInt(row[0].c_str())));
         }
-        pinfo->DefineVectorOutputMap(v_pair);
+        pinfo->DefineVectorOutputMap(v_pair);  v_pair.clear();
 
         r=W.exec("SELECT id_switch, name FROM switches") ;
         for (auto row : r) {
             v_pair.push_back(pair<string, int>(row[1].c_str(), FUtil::AtoInt(row[0].c_str())));
         }
-        pinfo->DefineSwitchMap(v_pair);
+        pinfo->DefineSwitchMap(v_pair); v_pair.clear();
 
         r= W.exec("SELECT id_singlepar, name FROM singleparameters");
         for (auto row : r) {
             v_pair.push_back(pair<string, int>(row[1].c_str(), FUtil::AtoInt(row[0].c_str())));
         }
-        pinfo->DefineSingleParMap(v_pair);
+        pinfo->DefineSingleParMap(v_pair); v_pair.clear();
 
         r= W.exec("SELECT id_vectorpar, id_vectorname FROM vectorparameters") ;
         for (auto row : r) {
             v_pair.push_back(pair<string, int>(row[1].c_str(), FUtil::AtoInt(row[0].c_str())));
         }
-        pinfo->DefineVectorParMap(v_pair);
+        pinfo->DefineVectorParMap(v_pair); v_pair.clear();
+
+        r = W.exec("SELECT id_timeserie, timeseriename FROM timeseriesinputs");
+        for (auto row : r) {
+            v_pair.push_back(pair<string, int>(row[1].c_str(), FUtil::AtoInt(row[0].c_str())));
+        }
+        pinfo->DefineTimeSeriesMap(v_pair); v_pair.clear();
+
     }
     catch (const std::exception& e) {
         cerr << sql.c_str() << std::endl;

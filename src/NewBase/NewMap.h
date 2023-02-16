@@ -45,6 +45,7 @@ public:
 	bool WriteDoc_To_Postgres();
 	bool ReDefinePostgresDataBase();
 	bool SelectDoc_From_Postgres(int pkey);
+	vector<pair<int, string>> GetDataBaseSimulations();
 
 	bool CheckStart_EndTime();
 	void UpdateArchiveLists(size_t icat=8);
@@ -59,6 +60,7 @@ public:
 	bool ReadDocFile(string filename="");
 	bool WriteDocFile();
 	bool ReadXmlDocFile(string filename);
+
 
 	void Init_BlankDocument();
 	bool CreateMapSvFlexFile(size_t index=0);

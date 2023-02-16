@@ -1901,7 +1901,6 @@ bool NewMap::Read_DataBaseLinks_FromXmlFile(pugi::xml_node node)
 
 bool NewMap::ReadDocFile(string file)
 {
-
 	#ifndef COUPSTD
 		CMainFrame *p_mainframe;
 		p_mainframe = (CMainFrame*) AfxGetMainWnd();
@@ -2242,7 +2241,11 @@ void NewMap::Init_BlankDocument()
 }
 bool NewMap::WriteDocFile()
 {
-	if (m_xmlFileToUse) {
+	if (m_IsUsingDB_Source) {
+
+		return true;
+	}
+	else if (m_xmlFileToUse) {
 		auto string=WriteEntireModelToXmlFile(doc_enabled::NOT_DEFAULT);
 		return true;
 	}
@@ -2303,7 +2306,11 @@ bool NewMap::WriteDocFile()
 
 }
 bool NewMap::SelectDoc_From_Postgres(int pkey) {
+	string current_str;
     try {
+
+		if(!m_pCommonModelInfo->ID_MapsForPostgresReady ) m_pCommonModelInfo->ID_MapsForPostgresReady = DefineUniqueIdMaps(m_pCommonModelInfo, this);
+		
 		pqxx::connection c = initconnection("Select from postgres");
 		pqxx::work txn{ c };
 		{
@@ -2319,6 +2326,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 
 		pqxx::result r = txn.exec("SELECT * FROM runinfo  WHERE id_simulations = " + to_string(pkey));
 		auto row = r.begin();
+		current_str = "RunInfo";
 		if (pkey == row["id_simulations"].as<int>()) {
 			m_DocFile.m_MultiRunning = row["multisimulation"].as<bool>();
 			m_DocFile.m_FinishedSimulation = row["finished"].as<bool>();
@@ -2336,12 +2344,20 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 			m_DocFile.m_TimeCreated = row["date_created"].as<int>();
 			m_DocFile.m_TimeModified = row["date_modified"].as<int>();
 			m_FileVersionNumberRead = row["fileversionnumber"].as<int>();
-			m_DocFile2.m_OriginFileName = row["originalfilename"].as<string>();
+			auto kk = row["originalfilename"].c_str();
+			auto str = string(kk);
+			if (str.size()>0) {
+				m_DocFile2.m_OriginFileName = row["originalfilename"].as<string>();
+			}
+			else
+				m_DocFile2.m_OriginFileName = "";
+			m_ExeFileDate = row["exefiledate"].c_str();
+
 			m_ExeFileDate = row["exefiledate"].as<string>();
 		}
 
 		r = txn.exec("SELECT id_switch, value FROM modified_switch_values  WHERE id_simulations = " + to_string(pkey));
-
+		current_str = "Modified_switch";
 		vector<string> names1, names2;
 		vector<int> ints1, ints2;
 		vector<float> floats1, floats2;
@@ -2362,6 +2378,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 		}
 
 		r = txn.exec("SELECT id_singlepar, value FROM modified_singleparameter_values  WHERE id_simulations = " + to_string(pkey));
+		current_str = "Modified_singleparameters";
 
 		for (auto row : r) {
 			string name = p_ModelInfo->GetSingleParameterName(row["id_singlepar"].as<int>());
@@ -2381,6 +2398,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 
 		//vector par
 		r = txn.exec("SELECT id_vectorpar, arraysize, values FROM modified_vectorparameter_values  WHERE id_simulations = " + to_string(pkey));
+		current_str = "Modified vectorpar";
 
 		for (auto row : r) {
 			string name = p_ModelInfo->GetVectorParameterName(row["id_vectorpar"].as<int>());
@@ -2406,15 +2424,15 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 
 		}
 		r = txn.exec("SELECT S.id_vectorname,M.id_vectorpar,M.arraysize, M.values FROM vectorparameters AS S JOIN modified_vectorparameter_values AS M ON S.id_vectorpar = M.id_vectorpar WHERE M.id_simulations = " + to_string(pkey));
-		for (auto row : r) {
+		for (auto row : r) {   
 			string name = row[0].as<string>();
 			P* pP = GetP(name);
-			int number_elements = row[1].as<int>();
+			int number_elements = row[2].as<int>();
 			if (pP != nullptr) {
 				if (pP->GetSize() != number_elements) {
 					pP->SetSize(number_elements);
 				}
-				auto pvector = row[2].as_array();
+				auto pvector = row[3].as_array();
 				auto next = pvector.get_next();
 				next = pvector.get_next();
 				size_t count{ 0 }; double value;
@@ -2432,6 +2450,8 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 
 		// outputs
 		r = txn.exec("SELECT id_singleoutputs, storeflag FROM modified_singleoutputs_storevalues  WHERE id_simulations = " + to_string(pkey));
+
+		current_str = "Modified_single outputs storevalues";
 
 		for (auto row : r) {
 			string name = p_ModelInfo->GetSingleOutputName(row["id_singleoutputs"].as<int>());
@@ -2455,6 +2475,8 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 
 
 		r = txn.exec("SELECT id_vectoroutputs, numberstoreflag, storeflags FROM modified_vectoroutputs_storevalues  WHERE id_simulations = " + to_string(pkey));
+
+		current_str = "Modified_vector outputs storevalues";
 
 		for (auto row : r) {
 			string name = p_ModelInfo->GetVectorOutputName(row["id_vectoroutputs"].as<int>());
@@ -2490,6 +2512,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 
 		r = txn.exec("SELECT id_vectoroutputs, numindexout,indexout, initial, final, min, max, mean, accumulated,singlerun_out_index, multirun_out_index  FROM modified_vectoroutputs_resultvalues  WHERE id_simulations = " + to_string(pkey));
 
+		current_str = "Modified_vectoroutputs resultsvalues";
 		for (auto row : r) {
 			string name = p_ModelInfo->GetVectorOutputName(row["id_vectoroutputs"].as<int>());
 			OutVector* pP = GetVectorOutputPtr(name);
@@ -2550,13 +2573,14 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 		// PG Files
 
 		r = txn.exec("SELECT id_timeserie, filename FROM modified_timeseries_inputs  WHERE id_simulations = " + to_string(pkey));
-
+		current_str = "Modified_timeseries_inputs";
 		for (auto row : r) {
 			int id_timeserie = row["id_timeserie"].as<int>();
 			string name = p_ModelInfo->GetTimeSeriesName(id_timeserie);
 			F* pF = GetF(name);
 			string filename = row["filename"].as<string>();
 			pF->SetValue(filename);
+
 
 			if (!pF->CheckFileNameAndAssignNameToPGClass()) {
 				int problem = 0; //FileNameDoes not exist
@@ -2565,7 +2589,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 		}
 
 		r = txn.exec("SELECT id_simulations, id_filename FROM filenamearchive_uses  WHERE id_simulations = " + to_string(pkey));
-
+		current_str = "filenamearchives";
 		for (auto row : r) {
 			int id_timeserie = row["id_simulations"].as<int>();
 			int id_filename = row["id_filename"].as<int>();
@@ -2576,6 +2600,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 				int numrec = row_inner["numrecords"].as<int>();
 				string filename = row_inner["filename"].as<string>();
 			}
+			CPG* pPG = new CPG();
 
 
 		}
@@ -2583,6 +2608,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 		// Validation
 		r = txn.exec("SELECT * FROM Validation  WHERE id_simulations = " + to_string(pkey));
 		m_Val_Array.clear();
+		current_str = "Validations";
 		VALv vst;
 		for (const auto row : r) {
 			vst.ValidationFileIndex = row[1].as<int>();
@@ -2615,7 +2641,8 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 	}
 	catch (const std::exception& e) {
 		cerr << e.what() << std::endl;
-		return -1;
+		cerr << current_str;
+		return false;
 	}
 
 };
@@ -3018,6 +3045,32 @@ bool NewMap::ReDefinePostgresDataBase()
 	ID_MapsForPostgresReady = true;
 
 	return true;
+}
+
+vector<pair<int, string>> NewMap::GetDataBaseSimulations() {
+	vector<pair<int, string>> out;
+	pair<int, string> a;
+	try {
+		pqxx::connection c = initconnection("Select from postgres");
+		pqxx::work txn{ c };
+		{
+			bool keyfind = false;
+			pqxx::result r{ txn.exec("SELECT id_simulations, name FROM simulations") };
+			for (auto row : r) {
+				int ii = row[0].as<int>();
+				string str = row[1].as<string>();
+				a = pair<int, string>(ii,str );
+				out.push_back(a);
+			};
+		}
+
+	}
+	catch (const std::exception& e) {
+		cerr << e.what() << std::endl;
+	}
+	return out;
+
+
 }
 
 
@@ -5684,7 +5737,7 @@ void NewMap::RemoveOriginalValues(string typ, string GroupSet, bool original, si
 		else if(typ=="Switches") {
 				Sw *pSw;
 				if(m_Sw_Array.size()>0)          m_Sw_Array.clear();
-				vp=GetPtrVector(typ,"");
+				vp=GetPtrVector(SWITCH,"");
 				for( size_t j=0;j<vp.size();j++) {
 					pSw=dynamic_cast<Sw*>(vp[j]);
 					if(pSw->IsNotOriginalValue()&&pSw->IsEnabled()&&original)

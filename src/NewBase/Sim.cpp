@@ -382,8 +382,11 @@ bool Sim::FixSumIndex()
 }
 
 #ifdef COUPSTD
-bool Sim::MakeSingleRun() 
+bool Sim::MakeSingleRun(bool DB_Source) 
 {
+	if (DB_Source == true) m_IsUsingDB_Source = true;
+
+
 	SetSingleSimulation();
 	ApplyOptStartValues();
 	if (!CheckAndUpdateFileName()) return false;
@@ -416,7 +419,9 @@ bool Sim::MakeSingleRun()
 	return false;
 }
 
-bool Sim::MakeMultiRun() {
+bool Sim::MakeMultiRun(bool DB_Source) {
+
+	if (DB_Source == true) m_IsUsingDB_Source = true;
 
 	p_ModelInfo->SetMultiRunning(true);
 	p_ModelInfo->SetRunning(true);

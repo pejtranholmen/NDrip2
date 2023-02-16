@@ -404,6 +404,13 @@ bool CommonModelInfo::DefineTimeSeriesMap(vector<SimB*> allVectorPar) {
 	if (m_TimeSeriesMap.size() == allVectorPar.size()) return true;
 	return false;
 };
+bool CommonModelInfo::DefineTimeSeriesMap(vector<pair<string, int>> vector_pair) {
+	if (m_TimeSeriesMap.size() > 0)  m_TimeSeriesMap.clear();
+	for (int i = 0; i < vector_pair.size(); ++i) {
+		m_TimeSeriesMap[vector_pair[i].first] = vector_pair[i].second;
+	};
+	if (m_TimeSeriesMap.size() > 0) return true;
+}
 int CommonModelInfo::GetTimeSeriesId(string name) {
 	auto it = m_TimeSeriesMap.find(name);
 	if (it != m_TimeSeriesMap.end())

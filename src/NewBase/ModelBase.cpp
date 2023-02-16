@@ -9,6 +9,8 @@
 
 
 ModelBase::ModelBase() {
+	m_IsUsingDB_Source = false;
+	m_IsUsingDB_Target = false;
 	m_UserLevel=0;
 	m_GroupEnabled.resize(60);
 

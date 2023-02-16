@@ -376,6 +376,7 @@ class ModelBase : public ModelMap{
 	bool m_OutputBinFileExist, m_OutputValidBinFileExist;
 	
 	bool m_IsMakingBayesianCalib; bool m_IsMakingNelderMeadCalib;
+	bool m_IsUsingDB_Source, m_IsUsingDB_Target;
 	
 	size_t m_CountError;
 	size_t m_MultiRun_TotalNumber;

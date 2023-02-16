@@ -174,6 +174,7 @@ bool Simulator::Start(bool MultiFlag, bool First)
 	if(!MultiFlag) {
 		m_pModelInfo->m_SimStart=clock();
 		m_pSim->m_PG_OutPutFile.SetCompleteRead(true);
+
 		if (!m_pSim->m_PG_OutPutFile.CreateNewFile(m_pModelInfo->m_NumOutputs, m_pModelInfo->m_OutRecord*m_pSim->m_DocFile.m_TimePeriodScaleFactor, 1)) {
 			((Sim*)m_pSim)->AddToRunReport("Failed to create output file - Check if file may be too many records and variables");
 #ifndef COUPSTD

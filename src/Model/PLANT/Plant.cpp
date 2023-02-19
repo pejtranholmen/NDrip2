@@ -39,6 +39,8 @@ bool Plant::Def()
 
 
 
+
+
 	Sw* pSw;
 	pSw = new Sw(&CanopyHeightInput, PLANT, WATER, FYS_SHAPE, NOBPROC, NORMAL);
 	Define(pSw, "CanopyHeightInput", 0, "Parameters|Driving variable|Simulated", "Roughness = 2|PlantType > 1", 206);

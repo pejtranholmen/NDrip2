@@ -9,7 +9,7 @@ CPGBase::CPGBase(void)
 	pg.status.b.PrevBuf = std::string::npos;
 	pg.status.b.NumberOfBuf=1;
 	pg.Des.defaultAddInfo.Key=0; pg.Des.defaultAddInfo.Lat=0.;pg.Des.defaultAddInfo.Long=0.;pg.Des.defaultAddInfo.Alt=0.;pg.Des.defaultAddInfo.CountryCode="";
-	pg.Des.defaultAddInfo.Element = GENERAL; pg.Des.defaultAddInfo.Unit =UNIT_TYPES::NO_UNIT;
+	pg.Des.defaultAddInfo.Element = GENERAL; 
 	pg.Des.defaultAddInfo.StationName=""; pg.Des.defaultAddInfo.num_missing=0;pg.Des.defaultAddInfo.num_substituted=0;
 	pg.status.CompleteRepRead=false;
 	pg.status.FileModified=false;

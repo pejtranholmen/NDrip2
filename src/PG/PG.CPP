@@ -472,8 +472,8 @@ void CPG::SetVarUnitType(size_t VarNo, size_t Repit, UNIT_TYPES unit)
 		add = (Repit - 1)*pg.Shape.NumVar;
 		VarNo += add;
 	}
-	if (pg.Des.addinfo.size() >= VarNo)
-		pg.Des.addinfo[VarNo - 1].Unit = unit;
+//	if (pg.Des.addinfo.size() >= VarNo)
+//		pg.Des.addinfo[VarNo - 1].Unit = unit;
 }
 void CPG::SetVarElementType(size_t VarNo, size_t Repit, elements elem)
 {

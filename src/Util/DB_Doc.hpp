@@ -68,6 +68,7 @@ struct timeserie_set {
     int NumRepetions;
     int NormalTimeStep;
     vector<string> Name;
+    vector<int> I_Units;
     vector<string> Units;
     vector<string> Id;
     vector<string> Pos;

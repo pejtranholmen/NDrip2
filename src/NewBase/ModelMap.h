@@ -1,9 +1,14 @@
 #pragma once
 #include "./CommonModelInfo.h"
+
+#include "../Util/Register.h"
 #include "../SoilData/GetSoilStorage.h"
 
 static CommonModelInfo modelinfo;
 static CommonModelInfo* p_ModelInfo = &modelinfo;
+
+static Register registera;
+static Register* p_Register= &registera;
 
 static GetSoilStorage getsoilstorage;
 static GetSoilStorage* pGetSoil = &getsoilstorage;

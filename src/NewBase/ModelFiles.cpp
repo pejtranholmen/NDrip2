@@ -158,9 +158,8 @@ string ModelFiles::GetOutputFileName(size_t ValidIndex, bool LastFile, bool Mult
 		}
 		
 	}
-	if (ValidIndex == 0 && FUtil::IsFileExisting(filename)) SetOutputFileNameToOutputFile(filename);
-    
-    cout <<"final file name: " << filename << endl;
+	if (ValidIndex == 0 && FUtil::IsFileExisting(filename)) SetOutputFileNameToOutputFile(filename);   
+
 	return filename;
 }
 

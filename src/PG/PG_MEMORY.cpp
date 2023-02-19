@@ -73,7 +73,7 @@ bool PG_Memory::ReAllocateVarVector(){
 
 					}
 				}
-				else /*if(i>=pg.Shape.OldNumRecords)*/ {
+				else if(pg.Shape.OldNumRecords!=0) {
 					in = (pg.Shape.OldNumRecords - 1)*pg.Shape.OldRecordIndexSize;
 					ut = localrec + i*pg.Shape.RecordIndexSize;
 					size_t t = *(size_t*)&pg.Var.v[in] + (i + 1 - pg.Shape.OldNumRecords)*mindiff;

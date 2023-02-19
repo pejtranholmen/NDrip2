@@ -45,7 +45,7 @@ public:
 	Simulator m_Simulator;
 	string  m_UserSubDirectory;
 	string m_OrgPathName;
-	bool CheckAndUpdateFileName(bool MultiRun=false);
+	bool CheckAndUpdateFileName(bool MultiRun=false, bool DB_Source=false);
 	bool CreateNewDocFromCurrentDoc();
 
 protected:

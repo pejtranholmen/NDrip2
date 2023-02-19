@@ -90,6 +90,7 @@ public:
 	std::string	GetVarDes(size_t, size_t repit=1);
 	std::string	GetVarName(size_t, size_t repit=1);
 	std::string	GetVarUnit(size_t, size_t repit=1);
+	int 	GetVarI_Unit(size_t, size_t repit = 1);
 	std::string	GetVarId(size_t, size_t repit=1);
 	std::string	GetVarPos(size_t, size_t repit=1);
 	float	GetVarMin(size_t, size_t repit=1);

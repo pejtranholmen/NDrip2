@@ -384,12 +384,16 @@ bool Sim::FixSumIndex()
 #ifdef COUPSTD
 bool Sim::MakeSingleRun(bool DB_Source) 
 {
-	if (DB_Source == true) m_IsUsingDB_Source = true;
+	if (DB_Source == true) {
+		m_IsUsingDB_Source = true;
+		m_ValidationData.Init(this);
+		m_MStorage.Init(this);
+	}
 
 
 	SetSingleSimulation();
 	ApplyOptStartValues();
-	if (!CheckAndUpdateFileName()) return false;
+	if (!CheckAndUpdateFileName(false, DB_Source)) return false;
 	m_SingleStartTime = clock();
 	p_ModelInfo->SetRunning(true);
 	p_ModelInfo->SetRunDoc(this);
@@ -821,7 +825,7 @@ bool Sim::OnSimMultiStart()
 }
 
 	
-bool Sim::CheckAndUpdateFileName(bool MultiRun) {
+bool Sim::CheckAndUpdateFileName(bool MultiRun, bool DB_Source) {
 	string newfilename;
 	string oldfilename = GetCurrentSimFile();
 	m_OrgPathName = oldfilename;
@@ -833,19 +837,25 @@ bool Sim::CheckAndUpdateFileName(bool MultiRun) {
 
 	bool xmlType = true;
 	if (iposXml == string::npos) xmlType = false;
-
-	int SimulationRunNo = FUtil::GetProfileIntNo("SimulationRunNo", 0);
-	if (SimulationRunNo < 0) {
-		if (iposExt != string::npos && iposSim != string::npos) {
-			if (iposSim - iposExt == 7) {
-				string filenum = oldfilename.substr(iposExt + 1, 6);
-				SimulationRunNo = FUtil::AtoInt(filenum);
+	int SimulationRunNo;
+	if (!DB_Source) {
+		int SimulationRunNo = FUtil::GetProfileIntNo("SimulationRunNo", 0);
+		if (SimulationRunNo < 0) {
+			if (iposExt != string::npos && iposSim != string::npos) {
+				if (iposSim - iposExt == 7) {
+					string filenum = oldfilename.substr(iposExt + 1, 6);
+					SimulationRunNo = FUtil::AtoInt(filenum);
+				}
 			}
 		}
+		SimulationRunNo = max(1, min(SimulationRunNo, 999999));
+
 	}
+	else {
+		iposXml = true;
+		SimulationRunNo = m_DocFile.m_SimulationRunNo;
 
-
-	SimulationRunNo = max(1, min(SimulationRunNo, 999999));
+	}
 	string NumStr = FUtil::ItoNumAscii(SimulationRunNo);
 	string filtypstr = ".Sim";
 	if (iposXml) filtypstr = ".xml";
@@ -875,7 +885,7 @@ bool Sim::CheckAndUpdateFileName(bool MultiRun) {
 
 	SetCurrentFileName(newfilename);
 	m_DocFile.m_SimulationRunNo = SimulationRunNo;
-		
+	
 #ifndef NO_FILES
 	if (!WriteDocFile()) return false;
 #endif

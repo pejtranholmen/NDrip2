@@ -1,5 +1,7 @@
 #pragma once
 #include <vector>
+#include <fstream>
+#include <map>
 #include "../../Util/FUtil.hpp"
 class Doc;
 struct DB_OldHeader

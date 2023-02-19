@@ -1,11 +1,19 @@
 #pragma once
 #include <vector>
 #include <cmath>
-#include "Register.hpp"
+#include <direct.h>
+#include <filesystem>
+#include <string>
+#include <fstream>
+
+//#include "../NewBase/ModelMap.h"
+
+
 #ifndef MISSING
 #define MISSING -1.1E38f
 #endif
 
+using namespace std;
 
 struct rgb_color
 {
@@ -45,6 +53,52 @@ namespace FUtil
 {
 	static bool LocalHost = true;
 	static char delimchar=',';
+
+
+
+
+
+static std::string GetCurrentPath() {
+		std::string path;
+#ifdef MS_CODE
+		char* buff;
+		buff = _getcwd(nullptr, 0);
+		path = buff; path += "\\";
+#else
+		path = get_current_dir_name();
+		path += "/";
+#endif
+		return path;
+	};
+
+
+static vector<string> GetFileList(string type) {
+		vector<string> out;
+		struct stat sb;
+		namespace fs = std::filesystem;
+		string path = GetCurrentPath();
+		// Looping until all the items of the directory are
+		// exhausted
+		if (type.size() == 0) type = ".";
+
+		for (const auto& entry : fs::directory_iterator(path)) {
+
+			// Converting the path to const char * in the
+			// subsequent lines
+			std::filesystem::path outfilename = entry.path();
+			std::string outfilename_str = outfilename.string();
+			const char* path = outfilename_str.c_str();
+
+			// Testing whether the path points to a
+			// non-directory or not If it does, displays path
+			if (stat(path, &sb) == 0 && !(sb.st_mode & S_IFDIR) && outfilename_str.find(type) != string::npos)
+				out.push_back(outfilename_str);
+		}
+		return out;
+	}
+
+
+
 	static std::string GetProfileStringStd(std::string item, std::string value) {
 
 #ifndef COUPSTD
@@ -53,7 +107,7 @@ namespace FUtil
 		return CT2A(Comp).m_psz;
 #else 
 
-		return Register::GetString(item);
+		//return p_Register->GetString(item);
 
 #endif
 		return value;
@@ -64,8 +118,10 @@ namespace FUtil
 		int Comp = pApp->GetProfileInt(_T("CoupModel"), CString(item.c_str()), value);
 		return Comp;
 #else
-#ifndef NO_MS_GUI
-		return Register::GetInt(item);
+#ifdef MS_CODE
+		//int koll=p_Register->GetInt(item);
+		//if (koll < 0) p_Register->SetInt(item, value);
+		//return p_Register->GetInt(item);
 #endif
 #endif
 		return value;
@@ -76,7 +132,7 @@ namespace FUtil
 		pApp->WriteProfileInt(_T("CoupModel"), CString(item.c_str()), value);
 #else
 
-		Register::SetInt(item, value);
+		//p_Register->SetInt(item, value);
 
 #endif
 	}
@@ -86,7 +142,7 @@ namespace FUtil
 		pApp->WriteProfileString(_T("CoupModel"), CString(item.c_str()), CString(value.c_str()));
 #else  
 
-		Register::SetString(item, value);
+		//p_Register->SetString(item, value);
 
 #endif
 	}
@@ -260,10 +316,7 @@ namespace FUtil
 				str.replace(i, 1, " ");
 
 			}
-
 		}
-
-
 		auto pos = str.find(0x2f);
 		while (pos != string::npos) {
 			str.erase(pos, 1);

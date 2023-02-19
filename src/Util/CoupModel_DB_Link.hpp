@@ -7,6 +7,7 @@
 #include "./FUtil.hpp"
 
 
+
 using namespace pqxx;
 
 namespace coup_pg {
@@ -126,6 +127,88 @@ static bool uploadpgFile(std::string filename) {
     }
     return 1;
 };
+static bool download_pg_file(int pkey) {
+
+   
+    connection c = initconnection("create pg file");
+    pqxx::work txn{ c };
+   
+    pqxx::result rr = txn.exec("SELECT id_filename, filename, numvar, numrecords FROM filenamearchive  WHERE id_filename = " + to_string(pkey));
+
+    int numvar=0, numrec=0;
+    string filename;
+    for (auto row_inner : rr) {
+        numvar = row_inner["numvar"].as<int>();
+        numrec = row_inner["numrecords"].as<int>();
+        filename = row_inner["filename"].as<string>();
+    }
+    if (!FUtil::IsFileExisting(filename)) {
+        auto path = FUtil::GetCurrentPath();
+        filename = path+FUtil::FileNameOnly(filename);      
+    }
+
+    CPG pg(filename);
+
+
+    pg.SetCompleteRead(true);
+    pg.AdjustSize(numrec, numvar,1);
+
+
+    rr = txn.exec("SELECT varno, name, i_unit,unit, id, pos, country, station, latitude, longitude, altitude FROM filenamearchive_descriptions  WHERE id_filename = " + to_string(pkey));
+    for (auto row_inner : rr) {
+        int varno = row_inner["varno"].as<int>();
+        string name = row_inner["name"].as<string>();
+        int i_unit = row_inner["i_unit"].as<int>();
+        string unit = row_inner["unit"].as<string>();
+        string id = row_inner["id"].as<string>();
+        string pos = row_inner["pos"].as<string>();
+        string country = row_inner["country"].as<string>();
+        string station = row_inner["station"].as<string>();
+        auto latitude = row_inner["latitude"].as<double>();
+        auto longitude = row_inner["longitude"].as<double>();
+        auto altitude = row_inner["altitude"].as<double>();
+        pg.SetVarName(varno, name);
+        pg.SetVarUnit(varno, unit);
+        pg.SetVarId(varno, id);
+        pg.SetVarPos(varno, pos);
+        pg.SetVarCountry(varno, country);
+        pg.SetVarStation(varno, station);
+        pg.SetVarLat(varno, latitude);
+        pg.SetVarLong(varno, longitude);
+        pg.SetVarAlt(varno, altitude);
+    }
+    rr = txn.exec("SELECT pgmintime, pgvarvalues FROM filenamearchive_data WHERE id_filename = " + to_string(pkey));
+    size_t recno = 1;
+    for (auto row_inner : rr) {
+        size_t min = row_inner[0].as<int>();
+        pg.SetLongTime(recno, min);
+        auto pvector = row_inner[1].as_array();
+        size_t count = 1;
+        auto next = pvector.get_next();
+        next = pvector.get_next();
+       
+        while (next.second.size() > 0) {
+
+            float value;
+            while (next.second.size() > 0) {
+                value = stof(string(next.second));
+                pg.SetVarValue(count, recno, value);
+                next = pvector.get_next();
+                count++;
+            }
+        }
+        recno++;
+    }
+    if (pg.WritePGFile()) {
+        cout << "pg file created : " << filename << endl;
+        return true;
+    }
+    else {
+        cout << "pg file write error : " << filename << endl;
+        return false;
+    }
+    
+}
 static pqxx::result query(string tablename)
 {
     connection c = initconnection("query table");
@@ -214,7 +297,7 @@ vector<string> create_Init_Tables(CommonModelInfo* pinfo) {
         sql += "NumRepetions Integer,";
         sql += "NormalTimeStep Integer,";
         sql += "Name Varchar(24)[],";
-        sql += "Units Varchar(24)[], ";
+        sql += "I_Units Integer[], ";
         sql += "Id Varchar(24)[], ";
         sql += "Pos Varchar(24)[], ";
         sql += "MinValue REAL[], ";
@@ -310,6 +393,7 @@ vector<string> create_Init_Tables(CommonModelInfo* pinfo) {
         sql += "(Id_FileName Integer References FileNameArchive(Id_FileName),";
         sql += "VarNo Integer ,";
         sql += "Name Varchar(24),";
+        sql += "I_Unit Integer,";
         sql += "Unit Varchar(12),";
         sql += "Id Varchar(24),";
         sql += "Pos Varchar(12),";
@@ -1723,21 +1807,20 @@ int transfer_Modified_VectorOutput(vector<vectoroutput_set> s) {
 
 }
 int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector<float>>>& pg) {
+    string sql;
     try {
         connection c = initconnection("modified_timeseries_inputs");
         pqxx::work W{ c };
         {
-            string sql = "INSERT INTO modified_timeseries_inputs VALUES (default, ";
+            sql = "INSERT INTO modified_timeseries_inputs VALUES (default, ";
             sql += to_string(r.key_simulation) + ",";
             sql += to_string(r.id_timeserie) + ",'";
             sql += r.filename;
             sql += "');";
             W.exec(sql.c_str());
         }
-
         {
             int id_fileName;
-            string sql;
             try {
                 sql = "SELECT Id_FileName FROM FileNameArchive WHERE FileName=";
                 sql += "'" + r.filename + "'";
@@ -1785,6 +1868,15 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
                         if (count < s.size()) sql += ",";
                     }
                 };
+                auto insertvector_i = [&sql](vector<int> s) {
+                    int count = 0;
+                    for (int flt : s) {
+                        count++;
+                        if (flt >= 0) sql += to_string(flt);
+                        else sql += "null";
+                        if (count < s.size()) sql += ",";
+                    }
+                };
                 string shortname;
                 auto posend = r.filename.rfind(".");
                 auto pos = r.filename.rfind("/");
@@ -1801,13 +1893,14 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
                 sql += to_string(r.NumRepetions) + ",";
                 sql += to_string(r.NormalTimeStep) + ",'{";
 
-                insertvector(r.Name); sql += "}','{"; insertvector(r.Units); sql += "}','{"; insertvector(r.Id);
+                insertvector(r.Name); sql += "}','{"; insertvector_i(r.I_Units); sql += "}','{"; insertvector(r.Id);
                 sql += "}','{"; insertvector(r.Pos); sql += "}','{";
                 insertvector_r(r.Min); sql += "}','{"; insertvector_r(r.Max); sql += "}','{";
                 insertvector(r.Country); sql += "}','{"; insertvector(r.Station); sql += "}','{";
                 insertvector_d(r.Latitude); sql += "}','{"; insertvector_d(r.Longitude); sql += "}','{"; insertvector_d(r.Altitude);
                 sql += "}'";
                 sql += ") returning Id_FileName; ";
+                }
                 result rr = W.exec(sql.c_str());
                 for (auto row : rr)  id_fileName = row[0].as<int>();
 
@@ -1816,8 +1909,9 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
                     sql = "INSERT INTO FileNameArchive_Descriptions VALUES (";
                     sql += to_string(id_fileName) + ",";
                     sql += to_string(i + 1) + ",'";
-                    sql += r.Name[i] + "','";
-                    sql += r.Units[i] + "','";
+                    sql += r.Name[i] + "',";
+                    sql += to_string(r.I_Units[i]) + ",'";
+                    sql += "x ','";
                     sql += r.Id[i] + "','";
                     sql += r.Pos[i] + "','";
                     sql += r.Country[i] + "','";
@@ -1841,7 +1935,7 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
                     W.exec(sql.c_str());
                 }
 
-            }
+            
 
             if (r.NumVar != 0) {
                 sql = "INSERT INTO filenamearchive_uses VALUES (";
@@ -1849,17 +1943,20 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
                 sql += to_string(id_fileName) + ");";
                 W.exec(sql.c_str());
             }
+            W.commit();
         }
 
-
-
-        W.commit();
     }
     catch (const std::exception& e) {
         cerr << e.what() << std::endl;
+        char a = 0xb2;
+        auto pos1 = sql.find(a);
+        if (pos1 != string::npos) {
+            cerr << to_string(pos1);
+        }
         return -1;
     }
-
+   
 };
 int transfer_Validation(int simkey, vector< vector<string>>& v) {
 

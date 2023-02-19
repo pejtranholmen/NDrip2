@@ -1,9 +1,9 @@
 #pragma once
 #include "./PhysConst.h"
-#include "./Units.h"
 
 
-class PhysFunctions: public PhysConst, public Units {
+
+class PhysFunctions: public PhysConst {
 	public:
 
 	PhysFunctions(){ px=py=Solar_Time_Adjust=m_Hour=m_ThetaAngle=0;};

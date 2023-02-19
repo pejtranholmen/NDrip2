@@ -19,9 +19,9 @@ namespace SimUtil {
         }
     }
 
-    Doc* CreateDoc(size_t i, string str) {
-        Doc* pDoc;
-        pDoc = new Doc();
+    unique_ptr<Doc> CreateDoc(size_t i, string str) {
+        
+        auto pDoc=std::make_unique<Doc>();
         pDoc->SetCurrentFileName(str);
 
         bool makesim;
@@ -34,7 +34,7 @@ namespace SimUtil {
             return NULL;
         }
 
-        return pDoc;
+        return move(pDoc);
     }
 
     bool MakeMulti(size_t i, Doc* pDoc) {

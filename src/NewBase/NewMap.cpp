@@ -2242,8 +2242,9 @@ void NewMap::Init_BlankDocument()
 bool NewMap::WriteDocFile()
 {
 	if (m_IsUsingDB_Source) {
-
-		return true;
+		 auto string = WriteEntireModelToXmlFile(doc_enabled::NOT_DEFAULT);
+		 WriteDoc_To_Postgres();
+		 return true;
 	}
 	else if (m_xmlFileToUse) {
 		auto string=WriteEntireModelToXmlFile(doc_enabled::NOT_DEFAULT);
@@ -2319,6 +2320,12 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 			for (auto row : r) {
 				if (pkey == row[0].as<int>()) {
 					keyfind = true;
+					string name = row["name"].as<string>();
+					name = FUtil::FileNameOnly(name);
+					auto dotpos = name.find(".");
+					if (dotpos != string::npos) name = name.substr(0, dotpos);
+					m_CurrentFile=name;
+					m_DocFile.m_SimulationRunNo = pkey;
 				};
 			};
 			if (!keyfind) return false;
@@ -2600,7 +2607,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 				int numrec = row_inner["numrecords"].as<int>();
 				string filename = row_inner["filename"].as<string>();
 			}
-			CPG* pPG = new CPG();
+			download_pg_file(id_filename);
 
 
 		}
@@ -2858,7 +2865,8 @@ bool NewMap::WriteDoc_To_Postgres() {
 						string str = pPG->GetVarName(i + 1); FUtil::trim(str);
 						FUtil::trim_xmlstring(str);
 						ss.Name.push_back(str);
-						ss.Units.push_back("x");
+						ss.Units.push_back(pPG->GetVarUnit(i + 1));
+						ss.I_Units.push_back(pPG->GetVarI_Unit(i + 1));
 						ss.Id.push_back(pPG->GetVarId(i + 1));
 						ss.Pos.push_back(pPG->GetVarPos(i + 1));
 						ss.Min.push_back(pPG->GetVarMin(i + 1));

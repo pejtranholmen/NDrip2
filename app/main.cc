@@ -2,7 +2,6 @@
 using namespace std;
 #include "Util/SimUtil.hpp"
 #include "NewBase/NewMap.h"
-#include "Util/FileSystemUtil.hpp"
 #include "Util/StatUtil.h"
 
 #include "NewBase/SimArchive.h"
@@ -17,6 +16,7 @@ using namespace std;
 #include <chrono>
 #ifdef MS_CODE
 #include <direct.h>
+
 #else
 #include <filesystem>
 #include <unistd.h>
@@ -134,8 +134,8 @@ int main(int argc, char *argv[])
     string simFilePath;
     string SimInputsFileNameJson;
 
-    path = FileSystemUtil::GetCurrentPath();
-    auto kolla = FileSystemUtil::GetFileList(".Sim");
+    path = FUtil::GetCurrentPath();
+    auto kolla = FUtil::GetFileList(".Sim");
     /*
     simFilePath = path + "Main_000000.Sim";
 
@@ -161,11 +161,16 @@ int main(int argc, char *argv[])
     pDoc->WriteDocFile();
 
     */
-    Doc* pDoc = new Doc();
+    auto koll=FUtil::GetFileList(".");
+    
+     Doc* pDoc = new Doc();
         vector<pair<int,string>> a=pDoc->GetDataBaseSimulations();
-        pDoc->SelectDoc_From_Postgres(2);
+        pDoc->SelectDoc_From_Postgres(4);
         pDoc->MakeSingleRun(true);
+     
+        
 
-    //*
+
+    
     return 0;
 }

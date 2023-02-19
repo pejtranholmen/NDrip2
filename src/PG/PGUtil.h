@@ -1,5 +1,8 @@
 #pragma once
 #include "./PGBase.h"
+#include "./Units.h"
+#include <map>
+#include <string>
 #ifndef BASE
 #define BASE   1721424L  
 #endif
@@ -84,12 +87,14 @@ struct IPGTID {
 	int ihour;
 	int iminut;
 };
+
+
 class PGUtil
 {
 public:
 	PGUtil(void);
 	virtual ~PGUtil(void);
-	
+	UNIT_TYPES GetUnitType(std::string key);
 	static float AtoFloat(std::string str);
 	static std::string DateConv(enum dateformats, std::string instr);
 	static std::string ItoNumAscii(int);
@@ -129,5 +134,12 @@ public:
 	static bool CreateOutputCSVFile(std::string filename, std::string filenameinput, Doc* pDoc);
 	static std::string createInputBinFile(std::string csvFileName);
 
+private:
+	void SetUnitMap(UNIT_TYPES type, std::string str) {
+		m_TypeBasedUnits.insert(std::pair<UNIT_TYPES, std::string>(type, str));
+		m_StringBasedUnits.insert(std::pair<std::string, UNIT_TYPES>(str, type));
+	};
+	std::map<std::string, UNIT_TYPES> m_StringBasedUnits;
+	std::map<UNIT_TYPES, std::string> m_TypeBasedUnits;
 };
 

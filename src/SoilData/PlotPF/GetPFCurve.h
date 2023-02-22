@@ -1,4 +1,7 @@
 #pragma once
+#ifndef MS_CODE
+#include <cstddef>
+#endif
 
 struct PFCOEF
 {

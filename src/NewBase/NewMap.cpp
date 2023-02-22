@@ -2307,6 +2307,7 @@ bool NewMap::WriteDocFile()
 
 }
 bool NewMap::SelectDoc_From_Postgres(int pkey) {
+#ifdef COUP_POSTGRES
 	string current_str;
     try {
 
@@ -2652,9 +2653,13 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 		return false;
 	}
 
+#endif
+	return false;
+
 };
 
 bool NewMap::WriteDoc_To_Postgres() {
+#ifdef COUP_POSTGRES
 
 	if (!m_pCommonModelInfo->ID_MapsForPostgresReady) m_pCommonModelInfo->ID_MapsForPostgresReady=DefineUniqueIdMaps(m_pCommonModelInfo, this);
 
@@ -3041,22 +3046,29 @@ bool NewMap::WriteDoc_To_Postgres() {
 	}
 
 	return true;
+#endif
+
+	return false;
 }
 bool NewMap::ReDefinePostgresDataBase()
 {
-
 	// Call to units which construct all necessary tables for Postgres
+#ifdef COUP_POSTGRES
 	auto init_tables = create_Init_Tables(m_pCommonModelInfo);
 	auto main_tables = create_Main_Tables(m_pCommonModelInfo);
 	auto add_tables = create_Additional_Tables(m_pCommonModelInfo, this);
 
 	ID_MapsForPostgresReady = true;
 
+#endif
+
 	return true;
 }
 
 vector<pair<int, string>> NewMap::GetDataBaseSimulations() {
 	vector<pair<int, string>> out;
+#ifdef COUP_POSTGRES
+	
 	pair<int, string> a;
 	try {
 		pqxx::connection c = initconnection("Select from postgres");
@@ -3076,6 +3088,8 @@ vector<pair<int, string>> NewMap::GetDataBaseSimulations() {
 	catch (const std::exception& e) {
 		cerr << e.what() << std::endl;
 	}
+	return out;
+#endif
 	return out;
 
 

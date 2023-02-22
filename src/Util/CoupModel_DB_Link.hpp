@@ -1,7 +1,9 @@
 #pragma once
 
+#ifdef COUP_POSTGRES
 
 #include <stddef.h>
+
 #include <pqxx/pqxx>
 #include "./DB_Doc.hpp"
 #include "./FUtil.hpp"
@@ -9,6 +11,8 @@
 
 
 using namespace pqxx;
+
+
 
 namespace coup_pg {
     static connection initconnection(string work_to_be) {
@@ -2348,3 +2352,4 @@ int transfer_ensemble_statistics(int pkey, NewMap* pDoc) {
 
 };
 using namespace coup_pg;
+#endif

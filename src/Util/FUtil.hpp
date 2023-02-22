@@ -1,7 +1,11 @@
 #pragma once
 #include <vector>
 #include <cmath>
+#ifdef MS_CODE
 #include <direct.h>
+#else
+#include <sys/stat.h>
+#endif
 #include <filesystem>
 #include <string>
 #include <fstream>
@@ -65,7 +69,7 @@ static std::string GetCurrentPath() {
 		buff = _getcwd(nullptr, 0);
 		path = buff; path += "\\";
 #else
-		path = get_current_dir_name();
+		path = "temp";
 		path += "/";
 #endif
 		return path;
@@ -75,8 +79,17 @@ static std::string GetCurrentPath() {
 static vector<string> GetFileList(string type) {
 		vector<string> out;
 		struct stat sb;
+		string path;
+
+#ifdef LINUX2
+		path = "/temp";
+		return out;
+			
+#else
 		namespace fs = std::filesystem;
-		string path = GetCurrentPath();
+		path = GetCurrentPath();
+
+
 		// Looping until all the items of the directory are
 		// exhausted
 		if (type.size() == 0) type = ".";
@@ -95,7 +108,9 @@ static vector<string> GetFileList(string type) {
 				out.push_back(outfilename_str);
 		}
 		return out;
-	}
+#endif
+
+}
 
 
 
@@ -122,6 +137,10 @@ static vector<string> GetFileList(string type) {
 		//int koll=p_Register->GetInt(item);
 		//if (koll < 0) p_Register->SetInt(item, value);
 		//return p_Register->GetInt(item);
+#else 
+#ifdef LINUX2
+		return 1;
+#endif
 #endif
 #endif
 		return value;
@@ -146,7 +165,11 @@ static vector<string> GetFileList(string type) {
 
 #endif
 	}
+
+
 	static std::string arrayToString(std::vector <float> v) {
+#ifndef LINUX2
+
 		std::stringstream ss;
 		for (size_t i = 0; i < v.size(); ++i)
 		{
@@ -156,7 +179,10 @@ static vector<string> GetFileList(string type) {
 		}
 		std::string s = ss.str();
 		return s;
-	}
+#endif
+		return "";
+}
+
 
 
 

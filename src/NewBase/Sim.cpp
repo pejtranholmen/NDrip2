@@ -356,7 +356,12 @@ void Sim::SetCurrentFileName(string pzPathName)
 	m_CurrentFile=pzPathName;
 	m_DocFileName=m_CurrentFile;
 	int iv;
-	iv = m_CurrentFile.rfind('\\');
+#ifndef LINUX2
+		iv = m_CurrentFile.rfind('\\');
+#else
+	iv = m_CurrentFile.rfind('/');
+#endif
+
 	if (iv>1) m_CurrentDirectory = m_CurrentFile.substr(0, iv + 1);
 	
 }
@@ -839,7 +844,7 @@ bool Sim::CheckAndUpdateFileName(bool MultiRun, bool DB_Source) {
 	if (iposXml == string::npos) xmlType = false;
 	int SimulationRunNo;
 	if (!DB_Source) {
-		int SimulationRunNo = FUtil::GetProfileIntNo("SimulationRunNo", 0);
+		SimulationRunNo = FUtil::GetProfileIntNo("SimulationRunNo", 1);
 		if (SimulationRunNo < 0) {
 			if (iposExt != string::npos && iposSim != string::npos) {
 				if (iposSim - iposExt == 7) {
@@ -848,7 +853,8 @@ bool Sim::CheckAndUpdateFileName(bool MultiRun, bool DB_Source) {
 				}
 			}
 		}
-		SimulationRunNo = max(1, min(SimulationRunNo, 999999));
+		SimulationRunNo = max(1, min(SimulationRunNo, 99999));
+		m_xmlFileToUse = true;
 
 	}
 	else {

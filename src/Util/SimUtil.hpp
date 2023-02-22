@@ -18,10 +18,16 @@ namespace SimUtil {
             pDoc->MakeSingleRun();
         }
     }
-
+#ifndef LINUX2
     unique_ptr<Doc> CreateDoc(size_t i, string str) {
         
         auto pDoc=std::make_unique<Doc>();
+#else
+    Doc* CreateDoc(size_t i, string str) {
+
+        Doc* pDoc = new Doc();
+
+#endif
         pDoc->SetCurrentFileName(str);
 
         bool makesim;
@@ -34,7 +40,11 @@ namespace SimUtil {
             return NULL;
         }
 
+#ifndef LINUX2
         return move(pDoc);
+#else
+        return pDoc;
+#endif
     }
 
     bool MakeMulti(size_t i, Doc* pDoc) {

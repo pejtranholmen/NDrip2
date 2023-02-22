@@ -981,15 +981,17 @@ string PGUtil::StringDatumStartEstimate(unsigned int value, unsigned int start)
 unsigned int PGUtil::cminut(char *date)
 //char  *date;
 {  size_t jy,jm,ja,jd;
-   size_t   iyear, imonth, iday, ihour, iminut;
+
 #ifdef MS_CODE
+	size_t   iyear, imonth, iday, ihour, iminut;
    sscanf_s(date, "%4u", &iyear);
    sscanf_s(&date[4], "%2u", &imonth);
    sscanf_s(&date[6], "%2u", &iday);
    sscanf_s(&date[8], "%2u", &ihour);
    sscanf_s(&date[10], "%2u", &iminut);
 #else
-   sscanf(date,     "%4u", &iyear);
+unsigned int iyear, imonth, iday, ihour, iminut;
+sscanf(date,     "%4u", &iyear);
    sscanf(&date[4], "%2u", &imonth);
    sscanf(&date[6], "%2u", &iday);
    sscanf(&date[8], "%2u", &ihour);

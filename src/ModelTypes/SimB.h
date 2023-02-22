@@ -8,6 +8,10 @@
 #define NUM_TIME 50
 #endif
 
+#ifndef MS_CODE
+#include <cstddef>
+#endif
+
 #include <vector>
 #include <string>
 #include <map>

@@ -5,6 +5,8 @@
 #include "GausKreuger.h"
 #ifndef COUPSTD
 #include "../../Util/MFC_Util.h"
+#else
+#include <cstddef>
 #endif
 #include "../../Util/FUtil.hpp"
 #include "./GetPFCurve.h"

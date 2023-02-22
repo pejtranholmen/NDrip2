@@ -26,8 +26,14 @@ target_include_directories(${LIBUTIL_NAME} PUBLIC
     "../"
     "${CMAKE_BINARY_DIR}/configured_files/include"
  )
+ if(USE_POSTGRES) 
  target_link_libraries(${LIBUTIL_NAME} PUBLIC
     libpqxx::pqxx   
     cxxopts::cxxopts
     nlohmann_json::nlohmann_json
  )
+ else()
+  target_link_libraries(${LIBUTIL_NAME} PUBLIC
+    nlohmann_json::nlohmann_json
+ )
+endif()

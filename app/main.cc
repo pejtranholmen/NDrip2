@@ -28,7 +28,7 @@ using namespace std;
 #include "config.hpp"
 #include "Simulator/DefineModel.h"
 #include "Model/Structure/StructureModel.h"
-#include <cxxopts.hpp>
+//#include <cxxopts.hpp>
 #include <nlohmann/json.hpp>
 
 
@@ -106,7 +106,7 @@ void readJson(string jsonFileName, Doc* pDoc) {
 
 int main(int argc, char *argv[])
 {
-   cxxopts::Options options("test", "A brief description");
+ /*  cxxopts::Options options("test", "A brief description");
    options.add_options()
         ("b,bar", "Param bar", cxxopts::value<std::string>())
         ("d,debug", "Enable debugging", cxxopts::value<bool>()->default_value("false"))
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
     if (result.count("bar"))
         bar = result["bar"].as<std::string>();
     int foo = result["foo"].as<int>();
-
+    */
     using namespace std;
 
     // Adding path var
@@ -136,7 +136,13 @@ int main(int argc, char *argv[])
 
     path = FUtil::GetCurrentPath();
     auto kolla = FUtil::GetFileList(".Sim");
-    /*
+#ifndef COUP_POSTGRES
+#ifdef LINUX2
+    string pfile = string(argv[0]);
+    auto pos=pfile.rfind("/");
+    path = pfile.substr(0, pos)+"/";
+
+#endif
     simFilePath = path + "Main_000000.Sim";
 
     // Setting global OPTIONS
@@ -147,10 +153,11 @@ int main(int argc, char *argv[])
     FUtil::WriteProfileInt("SimulationRunNo", 1);
 
     int i = 0;
-    Doc* pDoc = SimUtil::CreateDoc(i, simFilePath);
+    auto pDoc = SimUtil::CreateDoc(i, simFilePath);
 
     string jsonfile = path + "par.json";
     readJson(jsonfile, pDoc);
+
 
     auto koll=PGUtil::createInputBinFile(path + "CLIMATE.TXT");
     koll=PGUtil::createInputBinFile(path + "FERTILIZERS.TXT");
@@ -159,8 +166,9 @@ int main(int argc, char *argv[])
     SimUtil::SimProc(0, pDoc, false);
 
     pDoc->WriteDocFile();
+#else
 
-    */
+    
     auto koll=FUtil::GetFileList(".");
     
      Doc* pDoc = new Doc();
@@ -168,7 +176,7 @@ int main(int argc, char *argv[])
         pDoc->SelectDoc_From_Postgres(4);
         pDoc->MakeSingleRun(true);
      
-        
+#endif       
 
 
     

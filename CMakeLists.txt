@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(CMAKE_CXX_STANDARD 20)
+#set(CMAKE_CXX_STANDARD 1)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD_REQUIRED OFF)
+
 
 include(FetchContent)
 
@@ -13,26 +14,28 @@ set(EXECUTABLE_NAME Executable)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 include(AddGitSubmodule)
-option(USE_POSTGRES "To include the link to a local Postgres Database" ON)
 
 
-if(USE_POSTGRES) 
-
-    find_package(libpqxx CONFIG REQUIRED)
-    message("libpq will be used")
-    add_compile_definitions(COUP_POSTGRES )
-
-endif()
+#option(USE_POSTGRES "To include the link to a local Postgres Database" OFF)
 
 
+#if(USE_POSTGRES) 
 
-FetchContent_Declare(
-    cxxopts
-    GIT_REPOSITORY https://github.com/jarro2783/cxxopts
-    GIT_TAG v3.0.0
-    GIT_SHALLOW TRUE)
+#    find_package(libpqxx CONFIG REQUIRED)
+#    message("libpq will be used")
+#    add_compile_definitions(COUP_POSTGRES )
 
-FetchContent_MakeAvailable(cxxopts)
+#endif()
+
+
+
+#FetchContent_Declare(
+#    cxxopts
+#    GIT_REPOSITORY https://github.com/jarro2783/cxxopts
+#    GIT_TAG v3.0.0
+#    GIT_SHALLOW TRUE)
+
+#FetchContent_MakeAvailable(cxxopts)
 
 FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz)
 
@@ -47,6 +50,7 @@ if (MSVC)
     add_compile_definitions(MS_CODE)
 else ()
     include(GNUInstallDirs)
+    add_compile_definitions(LINUX2)
 endif()
 
 add_compile_definitions(NO_MS_GUI COUPSTD STD)

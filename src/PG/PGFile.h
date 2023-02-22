@@ -1,4 +1,12 @@
 #pragma once
+
+#ifndef MS_CODE
+#include <cstddef>
+#endif
+
+#include "./PG_Stream.h"
+#include "../ModelTypes/CoupTypes.h"
+
 struct PGPOS
 {
 	size_t first;
@@ -8,8 +16,6 @@ struct PGPOS
 	bool nodiscretehit;
 };
 
-#include "./PG_Stream.h"
-#include "../ModelTypes/CoupTypes.h"
 class CPGFile: public PG_Stream
 {
 public:

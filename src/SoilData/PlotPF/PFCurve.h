@@ -1,5 +1,8 @@
 #pragma once
 #include "./GetPFCurve.h"
+#ifndef MS_CODE
+#include <cstddef>
+#endif
 class PFCurve :
 	public GetPFCurve
 {

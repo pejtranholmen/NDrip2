@@ -7,9 +7,11 @@ using namespace std;
 Register::Register()
 {
 #ifndef NOSIMMODEL
+#ifndef LINUX2
 	m_IsOpen = true;
 	OpenRegister();
 	if (!m_register.is_open()) OpenRegister();
+#endif
 #endif
 }
 

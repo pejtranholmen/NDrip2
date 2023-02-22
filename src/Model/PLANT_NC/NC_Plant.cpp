@@ -3544,7 +3544,7 @@ void NC_Plant::Summation_Fluxes() {
 		for (size_t j = 1; j <= _OLD_COARSE_ROOT; j++) {
 			TotPlantLitter[jj] += sum(P_LitterFall[j][jj]);
 			if (j == _OLD_STEM) TotAbovePlantLitter[jj] = TotPlantLitter[jj];
-			for (size_t iplant = 0; iplant < size(P_LitterFall[j][jj]); iplant++) {
+			for (size_t iplant = 0; iplant <P_LitterFall[j][jj].size(); iplant++) {
 				TotalPlantLitterFall[jj][iplant] += P_LitterFall[j][jj][iplant];
 			}
 			

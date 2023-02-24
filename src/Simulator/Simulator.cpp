@@ -727,8 +727,11 @@ bool Simulator::Store_Write(bool MultiFlag, bool Final)
 		}
 		m_pSim->m_PG_OutPutFile.ReCalculateMinMax();
 		if(!m_pSim->m_PG_OutPutFile.SaveAs(((ModelFiles*)m_pSim)->GetNewOutputFileName(), true)) {
-			
+#ifdef LINUX2
+			string koll = ((ModelFiles*)m_pSim)->GetNewOutputFileName();
+			cerr << koll << endl;
 			return false;	
+#endif
 			
 		};
 
@@ -994,6 +997,9 @@ bool Simulator::Valid_Ini(bool MultiFlag, bool First) {
 			if (pSimB == nullptr) {
 				m_pSim->m_Val_Array[i].Name = FUtil::NameRevision2018(m_pSim->m_Val_Array[i].Name);
 				pSimB = m_pSim->GetPtr(type, m_pSim->m_Val_Array[i].Group, m_pSim->m_Val_Array[i].Name);
+				if (pSimB == nullptr) {
+					pSimB = m_pSim->GetPtrByName(m_pSim->m_Val_Array[i].Name);
+				}
 
 			}
 			a.pBase=pSimB; a.TabIndex=m_pSim->m_Val_Array[i].LocalIndex;

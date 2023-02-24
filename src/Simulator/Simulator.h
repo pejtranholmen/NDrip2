@@ -81,10 +81,18 @@ class Simulator
 		bool WShed_Store();
 		bool WShed_StoreWrite();
 
-		double GetSimValValue(size_t index)
-		{if(m_pValVar[index].pBase->Is_Vector()) return ((OutVector*)m_pValVar[index].pBase)->GetValue(m_pValVar[index].TabIndex);
-		else return ((OutSingle*)m_pValVar[index].pBase)->GetValue(); }	;
-	
+		double GetSimValValue(size_t index)		{
+			if (m_pValVar[index].pBase != nullptr) {
+				if(m_pValVar[index].pBase->Is_Vector()) return ((OutVector*)m_pValVar[index].pBase)->GetValue(m_pValVar[index].TabIndex);
+				else
+				{
+
+				}			return ((OutSingle*)m_pValVar[index].pBase)->GetValue();
+			}
+			else
+				return double(MISSING);
+		};
+
 		vector<SIMB> m_Outputs, m_MultiOutputs, m_WshedOutputs;	// The two possible time serie outputs for single runs and Multi Runs	
 		vector<OUTPUT_SUMMARY_RESULTS> Stat;
 		vector<float> m_OutFloat, m_OutFloatWShed;

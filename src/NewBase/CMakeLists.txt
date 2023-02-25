@@ -36,29 +36,14 @@ add_subdirectory(Validation)
 add_subdirectory(DB)
 add_subdirectory(mcmc)
 
-#target_include_directories(
-#	modeltypeslib
-#	PRIVATE src/modeltypes)
-
 target_include_directories(${DOCUMENT_NAME} PUBLIC
     "./"
     "../"
     "${CMAKE_BINARY_DIR}/configured_files/include"
 )
-if(USE_POSTGRES)
+
 target_link_libraries(${DOCUMENT_NAME} 
 PUBLIC 
-if(MSVC)
     libpqxx::pqxx
-endif()
     nlohmann_json::nlohmann_json 
 )
-else ()
-target_link_libraries(${DOCUMENT_NAME} 
-PUBLIC 
-    nlohmann_json::nlohmann_json 
-)
-
-
-
-endif()

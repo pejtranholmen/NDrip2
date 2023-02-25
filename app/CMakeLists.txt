@@ -24,4 +24,4 @@ target_link_libraries(documentlib INTERFACE mcmclib)
 target_link_libraries(${EXECUTABLE_NAME} PUBLIC 
     documentlib
     ${SIMULATOR_LIBNAME}
- )
+)

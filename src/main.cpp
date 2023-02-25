@@ -1,6 +1,6 @@
 
 
-#include "Util/SimUtil.hpp"
+#include "./Util/SimUtil.hpp"
 
 #include <NewBase/CommonModelInfo.h>
 #include <NewBase/ModelMap.h>
@@ -15,17 +15,17 @@
 
 int main(int argc, char *argv[]) {
 
-    auto path = FUtil::GetCurrentPath();
-    auto kolla = FUtil::GetFileList(".xml");
+   auto path = FUtil::GetCurrentPath();
+   auto kolla = FUtil::GetFileList(".xml");
     
 
-    for (size_t i = 0; i < kolla.size(); i++) {
+   for (size_t i = 0; i < kolla.size(); i++) {
             unique_ptr<Doc> pDoc = SimUtil::CreateDoc(i, kolla[i]);
             if(i==0) pDoc->ReDefinePostgresDataBase();
 
             pDoc->WriteDoc_To_Postgres();
     }
-
+   
     
 
   //  pDoc->ReDefinePostgresDataBase();
@@ -35,6 +35,6 @@ int main(int argc, char *argv[]) {
  auto add_tables = create_Additional_Tables(pinfo, move(pDoc));
  */
 
-     
+    return 0;
 
 }

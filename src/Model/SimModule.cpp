@@ -325,7 +325,7 @@ void SimModule::Define(Func* ptr, FunctorProp myf, SimModule *mClass, string nam
 	ptr->SetGroupNo(ModuleNo);
 	auto ret = m_pModelMap->MapFunc[ModuleNo].insert(pair<string, Func*>(name, ptr));
 	if (ret.second == false) {
-		m_pModelMap->MapErrors.insert(pair<string, int>(name, ModuleNo));
+		m_pModelMap->MapErrors.insert(pair<string, int>(name, int(ModuleNo)));
 	}
 }
 void SimModule::Define(Func* ptr, FunctorProp myf,  SimModule *mClass, string name, PLOT_PARAM plotpar)
@@ -337,7 +337,7 @@ void SimModule::Define(Func* ptr, FunctorProp myf,  SimModule *mClass, string na
 	auto ret = m_pModelMap->MapFunc[ModuleNo].insert(pair<string, Func*>(name, ptr));
 	auto ret2 = m_pModelMap->MapMyFunc.insert(pair<MyFunc, Func*>(myf.FuncName, ptr));
 	if (ret.second == false) {
-		m_pModelMap->MapErrors.insert(pair<string, int>(name, ModuleNo));
+		m_pModelMap->MapErrors.insert(pair<string, int>(name, int(ModuleNo)));
 	}
 }
 
@@ -353,7 +353,7 @@ void SimModule::Define(Func* ptr, FunctorProp myf, string name,  vector<Ps*> Ps_
     if (myf.FuncName == MyFunc::NO_PARFUNC) m_pModelMap->MapPhysFunc.insert(pair<int, Func*>(int(myf.PhysFuncName), ptr));
 	else m_pModelMap->MapMyFunc.insert(pair<enum  MyFunc, Func*>(myf.FuncName, ptr));
 	if (ret.second == false) {
-		m_pModelMap->MapErrors.insert(pair<string, int>(name, ModuleNo));
+		m_pModelMap->MapErrors.insert(pair<string, int>(name, int(ModuleNo)));
 	}
 }
 void SimModule::Define(Func* ptr, FunctorProp myf, string name, vector<Ps*> Ps_Vec, PLOT_PARAM plotpar)
@@ -369,7 +369,7 @@ void SimModule::Define(Func* ptr, FunctorProp myf, string name, vector<Ps*> Ps_V
 	if (myf.FuncName == MyFunc::NO_PARFUNC) m_pModelMap->MapPhysFunc.insert(pair<int, Func*>(int(myf.PhysFuncName), ptr));
 	else m_pModelMap->MapMyFunc.insert(pair<enum  MyFunc, Func*>(myf.FuncName, ptr));
 	if (ret.second == false) {
-		m_pModelMap->MapErrors.insert(pair<string, int>(name, ModuleNo));
+		m_pModelMap->MapErrors.insert(pair<string, int>(name, int(ModuleNo)));
 	}
 }
 void SimModule::Define(Func* ptr, FunctorProp myf, string name, vector<Ps*> Ps_Vec, vector<P*> P_Vec, PLOT_PARAM plotpar)
@@ -388,7 +388,7 @@ void SimModule::Define(Func* ptr, FunctorProp myf, string name, vector<Ps*> Ps_V
 	if (myf.FuncName == MyFunc::NO_PARFUNC) m_pModelMap->MapPhysFunc.insert(pair<int, Func*>(int(myf.PhysFuncName), ptr));
 	else m_pModelMap->MapMyFunc.insert(pair<enum  MyFunc, Func*>(myf.FuncName, ptr));
 	if (ret.second == false) {
-		m_pModelMap->MapErrors.insert(pair<string, int>(name, ModuleNo));
+		m_pModelMap->MapErrors.insert(pair<string, int>(name, int(ModuleNo)));
 	}
 }
 
@@ -402,7 +402,7 @@ void SimModule::Define(Func* ptr, FunctorProp myf, string name, vector<P*> P_Vec
 	if (myf.FuncName == MyFunc::NO_PARFUNC) m_pModelMap->MapPhysFunc.insert(pair<int, Func*>(int(myf.PhysFuncName), ptr));
 	else m_pModelMap->MapMyFunc.insert(pair<enum  MyFunc, Func*>(myf.FuncName, ptr));
 	if (ret.second == false) {
-		m_pModelMap->MapErrors.insert(pair<string, int>(name, ModuleNo));
+		m_pModelMap->MapErrors.insert(pair<string, int>(name, int(ModuleNo)));
 	}
 }
 void SimModule::Define(Func* ptr, FunctorProp myf, string name, vector<P*> P_Vec,  PLOT_PARAM plotpar)
@@ -416,7 +416,7 @@ void SimModule::Define(Func* ptr, FunctorProp myf, string name, vector<P*> P_Vec
 	if (myf.FuncName == MyFunc::NO_PARFUNC) m_pModelMap->MapPhysFunc.insert(pair<int, Func*>(int(myf.PhysFuncName), ptr));
 	else m_pModelMap->MapMyFunc.insert(pair<enum  MyFunc, Func*>(myf.FuncName, ptr));
 	if (ret.second == false) {
-		m_pModelMap->MapErrors.insert(pair<string, int>(name,ModuleNo ));
+		m_pModelMap->MapErrors.insert(pair<string, int>(name,int(ModuleNo) ));
 	}
 }
 

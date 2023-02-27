@@ -2668,6 +2668,8 @@ bool NewMap::WriteDoc_To_Postgres() {
 	t.comment = m_DocFile2.m_Comments;
 	t.simno = m_DocFile.m_SimulationRunNo;
 	t.name = m_DocFileName;
+	cout << m_DocFileName << endl;
+
 
 	int pkey = transfer_Document(t);
 	// Runinfo

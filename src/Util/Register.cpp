@@ -94,7 +94,7 @@ size_t Register::WriteRegisterFile() {
 	char buffer[100];
 	int n;
 	m_register.seekp(0);
-	n=snprintf(buffer,100, "%u,%u\n", m_MapInt.size(), m_MapString.size());
+	n=snprintf(buffer,100, "%zu,%zu\n", m_MapInt.size(), m_MapString.size());
 	m_register.write(buffer, n);
 	for (auto it = m_MapInt.begin(); it !=m_MapInt.end(); ++it) {
 		string str;

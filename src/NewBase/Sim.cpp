@@ -355,6 +355,7 @@ void Sim::SetCurrentFileName(string pzPathName)
 {
 	m_CurrentFile=pzPathName;
 	m_DocFileName=m_CurrentFile;
+	cout << m_DocFileName << endl;
 	int iv;
 #ifndef LINUX2
 		iv = m_CurrentFile.rfind('\\');

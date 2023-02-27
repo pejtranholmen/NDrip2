@@ -12,13 +12,6 @@
       "cmakeExecutable": "C:/Program Files/CMake/bin/cmake.exe",
       "intelliSenseMode": "windows-msvc-x64",
       "inheritEnvironments": [ "msvc_x64_x64" ],
-      "variables": [
-        {
-          "name": "CMAKE_TOOLCHAIN_FILE",
-          "value": "C:\\Dev\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake",
-          "type": "STRING"
-        }
-      ],
       "cmakeToolchain": "C:/Dev/vcpkg/scripts/buildsystems/vcpkg.cmake"
     },
     {

@@ -9,10 +9,10 @@ add_subdirectory(ModelTypes)
 add_subdirectory(NewBase)
 add_subdirectory(Model)
 
-add_executable(main main.cpp)
+add_executable(upload_xmlfile main.cpp)
 
 if(USE_POSTGRES) 
-		target_link_libraries(main libpqxx::pqxx documentlib ${SIMULATOR_LIBNAME})
+		target_link_libraries(upload_xmlfile libpqxx::pqxx documentlib ${SIMULATOR_LIBNAME})
 endif()
 
 

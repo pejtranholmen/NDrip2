@@ -1584,6 +1584,7 @@ int transfer_Document(struct sim_doc_simulation str) {
         cerr << e.what() << std::endl;
         return -1;
     }
+
     return 0;
 };
 int transfer_RunInfo_Document(struct run_info_document s) {
@@ -1960,6 +1961,7 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
         }
         return -1;
     }
+    return 0;
    
 };
 int transfer_Validation(int simkey, vector< vector<string>>& v) {
@@ -2034,6 +2036,7 @@ int transfer_dynamic_parameters(int pkey, vector < tuple<int, int, string, int, 
         cerr << e.what() << std::endl;
         return -1;
     }
+    return 0;
 };
 int transfer_multirun_setting(int pkey, vector <tuple<int, int, string, int, int, int, float, float, float, string, int, vector<float>, vector<string>, vector<string>, int >>& mr) {
     try {
@@ -2086,6 +2089,7 @@ int transfer_multirun_setting(int pkey, vector <tuple<int, int, string, int, int
         cerr << e.what() << std::endl;
         return -1;
     }
+    return 0;
 
 }
 int transfer_MultiStorage(int pkey, NewMap* pDoc) {

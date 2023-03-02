@@ -795,6 +795,8 @@ bool PG_Stream::Open(string filename, bool ShowError)
 	m_IsOpen=false;	
 	filename = PGUtil::CheckedForExistingBinFileName(filename);
 
+	cout << filename << endl;
+
 		
 		if(pg.status.CompleteFileRead) {
 			if(!GetAllFileInfo(filename, ShowError)) {

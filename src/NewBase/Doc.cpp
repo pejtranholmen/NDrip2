@@ -6,6 +6,7 @@
 #include "../Chart/ChartProperties/ChartProp.h"
 #endif
 #include "../Util/FUtil.hpp"
+
 //#include "..\Base\ModelType.h"
 
 
@@ -24,6 +25,7 @@ Doc::Doc() {
 	m_CurrentSheet=0;
 	m_SelectedDocuments.clear();
 	m_ActualDocChartType = CHART_TYPES::TIME_SERIE;
+
 }
 Doc::~Doc() {
 

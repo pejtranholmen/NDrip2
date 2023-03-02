@@ -152,6 +152,7 @@ public:
 	int     GetMonitor2View();
 	int     m_Monitor1View,m_Monitor2View;
 
+
 protected:
 	int m_LinkedDocNumber;
 	CCoupModelView *m_pModelView;

@@ -91,6 +91,8 @@ public:
 	string Sim2XLSX(bool ReadFlag = true, bool AllItems=false);
 	
 	bool ID_MapsForPostgresReady = false;
+	void SetLocalHost(bool status);
+	bool GetLocalHost();
 
 #ifndef COUPSTD
 	CPlotStorage m_PlotStorage;

@@ -1,7 +1,4 @@
 #include "NewMap.h"
-
-
-
 #include "../Util/FUtil.hpp"
 
 #define SECS_TO_FT_MULT 10000000
@@ -137,6 +134,13 @@ NewMap::~NewMap()
 
 
 
+}
+void NewMap::SetLocalHost(bool value) {
+	coup_pg::LocalHost = value;
+
+}
+bool NewMap::GetLocalHost() {
+	return coup_pg::LocalHost;
 }
 
 string NewMap::WriteEntireModelToXmlFile(doc_enabled enable_level)
@@ -536,7 +540,15 @@ bool NewMap::Read_SimB_FromXmlFile(pugi::xml_node node) {
 						if (pF != nullptr) {
 							string str_value = item.attribute("PG_File").as_string();
 							pF->SetValue(str_value);
-							pF->CheckFileNameAndAssignNameToPGClass();
+							if (!pF->CheckFileNameAndAssignNameToPGClass()) {
+								string fileonly;
+								string str;
+								auto pos = str_value.rfind('\\');
+								fileonly = str_value.substr(pos + 1);
+								str_value = m_CurrentDirectory + fileonly;
+								pF->SetValue(str_value);
+								cout << str_value << endl;
+							};
 							m_F_Array.push_back(pF);
 						}
 						else {
@@ -2619,6 +2631,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 		current_str = "Validations";
 		VALv vst;
 		for (const auto row : r) {
+			vst.NSE = MISSING;
 			vst.ValidationFileIndex = row[1].as<int>();
 			vst.OutputType = row[2].as<int>();
 			vst.Group = row[3].as<string>();
@@ -2640,7 +2653,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 			vst.MeanSim = row[20].as<float>();
 			vst.MeanVal = row[21].as<float>();
 			vst.LogLi = row[22].as<float>();
-			vst.NSE = row[23].as<float>();
+			vst.NSE = row[23].as<float>();		
 			m_Val_Array.push_back(vst);
 		}
 
@@ -2824,7 +2837,10 @@ bool NewMap::WriteDoc_To_Postgres() {
 	// Model Files
 	tuple<int, int, vector<float>> record;
 	vector< tuple<int, int, vector<float>>> vrecs;
-	string outputfiledir, outputfilename;
+	string outputfiledir, outputfilename, infiledir;
+	auto pos = m_DocFileName.rfind('\\');
+	infiledir = m_DocFileName.substr(0, pos + 1);
+
 	{
 		vector<SimB*> vall;
 		vall = GetPtrVector(PGFILE, false);
@@ -2863,6 +2879,19 @@ bool NewMap::WriteDoc_To_Postgres() {
 				std::string f = ss.filename;
 				pPG->SetFileName(f);
 				auto koll = pPG->Open(f);
+				if (!koll) {
+					string ans;
+					string shortname;
+					auto pos2 = f.rfind('\\');
+					shortname = f.substr(pos2 + 1);
+					f = FUtil::GetDocumentPath() + shortname;
+					auto koll = pPG->Open(f);
+					cout <<"file not open:"<< f << endl;
+					cin >> ans;
+
+
+
+				}
 				if (pPG->IsOpen() && koll) {
 					ss.NumVar = pPG->GetNumVariables();
 					ss.NumRec = pPG->GetNumRecords();
@@ -2907,6 +2936,8 @@ bool NewMap::WriteDoc_To_Postgres() {
 				transfer_Modified_TimeSeries(ss, vrecs);
 
 			};
+			cout << PGFileName << endl;
+
 
 			set_info_file(pkey, name, PGFileName);
 			if (OutputValFile.size() > 0) 	set_info_file(pkey, name, OutputValFile);
@@ -2921,13 +2952,14 @@ bool NewMap::WriteDoc_To_Postgres() {
 			count++;
 			v_inner[0] = to_string(vst.ValidationFileIndex); v_inner[1] = to_string(vst.OutputType);
 			v_inner[2] = "'" + vst.Group + "'"; v_inner[3] = +"'" + vst.Name + "'";
-			v_inner[4] = to_string(vst.LocalIndex); v_inner[5] = to_string(vst.ValidationFileNumber); v_inner[6] = to_string(count);
-			v_inner[7] = to_string(vst.Monitoring); v_inner[8] = to_string(vst.P_Error); v_inner[9] = to_string(vst.A_Error);
+			v_inner[4] = to_string(int(vst.LocalIndex)); v_inner[5] = to_string(vst.ValidationFileNumber); v_inner[6] = to_string(count);
+			v_inner[7] = to_string(int(vst.Monitoring)); v_inner[8] = to_string(vst.P_Error); v_inner[9] = to_string(vst.A_Error);
 			v_inner[10] = to_string(vst.AccTest); v_inner[11] = to_string(vst.LogTrans); v_inner[12] = to_string(vst.Duration);
 			v_inner[13] = to_string(vst.nNumber);	v_inner[14] = to_string(vst.R2); v_inner[15] = to_string(vst.A0); v_inner[16] = to_string(vst.A1);
 			v_inner[17] = to_string(vst.ME); v_inner[18] = to_string(vst.RMSE); v_inner[19] = to_string(vst.MeanSim); v_inner[20] = to_string(vst.MeanVal);
 			v_inner[21] = to_string(vst.LogLi);
 			v_inner[22] = to_string(vst.NSE);
+			if (v_inner[22] == "-inf") v_inner[22] = "Null";
 			v.push_back(v_inner);
 		}
 		transfer_Validation(pkey, v);

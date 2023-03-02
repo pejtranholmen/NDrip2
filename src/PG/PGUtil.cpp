@@ -1134,7 +1134,7 @@ int PGUtil::LengthOfMonth(unsigned int min) {
 
 string PGUtil::CheckedForExistingBinFileName(string filename)
 {
-    //cout << "original file name: " << filename << endl;
+    cout << "original file name: " << filename << endl;
 	string filenameout;
 	if (!FUtil::IsFileExisting(filename)) {
 
@@ -1149,6 +1149,8 @@ string PGUtil::CheckedForExistingBinFileName(string filename)
 		string UserDirectory = "";
 		UserDirectory = FUtil::GetProfileStringStd("UserDirectory", UserDirectory);
 		size_t numo;
+		cout << UserDirectory << endl;
+
 		numo = UserDirectory.size();
 		if (UserDirectory.rfind("\\") != numo - 1) {
 			UserDirectory += "\\";

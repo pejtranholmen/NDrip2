@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <string>
 #include <fstream>
+#include <ios>
 
 //#include "../NewBase/ModelMap.h"
 
@@ -57,9 +58,16 @@ namespace FUtil
 {
 	static bool LocalHost = true;
 	static char delimchar=',';
+	static string cur_path;
 
 
 
+	static void SetDocumentPath(string path) {
+		cur_path = path;
+    }
+	static std::string GetDocumentPath() {
+		return cur_path;
+	}
 
 
 static std::string GetCurrentPath() {
@@ -121,7 +129,11 @@ static vector<string> GetFileList(string type) {
 		CString Comp = pApp->GetProfileString(_T("CoupModel"), CString(item.c_str()), CString(value.c_str()));
 		return CT2A(Comp).m_psz;
 #else 
+		if (item == "UserDirectory") {
 
+			value = FUtil::GetDocumentPath();
+
+		}
 		//return p_Register->GetString(item);
 
 #endif

@@ -15,16 +15,20 @@ using namespace pqxx;
 
 
 namespace coup_pg {
+    static bool LocalHost{ false };
     static connection initconnection(string work_to_be) {
-        string init;
-        if(FUtil::LocalHost)
+        string init, ans;
+        
+
+        if(LocalHost)
             init = "dbname = coup user = postgres password = pe1950 port = 5432";
-        else
-            init ="dbname = teyojvga  user = teyojvga password = lzigAYICibNNBU-Aefp4PszeBl9DkMEs host = balarama.db.elephantsql.com";
+        else 
+            init = "dbname = teyojvga  user = teyojvga password = lzigAYICibNNBU-Aefp4PszeBl9DkMEs host = balarama.db.elephantsql.com";       
 
         connection c(init);
         if (c.is_open()) {
             cout << "Open database " << c.dbname() <<" : " << work_to_be << endl;
+         //   cin >> ans;
         }
         else {
             cout << "Can't open database" << endl;
@@ -1965,14 +1969,15 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
    
 };
 int transfer_Validation(int simkey, vector< vector<string>>& v) {
-
+    string sql;
+    size_t count;
     try {
         connection c = initconnection("validation");
         pqxx::work W{ c };
         for (vector<string> inner : v) {
-            string sql = "INSERT INTO validation VALUES ( ";
+            sql = "INSERT INTO validation VALUES ( ";
             sql += to_string(simkey) + ",";
-            size_t count = 0;
+            count = 0;
             for (string str : inner) {
                 sql += str;
                 count++;
@@ -1989,6 +1994,7 @@ int transfer_Validation(int simkey, vector< vector<string>>& v) {
 
     catch (const std::exception& e) {
         cerr << e.what() << std::endl;
+        cerr << sql << count << std::endl;
         cerr << "Validation table error";
         return -1;
     }

@@ -591,7 +591,7 @@ float CResiduals::GetLogLiPMAX(size_t irun, size_t iv, bool res)
 }
 bool CResiduals::ReadHeader() {
 	auto koll=m_ResidualFile.tellg();
-	size_t RecL, NumRec, Numv;
+	unsigned int RecL, NumRec, Numv;
 
 	if (m_FileSize == -1) {
 		m_ResidualFile.read((char*)&NumRec, 4);

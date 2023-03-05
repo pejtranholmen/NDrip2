@@ -143,7 +143,7 @@ bool NewMap::GetLocalHost() {
 	return coup_pg::LocalHost;
 }
 
-string NewMap::WriteEntireModelToXmlFile(doc_enabled enable_level)
+string NewMap::WriteEntireModelToXmlFile(doc_enabled enable_level, string localdirectory)
 {
 	if (m_pCommonModelInfo == nullptr) {
 		auto pP = GetPPointer("Upper Depth");
@@ -163,6 +163,10 @@ string NewMap::WriteEntireModelToXmlFile(doc_enabled enable_level)
 			else if (enable_level == doc_enabled::ENABLED) fileout += "_Enabled";
 			//else if (enable_level == doc_enabled::NOT_DEFAULT) fileout += "_All";
 			fileout += ".xml";
+			if (localdirectory.size() > 0) {
+				fileout = localdirectory + FUtil::FileNameOnly(fileout);
+			}
+
 		}
 		return fileout;
 	};
@@ -2251,11 +2255,11 @@ void NewMap::Init_BlankDocument()
 		m_ValidationData.Init(this);
 		m_MStorage.Init(this);
 }
-bool NewMap::WriteDocFile()
+bool NewMap::WriteDocFile(string localdirectory)
 {
 	if (m_IsUsingDB_Source) {
-		 auto string = WriteEntireModelToXmlFile(doc_enabled::NOT_DEFAULT);
-		 WriteDoc_To_Postgres();
+		 auto string = WriteEntireModelToXmlFile(doc_enabled::NOT_DEFAULT, localdirectory);
+		 if(localdirectory.size()==0) WriteDoc_To_Postgres();
 		 return true;
 	}
 	else if (m_xmlFileToUse) {
@@ -2318,7 +2322,7 @@ bool NewMap::WriteDocFile()
 
 
 }
-bool NewMap::SelectDoc_From_Postgres(int pkey) {
+bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirectory) {
 #ifdef COUP_POSTGRES
 	string current_str;
     try {
@@ -2338,12 +2342,12 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 					auto dotpos = name.find(".");
 					if (dotpos != string::npos) name = name.substr(0, dotpos);
 					m_CurrentFile=name;
+					m_DocFileName = name+".xml";
 					m_DocFile.m_SimulationRunNo = pkey;
 				};
 			};
 			if (!keyfind) return false;
 		}
-
 		pqxx::result r = txn.exec("SELECT * FROM runinfo  WHERE id_simulations = " + to_string(pkey));
 		auto row = r.begin();
 		current_str = "RunInfo";
@@ -2597,14 +2601,18 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 		for (auto row : r) {
 			int id_timeserie = row["id_timeserie"].as<int>();
 			string name = p_ModelInfo->GetTimeSeriesName(id_timeserie);
-			F* pF = GetF(name);
-			string filename = row["filename"].as<string>();
-			pF->SetValue(filename);
-
-
-			if (!pF->CheckFileNameAndAssignNameToPGClass()) {
-				int problem = 0; //FileNameDoes not exist
+			if (download) {
+				F* pF = GetF(name);
+				string filename = row["filename"].as<string>();
+				if (localdirectory.size() > 0) {
+					filename = localdirectory + FUtil::FileNameOnly(filename);
+					pF->SetValue(filename);
+				}
+				//if (!pF->CheckFileNameAndAssignNameToPGClass()) {
+				//	int problem = 0; //FileNameDoes not exist
+				//}
 			}
+
 
 		}
 
@@ -2620,7 +2628,8 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 				int numrec = row_inner["numrecords"].as<int>();
 				string filename = row_inner["filename"].as<string>();
 			}
-			download_pg_file(id_filename);
+			if(download)
+			    download_pg_file(id_filename, localdirectory);
 
 
 		}
@@ -2657,7 +2666,11 @@ bool NewMap::SelectDoc_From_Postgres(int pkey) {
 			m_Val_Array.push_back(vst);
 		}
 
+		if (download) {
+			m_IsUsingDB_Source = true;
+			WriteDocFile(localdirectory);
 
+		}
 		return true;
 	}
 	catch (const std::exception& e) {
@@ -3241,7 +3254,7 @@ bool NewMap::Info_Header(bool reading)
 		}
 		else { //kk
 			string ExeDate; 
-			ExeDate="Version 6.2.1, ";
+			ExeDate="Version 6.2.2, ";
 #ifndef COUPSTD
 			CWinApp *pApp;
 			pApp=AfxGetApp();

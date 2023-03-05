@@ -135,7 +135,7 @@ static bool uploadpgFile(std::string filename) {
     }
     return 1;
 };
-static bool download_pg_file(int pkey) {
+static bool download_pg_file(int pkey, string localdirectory) {
 
    
     connection c = initconnection("create pg file");
@@ -150,9 +150,14 @@ static bool download_pg_file(int pkey) {
         numrec = row_inner["numrecords"].as<int>();
         filename = row_inner["filename"].as<string>();
     }
-    if (!FUtil::IsFileExisting(filename)) {
-        auto path = FUtil::GetCurrentPath();
-        filename = path+FUtil::FileNameOnly(filename);      
+    if (localdirectory.size() > 0) {
+         filename=localdirectory+ FUtil::FileNameOnly(filename);
+    }
+    else {
+        if (!FUtil::IsFileExisting(filename)) {
+            auto path = FUtil::GetCurrentPath();
+            filename = path + FUtil::FileNameOnly(filename);
+        }
     }
 
     CPG pg(filename);
@@ -185,7 +190,7 @@ static bool download_pg_file(int pkey) {
         pg.SetVarLong(varno, longitude);
         pg.SetVarAlt(varno, altitude);
     }
-    rr = txn.exec("SELECT pgmintime, pgvarvalues FROM filenamearchive_data WHERE id_filename = " + to_string(pkey));
+    rr = txn.exec("SELECT pgmintime, pgvarvalues FROM filenamearchive_data WHERE id_filename = " + to_string(pkey)+" ORDER BY pgmintime ASC");
     size_t recno = 1;
     for (auto row_inner : rr) {
         size_t min = row_inner[0].as<int>();

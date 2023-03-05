@@ -16,7 +16,7 @@ class NewMap :public MR{
 public:
 	bool MakeMapComplete();
 	bool UpdateFilterTags(bool with_activefilter);
-	string WriteEntireModelToXmlFile(doc_enabled enable_level = doc_enabled::ALL);
+	string WriteEntireModelToXmlFile(doc_enabled enable_level = doc_enabled::ALL, string localdirectory="");
 	bool WriteHeaderToXmlFile(pugi::xml_node node);
 	bool Read_Header_FromXmlFile(pugi::xml_node node);
 	bool WriteValidationToXmlFile(pugi::xml_node node);
@@ -44,7 +44,7 @@ public:
 
 	bool WriteDoc_To_Postgres();
 	bool ReDefinePostgresDataBase();
-	bool SelectDoc_From_Postgres(int pkey);
+	bool SelectDoc_From_Postgres(int pkey, bool download=false, string localdirectory="");
 	vector<pair<int, string>> GetDataBaseSimulations();
 
 	bool CheckStart_EndTime();
@@ -58,7 +58,7 @@ public:
 			// updates all variable interactions
 	void SetPathName(string filename) {m_DocFileName=filename; m_CurrentFile=filename;};
 	bool ReadDocFile(string filename="");
-	bool WriteDocFile();
+	bool WriteDocFile(string localdirectory="");
 	bool ReadXmlDocFile(string filename);
 
 

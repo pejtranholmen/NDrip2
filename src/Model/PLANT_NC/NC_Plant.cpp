@@ -1129,7 +1129,7 @@ void NC_Plant::Integ()
 
 		for (size_t jj = 0; jj < m_pModelStructure->m_NumActPlantElements; jj++) {
 
-			for (size_t j = LEAF_GRAIN; j <= COARSE_ROOT_GRAIN; j++) {
+			for (size_t j = LEAF_GRAIN; j <= ROOT_LEAF; j++) {
 				if (P_ReAllocation[j][jj][0] > -10. &&P_ReAllocation[j][jj][0] < 1000.) {
 					OutFlow(P_State[P_ReLink[j].first][jj], P_ReAllocation[j][jj]);
 					InFlow(P_State[P_ReLink[j].second][jj], P_ReAllocation[j][jj]);
@@ -1138,7 +1138,7 @@ void NC_Plant::Integ()
 					P_ReAllocation[j][jj][0] = 0.;
 			}
 
-			for (size_t j = LEAF_STEM; j <= OLD_LEAF_MOBILE_RETURN; j++) {
+			for (size_t j = LEAF_MOBILE_RETURN; j <= OLD_LEAF_MOBILE_RETURN; j++) {
 				OutFlow(P_State[P_ReLink[j].first][jj], P_ReAllocation[j][jj]);
 				InFlow(P_State[P_ReLink[j].second][jj], P_ReAllocation[j][jj]);
 			}
@@ -1837,7 +1837,7 @@ auto Growth_Stage = [&](size_t index) {
 
 			}
 		}
-		else if (Emergence_Switch_Sw(Emergence_Switch) == Emergence_Switch_Sw::Temperature_Sum&&DormingStartDayNum[index]<1.) {
+		else if ((Emergence_Switch_Sw(Emergence_Switch) == Emergence_Switch_Sw::Temperature_Sum || Winter_Regulation_Sw(Winter_Regulation) == Winter_Regulation_Sw::on) &&DormingStartDayNum[index]<1.) {
 			out = max(0., Min_GSI[index]) + f_EmergenceWithMoistControl(index, NDrivTAir, NDrivTheta[0], T_Step);
 			if (out >= 1.) {
 				f_GrainStart = GrainStart(GrainSI_Step, GrainSI_StepDay, GrainSI_ThresDay, GrainSI_StepTemp, GrainSI_ThresTemp);
@@ -3323,10 +3323,6 @@ void NC_Plant::At_YearShifting() {//year shift for P added by HH
 			P_ReAllocation[j][_P_][i] = P_State[index][_P_][i] * 1. / T_Step;// -P_LitterFall[index][_P_][i];
 		}
 
-
-
-
-
 		for (size_t j = ROOT_OLD_ROOT; j <= COARSE_ROOT_OLD_COARSE_ROOT; j++) {
 			size_t index = j - ROOT_OLD_ROOT + _ROOT;
 			P_ReAllocation[j][_C_][i] = P_State[index][_C_][i] * 1. / T_Step;// -P_Respiration[index][i] - P_LitterFall[index][_C_][i];
@@ -3339,70 +3335,87 @@ void NC_Plant::At_YearShifting() {//year shift for P added by HH
 		f_GrainFill = PlantTempSum(T_Thres_GrainFill, T_Sum_GrainFill);
 
 
+
+
 	};
 
 
-	for(size_t i=0; i<P_State[_STEM][_C_].size(); i++) {
-		for(size_t jj=0; jj<m_pModelStructure->m_NumActPlantElements; jj++) 
-			for (size_t j = LEAF_OLD_LEAF; j <= COARSE_ROOT_OLD_COARSE_ROOT;j++) {
-				P_ReAllocation[j][jj][i] = 0.;
+	for (size_t iplant = 0; iplant < P_State[_STEM][_C_].size(); iplant++) {
+		for (size_t jj = 0; jj < m_pModelStructure->m_NumActPlantElements; jj++)
+			for (size_t j = LEAF_OLD_LEAF; j <= COARSE_ROOT_OLD_COARSE_ROOT; j++) {
+				P_ReAllocation[j][jj][iplant] = 0.;
 			}
-	yearshift=false;
-			
-	if(m_pModelInfo->JDayNum==1&&Max_Plant_LifeTime[i]>1.&&pAtm->Latitude>0&& SimPlantAge[i]>180.0&&YearShiftToBeDone[i]) {
+		yearshift = false;
 
-			MakeShiftCurrent2Old(i);
-			for (size_t jj = 0; jj < m_pModelStructure->m_NumActPlantElements; jj++) {
-				RemainOldLeaf[jj][i] = max(0., (P_State[_OLD_LEAF][jj][i])*(1. - 1. / max(1., (Max_Leaf_Lifetime[i] - 1.))));
-				RemainOldLeaf[jj][i] = P_State[_OLD_LEAF][jj][i] + P_ReAllocation[LEAF_OLD_LEAF][jj][i];
-			}
-			if(Winter_Regulation==1) 
-				 GrowthStageIndex[i]=Min_GSI[i];
-			
-			yearshift=true;
-			YearShiftToBeDone[i]=false;
-			ResetYearShiftDay=2		;
-    	    
-    	    AccNPP_Leaf[i]=0.		;
-		    AccNPP_Stem[i]=0.;
-		    AccNPP_CoarseRoots[i]=0.;
-            AccNPP_Roots[i]=0.;
-            AccNPP_Plant[i]=0.;
-			Annual_D_CPlant[i]=P_SumPlant[_PLANT_WHOLE][_C_][i]-PreviousCPlant[i];
-			PreviousCPlant[i]=P_SumPlant[_PLANT_WHOLE][_C_][i]		;
-		}
-		else if(m_pModelInfo->JDayNum==180&&Max_Plant_LifeTime[i]>1.&&pAtm->Latitude<0&& SimPlantAge[i]>180.0&&YearShiftToBeDone[i]) {
+		if (m_pModelInfo->JDayNum == 1 && Max_Plant_LifeTime[iplant] > 1. && pAtm->Latitude > 0 && SimPlantAge[iplant] > 180.0 && YearShiftToBeDone[iplant]) {
 
-			MakeShiftCurrent2Old(i);
+			MakeShiftCurrent2Old(iplant);
 			for (size_t jj = 0; jj < m_pModelStructure->m_NumActPlantElements; jj++) {
-				RemainOldLeaf[jj][i] = (P_State[_OLD_LEAF][jj][i])*(1. - 1. / max(1., (Max_Leaf_Lifetime[i] - 1.)));
+				RemainOldLeaf[jj][iplant] = max(0., (P_State[_OLD_LEAF][jj][iplant]) * (1. - 1. / max(1., (Max_Leaf_Lifetime[iplant] - 1.))));
+				RemainOldLeaf[jj][iplant] = P_State[_OLD_LEAF][jj][iplant] + P_ReAllocation[LEAF_OLD_LEAF][jj][iplant];
 			}
-	
-			yearshift=true;
-			YearShiftToBeDone[i]=false;
-			ResetYearShiftDay=181			;
-      	    AccNPP_Leaf[i]=0.		;
-		    AccNPP_Stem[i]=0.;
-		    AccNPP_CoarseRoots[i]=0.;
-            AccNPP_Roots[i]=0.;
-            AccNPP_Plant[i]=0.;
-			Annual_D_CPlant[i]=P_SumPlant[_PLANT_WHOLE][_C_][i]-PreviousCPlant[i];
-			PreviousCPlant[i]=P_SumPlant[_PLANT_WHOLE][_C_][i]		           ;
+			if (Winter_Regulation == 1)
+				GrowthStageIndex[iplant] = Min_GSI[iplant];
+
+			yearshift = true;
+			YearShiftToBeDone[iplant] = false;
+			ResetYearShiftDay = 2;
+
+			AccNPP_Leaf[iplant] = 0.;
+			AccNPP_Stem[iplant] = 0.;
+			AccNPP_CoarseRoots[iplant] = 0.;
+			AccNPP_Roots[iplant] = 0.;
+			AccNPP_Plant[iplant] = 0.;
+			Annual_D_CPlant[iplant] = P_SumPlant[_PLANT_WHOLE][_C_][iplant] - PreviousCPlant[iplant];
+			PreviousCPlant[iplant] = P_SumPlant[_PLANT_WHOLE][_C_][iplant];
 		}
-		else if(m_pModelInfo->JDayNum==ResetYearShiftDay) {
+		else if (m_pModelInfo->JDayNum == 180 && Max_Plant_LifeTime[iplant] > 1. && pAtm->Latitude < 0 && SimPlantAge[iplant]>180.0 && YearShiftToBeDone[iplant]) {
+
+			MakeShiftCurrent2Old(iplant);
 			for (size_t jj = 0; jj < m_pModelStructure->m_NumActPlantElements; jj++) {
-				RemainOldLeaf[jj][i] = max(0., (P_State[_OLD_LEAF][jj][i])*(1. - 1. / max(1., (Max_Leaf_Lifetime[i] - 1.))));
-				P_LitterFall[_OLD_LEAF][jj][i] = 0.;
-				P_ReAllocation[_OLD_LEAF][jj][i] = 0.;
+				RemainOldLeaf[jj][iplant] = (P_State[_OLD_LEAF][jj][iplant]) * (1. - 1. / max(1., (Max_Leaf_Lifetime[iplant] - 1.)));
 			}
 
-	
-		    YearShiftToBeDone[i]=true	;
+			yearshift = true;
+			YearShiftToBeDone[iplant] = false;
+			ResetYearShiftDay = 181;
+			AccNPP_Leaf[iplant] = 0.;
+			AccNPP_Stem[iplant] = 0.;
+			AccNPP_CoarseRoots[iplant] = 0.;
+			AccNPP_Roots[iplant] = 0.;
+			AccNPP_Plant[iplant] = 0.;
+			Annual_D_CPlant[iplant] = P_SumPlant[_PLANT_WHOLE][_C_][iplant] - PreviousCPlant[iplant];
+			PreviousCPlant[iplant] = P_SumPlant[_PLANT_WHOLE][_C_][iplant];
 		}
-        if(yearshift) 
-        	SimPlantYearAge[i]= SimPlantAge[i]/365.25+0.5;
-        
+		else if (m_pModelInfo->JDayNum == ResetYearShiftDay) {
+			for (size_t jj = 0; jj < m_pModelStructure->m_NumActPlantElements; jj++) {
+				RemainOldLeaf[jj][iplant] = max(0., (P_State[_OLD_LEAF][jj][iplant]) * (1. - 1. / max(1., (Max_Leaf_Lifetime[iplant] - 1.))));
+				P_LitterFall[_OLD_LEAF][jj][iplant] = 0.;
+				P_ReAllocation[_OLD_LEAF][jj][iplant] = 0.;
+			}
+
+			YearShiftToBeDone[iplant] = true;
+		}
+
+		if (yearshift) 	SimPlantYearAge[iplant] = SimPlantAge[iplant] / 365.25 + 0.5;
+
 	}
+
+	if (yearshift) {
+		for (size_t jj = 0; jj < m_pModelStructure->m_NumActPlantElements; jj++) {
+			for (size_t j = LEAF_OLD_LEAF; j <= COARSE_ROOT_OLD_COARSE_ROOT; j++) {
+				auto root = P_State[_ROOT][0];
+				auto oldroot = P_State[_OLD_ROOT][0];
+				auto fluxes = P_ReAllocation[j][jj];
+				OutFlow(P_State[P_ReLink[j].first][jj], fluxes);
+				InFlow(P_State[P_ReLink[j].second][jj], fluxes);
+				root = P_State[_ROOT][0];
+				oldroot = P_State[_OLD_ROOT][0];
+			}
+		}
+	}
+
+
 
 }
 void NC_Plant::TraceElementUptake() {

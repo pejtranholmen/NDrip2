@@ -11,8 +11,6 @@
 
 #include <PG/PG.h>
 
-
-
 int main(int argc, char* argv[]) {
 
     string doc_file_name;
@@ -98,6 +96,7 @@ int main(int argc, char* argv[]) {
            cin >> ans;
            if (ans.find('y') != string::npos || ans.find('Y') != string::npos) {
                auto pDoc = make_unique<Doc>();
+               pDoc->SetLocalHost(true);
                pDoc->ReDefinePostgresDataBase();
            }
        }

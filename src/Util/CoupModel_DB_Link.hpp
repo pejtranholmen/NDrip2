@@ -2006,7 +2006,7 @@ int transfer_Validation(int simkey, vector< vector<string>>& v) {
 };
 int transfer_dynamic_parameters(int pkey, vector < tuple<int, int, string, int, int, vector<int>, vector<float>, vector<string>>>& t) {
     try {
-        connection c = initconnection("dyanamic_parameters");
+        connection c = initconnection("dynamic_parameters");
         pqxx::work W{ c };
         for (const tuple<int, int, string, int, int, vector<int>, vector<float>, vector<string>> first : t) {
             string sql = "INSERT INTO dynamic_parameters VALUES (";

@@ -45,6 +45,7 @@ public:
 	bool WriteDoc_To_Postgres();
 	bool ReDefinePostgresDataBase();
 	bool SelectDoc_From_Postgres(int pkey, bool download=false, string localdirectory="");
+	bool DeleteDoc_From_Postgres(int pkey);
 	vector<pair<int, string>> GetDataBaseSimulations();
 
 	bool CheckStart_EndTime();

@@ -18,14 +18,23 @@ int main(int argc, char* argv[]) {
     auto path = FUtil::GetCurrentPath();
     auto kolla = FUtil::GetFileList(".xml");
     string answer;
+    if (argc == 1 && kolla.size() > 0) {
 
+        cout << kolla.size() << " xml files ready for upload" << endl;
+
+        cout << "Do you want to Upload ? (Y/N) :";
+        cin >> answer;
+
+        if (answer.find('y') != string::npos || answer.find('Y') != string::npos);
+        else
+            kolla.clear();
+    }
    if (argc == 1 && kolla.size() > 0) {
-
-       cout << kolla.size()<<" xml files ready for upload"<<endl;
 
        for (size_t i = 0; i < kolla.size(); i++) {
            cout << FUtil::STD_ItoAscii(i + 1) << " : " << kolla[i] << endl;
        }
+
 
        cout << "Select your number:";
        cin >> answer;

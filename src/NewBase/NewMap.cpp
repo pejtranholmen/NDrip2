@@ -545,11 +545,18 @@ bool NewMap::Read_SimB_FromXmlFile(pugi::xml_node node) {
 							string str_value = item.attribute("PG_File").as_string();
 							pF->SetValue(str_value);
 							if (!pF->CheckFileNameAndAssignNameToPGClass()) {
-								string fileonly;
-								string str;
-								auto pos = str_value.rfind('\\');
-								fileonly = str_value.substr(pos + 1);
-								str_value = m_CurrentDirectory + fileonly;
+								if (item_name == "Output File") {
+										str_value = GetOutputFileName(0).c_str();
+										pF->SetValue(str_value);
+										pF->CheckFileNameAndAssignNameToPGClass();
+								}
+								else {
+									string fileonly;
+									string str;
+									auto pos = str_value.rfind('\\');
+									fileonly = str_value.substr(pos + 1);
+									str_value = m_CurrentDirectory + fileonly;
+								}
 								pF->SetValue(str_value);
 								cout << str_value << endl;
 							};
@@ -2322,6 +2329,81 @@ bool NewMap::WriteDocFile(string localdirectory)
 
 
 }
+bool NewMap::DeleteDoc_From_Postgres(int pkey) {
+#ifdef COUP_POSTGRES
+	string current_str, sql;
+	try {
+
+		if (!m_pCommonModelInfo->ID_MapsForPostgresReady) m_pCommonModelInfo->ID_MapsForPostgresReady = DefineUniqueIdMaps(m_pCommonModelInfo, this);
+
+		pqxx::connection c = initconnection("Select from postgres");
+		pqxx::work txn{ c };
+		{
+			pqxx::result r = txn.exec("DELETE FROM runinfo WHERE id_simulations = " + to_string(pkey)) ;
+			r=txn.exec("DELETE FROM modified_switch_values WHERE id_simulations = " + to_string(pkey));
+			r=txn.exec("DELETE FROM modified_singleparameter_values WHERE id_simulations = " + to_string(pkey));
+			r=txn.exec("DELETE FROM modified_vectorparameter_values WHERE id_simulations = " + to_string(pkey)) ;
+			r= txn.exec("DELETE FROM modified_singleoutputs_resultvalues WHERE id_simulations = " + to_string(pkey)) ;
+			r= txn.exec("DELETE FROM modified_singleoutputs_storevalues WHERE id_simulations = " + to_string(pkey)) ;
+			r= txn.exec("DELETE FROM modified_vectoroutputs_resultvalues WHERE id_simulations = " + to_string(pkey)) ;
+			r= txn.exec("DELETE FROM modified_vectoroutputs_storevalues WHERE id_simulations = " + to_string(pkey)) ;
+			r= txn.exec("DELETE FROM filenamearchive_uses WHERE id_simulations = " + to_string(pkey)) ;
+			r= txn.exec("DELETE FROM dynamic_parameters WHERE id_simulations = " + to_string(pkey)) ;
+			r= txn.exec("DELETE FROM multirun_settings WHERE id_simulations = " + to_string(pkey)) ;
+			r= txn.exec("DELETE FROM multirun_Results WHERE id_simulations = " + to_string(pkey)) ;
+			r= txn.exec("DELETE FROM multirun_Residuals WHERE id_simulations = " + to_string(pkey)) ;
+			r= txn.exec("DELETE FROM multirun_Ensemble_Statistics WHERE id_simulations = " + to_string(pkey)) ;
+			r = txn.exec("DELETE FROM validation WHERE id_simulations = " + to_string(pkey));
+
+			sql = "SELECT * FROM filenamearchive_uses WHERE id_simulations = " + to_string(pkey);
+			r = txn.exec(sql);
+
+			for (auto row : r) {
+				int id_filename = row[1].as<int>();
+				pqxx::result rr = txn.exec("SELECT COUNT(id_filename) FROM filenamearchive_uses");
+				int num;
+				for (auto rownum : rr) {
+					num = rownum[0].as<int>();
+				}
+				if (num == 1) {
+					r = txn.exec("DELETE FROM modified_timeseries_inputs WHERE id_filename = " + to_string(id_filename));
+					r = txn.exec("DELETE FROM filenamyearchive WHERE id_filename = " + to_string(id_filename));
+					r = txn.exec("DELETE FROM filenamearchive_uses WHERE id_filename = " + to_string(id_filename));
+					r = txn.exec("DELETE FROM filenamearchive_data WHERE id_filename = " + to_string(id_filename));
+					r = txn.exec("DELETE FROM filenamearchive_descriptions WHERE id_filename = " + to_string(id_filename));
+				
+				}
+
+			}
+
+			sql = "SELECT * FROM modified_timeseries_inputs WHERE id_simulations = " + to_string(pkey);
+			r = txn.exec(sql);
+			for (auto row : r) {
+				int id_filename = row[2].as<int>();
+
+				r = txn.exec("DELETE FROM modified_timeseries_inputs WHERE id_simulations = " + to_string(pkey));
+				r = txn.exec("DELETE FROM filenamearchive_uses WHERE id_filename = " + to_string(id_filename));
+				r = txn.exec("DELETE FROM filenamearchive_descriptions WHERE id_filename = " + to_string(id_filename));
+				r = txn.exec("DELETE FROM filenamearchive_data WHERE id_filename = " + to_string(id_filename));
+				r = txn.exec("DELETE FROM filenamearchive WHERE id_filename = " + to_string(id_filename));
+			}
+			//r= txn.exec("DELETE FROM multirun_Ensemble_DefinedCriteria WHERE id_simulations = " + to_string(pkey)) ;
+			r= txn.exec("DELETE FROM simulations WHERE id_simulations = " + to_string(pkey));
+
+		}
+
+		txn.commit();
+		
+	}
+	catch (const std::exception& e) {
+			cerr << e.what() << std::endl;
+			cerr << sql;
+			return false;
+	}
+	return true;
+#endif
+
+}
 bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirectory) {
 #ifdef COUP_POSTGRES
 	string current_str;
@@ -2333,7 +2415,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 		pqxx::work txn{ c };
 		{
 			bool keyfind = false;
-			pqxx::result r{ txn.exec("SELECT * FROM simulations WHERE id_simulations = " + to_string(pkey)) };
+			pqxx::result r= txn.exec("SELECT * FROM simulations WHERE id_simulations = " + to_string(pkey));
 			for (auto row : r) {
 				if (pkey == row[0].as<int>()) {
 					keyfind = true;
@@ -2342,8 +2424,12 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 					auto dotpos = name.find(".");
 					if (dotpos != string::npos) name = name.substr(0, dotpos);
 					m_CurrentFile=name;
-					m_DocFileName = name+".xml";
-					m_DocFile.m_SimulationRunNo = pkey;
+					if (name.rfind('_') != string::npos) {
+						string str;
+						str = name.substr(name.rfind('_')+1);
+						m_DocFile.m_SimulationRunNo = FUtil::AtoInt(str);
+					}
+					m_DocFileName = name+".xml";				
 				};
 			};
 			if (!keyfind) return false;
@@ -2604,13 +2690,18 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 			if (download) {
 				F* pF = GetF(name);
 				string filename = row["filename"].as<string>();
-				if (localdirectory.size() > 0) {
+				bool savefilename_as_modelfilename=true;
+				if (name.find("Validation File") != string::npos) {
+					string finaloutvalname;
+					if (id_timeserie == 18) finaloutvalname = GetOutputFileName(1).c_str();
+					else if (id_timeserie < 26) finaloutvalname = GetOutputFileName(id_timeserie - 9);
+					else if (id_timeserie < 24)  finaloutvalname = GetOutputFileName(id_timeserie - 24);
+					if (filename.find(finaloutvalname) != string::npos) savefilename_as_modelfilename = false;
+				}
+				if (localdirectory.size() > 0&&savefilename_as_modelfilename) {
 					filename = localdirectory + FUtil::FileNameOnly(filename);
 					pF->SetValue(filename);
 				}
-				//if (!pF->CheckFileNameAndAssignNameToPGClass()) {
-				//	int problem = 0; //FileNameDoes not exist
-				//}
 			}
 
 
@@ -2638,6 +2729,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 		r = txn.exec("SELECT * FROM Validation  WHERE id_simulations = " + to_string(pkey));
 		m_Val_Array.clear();
 		current_str = "Validations";
+
 		VALv vst;
 		for (const auto row : r) {
 			vst.NSE = MISSING;

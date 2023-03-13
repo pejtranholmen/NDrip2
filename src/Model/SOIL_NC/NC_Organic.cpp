@@ -24,6 +24,9 @@ bool NC_Organic::Ini()	{
 	SoilModel* p_Soil=(SoilModel*)m_pModelInfo->GetModelPtr("Soil Model");
 	Soil_Frost* pSoil=&p_Soil->m_SoilFrost;
 
+	PlantModel* pPlant = (PlantModel*)m_pModelInfo->GetModelPtr("Plant Model");
+	WaterUptake* p_Plant = &pPlant->m_WaterUptake;
+
 
 
 
@@ -106,6 +109,11 @@ bool NC_Organic::Ini()	{
 
 
 
+
+	}
+	if (LitterPools_Sw(LitterPools) == LitterPools_Sw::one) {
+		RateCoefSurf_L2 = 0.;
+		for (size_t i = 0; i < p_Plant->NumPlants; i++) p_NC_Plant->Root_FracLitter2[i];
 
 	}
 	if(!m_pModelInfo->StartStateValue) {
@@ -245,19 +253,22 @@ bool NC_Organic::IniFunctors() {
 
 	if (m_pModelStructure->m_NumActPlantElements < 3) {
 		f_TurnOver_CN[_L1] = Get_OrgTurnOverFunctor(MyFunc::LITTER_TURNOVER);
-		f_TurnOver_CN[_L2] = Get_OrgTurnOverFunctor(MyFunc::LITTER2_TURNOVER);
+		if (LitterPools_Sw(LitterPools) == LitterPools_Sw::two)
+				f_TurnOver_CN[_L2] = Get_OrgTurnOverFunctor(MyFunc::LITTER2_TURNOVER);
 		f_TurnOver_CN[_F] = Get_OrgTurnOverFunctor(MyFunc::FAECES_TURNOVER);
 		f_TurnOver_CN[_H] = Get_OrgTurnOverFunctor(MyFunc::HUMUS_TURNOVER);
 	}
 	else {
 		f_TurnOver_CNP[_L1] = Get_D5_OrgTurnOverFunctor(MyFunc::LITTER_CNP_TURNOVER);
-		f_TurnOver_CNP[_L2] = Get_D5_OrgTurnOverFunctor(MyFunc::LITTER2_CNP_TURNOVER);
+		if (LitterPools_Sw(LitterPools) == LitterPools_Sw::two)
+			f_TurnOver_CNP[_L2] = Get_D5_OrgTurnOverFunctor(MyFunc::LITTER2_CNP_TURNOVER);
 		f_TurnOver_CNP[_F] = Get_D5_OrgTurnOverFunctor(MyFunc::FAECES_CNP_TURNOVER);
 		f_TurnOver_CNP[_H] = Get_D5_OrgTurnOverFunctor(MyFunc::HUMUS_CNP_TURNOVER);
 	}
 
 	f_LitterTransSurf_L1 = Get_D1_Functor(MyFunc::LITTER_TRANS_SURFACE_L1);
-	f_LitterTransSurf_L2 = Get_D1_Functor(MyFunc::LITTER_TRANS_SURFACE_L2);
+	if(LitterPools_Sw(LitterPools)==LitterPools_Sw::two)
+			f_LitterTransSurf_L2 = Get_D1_Functor(MyFunc::LITTER_TRANS_SURFACE_L2);
 	f_LitterTransSurf_Hum = Get_D1_Functor(MyFunc::LITTER_TRANS_SURFACE_HUM);
 
 
@@ -322,10 +333,12 @@ Real		RateL
 Real*8		DecompHumus*/
 //!	New local variable included when correcting bug on Carbon mineralisation 18/1 2004
 //!	Flows from Surface Litter to uppermost soil compartments
-
+//! 
+size_t NumberOfLitterPools = 0;
+if (LitterPools_Sw(LitterPools) == LitterPools_Sw::two) NumberOfLitterPools = 1;
 auto OutflowFromSurfaceLittertoLitterUppermostLayer = [&]() {
 	for (size_t jj = 0; jj < m_pModelStructure->m_NumActPlantElements; jj++) {
-		for (size_t i = _L1; i <= _L2; i++) {
+		for (size_t i = _L1; i <= NumberOfLitterPools; i++) {
 			switch (i) {
 			case _L1:
 				if(Do_Cultivating) 
@@ -759,9 +772,10 @@ void NC_Organic::Integ()
 		Use CommonStrucN, Only	: SoilAmmonium, Denitrification, Denitrifier_Death
 
 	!	Flows from Surface Litter to uppermost soil compartments*/
-
+	size_t NumberOfLitterPools = 0;
+	if (LitterPools_Sw(LitterPools) == LitterPools_Sw::two) NumberOfLitterPools = 1;
 	for (size_t jj = 0; jj < m_pModelStructure->m_NumActPlantElements; jj++) {
-		for (size_t i = _L1; i <= _L2; i++) {
+		for (size_t i = _L1; i <= NumberOfLitterPools; i++) {
 			InFlow(O_State[i][jj].front(), SurfaceLitterMixingIntoUppermostlayer[i][jj]);
 			OutFlow(SurfaceLitter[i][jj], SurfaceLitterMixingIntoUppermostlayer[i][jj]);
 		}
@@ -772,7 +786,7 @@ void NC_Organic::Integ()
 	}
 
 	for (size_t jj = 0; jj < m_pModelStructure->m_NumActPlantElements; jj++) {
-		for (size_t i = _L1; i <= _L2; i++)
+		for (size_t i = _L1; i <= NumberOfLitterPools; i++)
 			InFlow(O_State[i][jj], LitterInputToSoilLayers[i][jj]);
 	}
 	/*

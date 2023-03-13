@@ -17,7 +17,20 @@ int main(int argc, char* argv[]) {
 
     auto path = FUtil::GetCurrentPath();
     auto kolla = FUtil::GetFileList(".xml");
+
+
     string answer;
+
+    string currentcreator=FUtil::GetProfileStringStd("Creator", "NN");
+
+    cout << "Current Creator Id :" << currentcreator<<" Enter string to change: ";
+    cin >> answer;
+
+    if (answer.size() > 2) {
+        FUtil::WriteProfileStringStd("Creator", answer);
+
+    }
+    
     if (argc == 1 && kolla.size() > 0) {
 
         cout << kolla.size() << " xml files ready for upload" << endl;
@@ -57,7 +70,6 @@ int main(int argc, char* argv[]) {
        if (pDoc != nullptr) {
            if (pDoc->WriteDoc_To_Postgres()) {
                cout <<"File Content Uploaded :"<< doc_file_name << endl;
-               cin >> answer;
            }
        }
        return 0;

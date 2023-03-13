@@ -17,6 +17,9 @@ int main(int argc, char* argv[]) {
 
     auto path = FUtil::GetCurrentPath();
     auto kolla = FUtil::GetFileList(".xml");
+
+    FUtil::WriteProfileInt("User", 1);
+    auto koll = FUtil::GetProfileIntNo("User",5);
     string ans;
     cout << "Do you want to Connect with Remote Database (Y/N) ?:";
     cin >> ans;

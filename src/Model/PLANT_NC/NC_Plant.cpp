@@ -605,6 +605,26 @@ bool NC_Plant::Ini()	{
 				return false;
 
 		}
+		if (Sowing_Switch_Sw(Sowing_Switch) == Sowing_Switch_Sw::PG_File_specified) {
+			m_PG_Sowing.Open(m_PG_Sowing.GetFileName());
+			auto num = m_PG_Sowing.GetNumRecords();
+			ISowingDates.resize(num);
+			for (size_t i = 0; i < num; i++)
+				ISowingDates[i] = m_PG_Sowing.GetLongTime(i + 1);
+			for (int i = num - 1; i >= 0; i--)
+				if (m_pModelInfo->m_ActMin < ISowingDates[i]) ISowingCount = i;
+			m_PG_Sowing.CloseFile();
+		}
+		if (Emergence_Switch_Sw(Emergence_Switch) == Emergence_Switch_Sw::PG_File_specified) {
+			m_PG_Emergence.Open(m_PG_Emergence.GetFileName());
+			auto num = m_PG_Emergence.GetNumRecords();
+			IEmergenceDates.resize(num);
+			for (size_t i = 0; i < num; i++)
+				IEmergenceDates[i] = m_PG_Emergence.GetLongTime(i + 1);
+			for (int i = num - 1; i >= 0; i--)
+				if (m_pModelInfo->m_ActMin < IEmergenceDates[i]) IEmergenceCount = i;
+			m_PG_Emergence.CloseFile();
+		}
 
 		if (Harvest_Day_Sw(Harvest_Day) == Harvest_Day_Sw::PG_File_specified) {
 			m_PG_HarvestDate.Open(m_PG_HarvestDate.GetFileName());
@@ -1179,49 +1199,72 @@ void NC_Plant::Integ()
 
 	auto LitterFallFlow = [&]() {
 		// Add for P in surface litter by HH
-		auto InflowToSurfaceLitter = [&](size_t jj_element, size_t i_plant, double Fraction) {
+		auto InflowToSurfaceLitter = [&](size_t jj_element, size_t i_plant) {
+			double Litter1Fraction;
 			for (size_t j = _LEAF; j <= _OLD_STEM; j++) {
+				switch (j) {
+					case _LEAF:
+					case _OLD_LEAF:
+						Litter1Fraction = (1. - Leaf_FracLitter2[i_plant]);
+						break;
+					case _STEM:	
+					case _OLD_STEM:
+						Litter1Fraction = (1. - Stem_FracLitter2[i_plant]);
+						break;
+					case _GRAIN:
+						Litter1Fraction = (1. - Grain_FracLitter2[i_plant]);
+						break;
+				}
 				if (P_LitterFall[j][jj_element][i_plant] >= 0.&&P_LitterFall[j][jj_element][i_plant] < 100000.) {
-					if (jj_element == _C_) InFlow(pNCSoil->SurfaceLitter[_L1][_C_], P_LitterFall[j][jj_element][i_plant] * Fraction);
-					else if (jj_element == _N_) InFlow(pNCSoil->SurfaceLitter[_L1][_N_], P_LitterFall[j][jj_element][i_plant] * Fraction);
-					else if (jj_element == _P_) InFlow(pNCSoil->SurfaceLitter[_L1][_P_], P_LitterFall[j][jj_element][i_plant] * Fraction);
+					if (jj_element == _C_) InFlow(pNCSoil->SurfaceLitter[_L1][_C_], P_LitterFall[j][jj_element][i_plant] * Litter1Fraction);
+					else if (jj_element == _N_) InFlow(pNCSoil->SurfaceLitter[_L1][_N_], P_LitterFall[j][jj_element][i_plant] * Litter1Fraction);
+					else if (jj_element == _P_) InFlow(pNCSoil->SurfaceLitter[_L1][_P_], P_LitterFall[j][jj_element][i_plant] * Litter1Fraction);
 
-					if (Fraction < 1.) {
-						if (jj_element == _C_) InFlow(pNCSoil->SurfaceLitter[_L2][_C_], P_LitterFall[j][jj_element][i_plant] * (1 - Fraction));
-						else if (jj_element == _N_) InFlow(pNCSoil->SurfaceLitter[_L2][_N_], P_LitterFall[j][jj_element][i_plant] * (1 - Fraction));
-						else if (jj_element == _P_) InFlow(pNCSoil->SurfaceLitter[_L2][_P_], P_LitterFall[j][jj_element][i_plant] * (1 - Fraction));
-
+					if (Litter1Fraction < 1.) {
+						if (jj_element == _C_) InFlow(pNCSoil->SurfaceLitter[_L2][_C_], P_LitterFall[j][jj_element][i_plant] * (1 - Litter1Fraction));
+						else if (jj_element == _N_) InFlow(pNCSoil->SurfaceLitter[_L2][_N_], P_LitterFall[j][jj_element][i_plant] * (1 - Litter1Fraction));
+						else if (jj_element == _P_) InFlow(pNCSoil->SurfaceLitter[_L2][_P_], P_LitterFall[j][jj_element][i_plant] * (1 - Litter1Fraction));
 					}
 				}
 				else {
 					P_LitterFall[j][jj_element][i_plant] = 0.;
-
-
 				}
 
 			}
 		};
 
-		auto InflowAboveGroundComponentsToSoilHorizon = [&](size_t jj_element, size_t i_plant, size_t i_soil_layer, double Fraction) {
+		auto InflowAboveGroundComponentsToSoilHorizon = [&](size_t jj_element, size_t i_plant, size_t i_soil_layer) {
+			double Litter1Fraction, LayerFraction;
 			for (size_t j = _LEAF; j <= _OLD_STEM; j++) {
+				switch (j) {
+				case _LEAF:
+				case _OLD_LEAF:
+					Litter1Fraction = (1. - Leaf_FracLitter2[i_plant]);
+					break;
+				case _STEM:
+				case _OLD_STEM:
+					Litter1Fraction = (1. - Stem_FracLitter2[i_plant]);
+					break;
+				case _GRAIN:
+					Litter1Fraction = (1. - Grain_FracLitter2[i_plant]);
+					break;
+				}
+
 				if (P_LitterFall[j][jj_element][i_plant] >= 0. && P_LitterFall[j][jj_element][i_plant] < 100000.) {
-					if (jj_element == _C_) InFlow(pNCSoil->O_State[_L1][_C_][i_soil_layer], P_LitterFall[j][jj_element][i_plant] * Fraction);
-					else if (jj_element == _N_) InFlow(pNCSoil->O_State[_L1][_N_][i_soil_layer], P_LitterFall[j][jj_element][i_plant] * Fraction);
-					else if (jj_element == _P_) InFlow(pNCSoil->O_State[_L1][_P_][i_soil_layer], P_LitterFall[j][jj_element][i_plant] * Fraction);
 
-					if (Fraction < 1.) {
-						if (jj_element == _C_) InFlow(pNCSoil->O_State[_L2][_C_][i_soil_layer], P_LitterFall[j][jj_element][i_plant] * (1 - Fraction));
-						else if (jj_element == _N_) InFlow(pNCSoil->O_State[_L2][_N_][i_soil_layer], P_LitterFall[j][jj_element][i_plant] * (1 - Fraction));
-						else if (jj_element == _P_) InFlow(pNCSoil->O_State[_L2][_P_][i_soil_layer], P_LitterFall[j][jj_element][i_plant] * (1 - Fraction));
+					if (jj_element == _C_) InFlow(pNCSoil->O_State[_L1][_C_][i_soil_layer], P_LitterFall[j][jj_element][i_plant] * Litter1Fraction);
+					else if (jj_element == _N_) InFlow(pNCSoil->O_State[_L1][_N_][i_soil_layer], P_LitterFall[j][jj_element][i_plant] * Litter1Fraction);
+					else if (jj_element == _P_) InFlow(pNCSoil->O_State[_L1][_P_][i_soil_layer], P_LitterFall[j][jj_element][i_plant] * Litter1Fraction);
 
+					if (Litter1Fraction < 1.) {
+						if (jj_element == _C_) InFlow(pNCSoil->O_State[_L2][_C_][i_soil_layer], P_LitterFall[j][jj_element][i_plant] * (1 - Litter1Fraction));
+						else if (jj_element == _N_) InFlow(pNCSoil->O_State[_L2][_N_][i_soil_layer], P_LitterFall[j][jj_element][i_plant] * (1 - Litter1Fraction));
+						else if (jj_element == _P_) InFlow(pNCSoil->O_State[_L2][_P_][i_soil_layer], P_LitterFall[j][jj_element][i_plant] * (1 - Litter1Fraction));
 					}
 				}
 				else {
 					P_LitterFall[j][jj_element][i_plant] = 0.;
-
-
 				}
-
 			}
 		};
 
@@ -1254,22 +1297,27 @@ void NC_Plant::Integ()
 			if (FungalGrowth > 0) OutFlow(P_State[_FUNGI][jj], P_LitterFall[_FUNGI][jj]);
 
 
-			for (size_t i = 0; i < P_LitterFall[_ROOT][_C_].size(); i++) {
+			for (size_t indexplant = 0; indexplant < P_LitterFall[_ROOT][_C_].size(); indexplant++) {
+
 				if (pNCSoil->LitterPools > 0) {
-					if (SoilLayerForLitterInput[i] == string::npos)
-						InflowToSurfaceLitter(jj, i, (1 - Leaf_FracLitter2[i]));
+					if (SoilLayerForLitterInput[indexplant] == string::npos)
+						InflowToSurfaceLitter(jj, indexplant);
 					else
-						InflowAboveGroundComponentsToSoilHorizon(jj, i, SoilLayerForLitterInput[i], (1 - Leaf_FracLitter2[i]));
+						InflowAboveGroundComponentsToSoilHorizon(jj, indexplant, SoilLayerForLitterInput[indexplant]);
 
 				}
 				else {
-					if (SoilLayerForLitterInput[i] == string::npos)
-						InflowToSurfaceLitter(jj, i, 1.);
+					if (SoilLayerForLitterInput[indexplant] == string::npos)
+						InflowToSurfaceLitter(jj, indexplant);
 					else
-						InflowAboveGroundComponentsToSoilHorizon(jj, i, SoilLayerForLitterInput[i], 1.);
+						InflowAboveGroundComponentsToSoilHorizon(jj, indexplant, SoilLayerForLitterInput[indexplant]);
 				}
-				mobilepoolLitterFall(jj, i);
+				mobilepoolLitterFall(jj, indexplant);
 			}
+
+
+
+
 		}
 	};
 	auto HarvestFlow = [&]() {
@@ -1792,6 +1840,16 @@ auto Growth_Stage = [&](size_t index) {
 				m_LatestSowingDay = m_pModelInfo->JDayNum;
 			}
 		}
+		else if (Sowing_Switch_Sw(Sowing_Switch) == Sowing_Switch_Sw::PG_File_specified) {
+			if (m_pModelInfo->m_ActMin >= ISowingDates[ISowingCount]) {
+				m_LatestSowingDay = m_pModelInfo->JDayNum;
+				auto year=PGUtil::YearFunction(m_pModelInfo->JDayNum);
+				ISowingCount++;
+				GrowingSum[index] = 0.;
+				Emergence_Done[index] = false;
+				out = 0.;
+			}
+		}
 	}
 	else if (GrowthStageIndex[index] <= 1. && Max_GSI[index] > 0. && !Emergence_Done[index]) { // // 1 emergence
 		if (ZadokForcingFromFileInput_Sw(ZadokForcingFromFileInput) == ZadokForcingFromFileInput_Sw::on) {
@@ -1837,7 +1895,17 @@ auto Growth_Stage = [&](size_t index) {
 
 			}
 		}
-		else if ((Emergence_Switch_Sw(Emergence_Switch) == Emergence_Switch_Sw::Temperature_Sum || Winter_Regulation_Sw(Winter_Regulation) == Winter_Regulation_Sw::on) &&DormingStartDayNum[index]<1.) {
+		else if (Emergence_Switch_Sw(Emergence_Switch) == Emergence_Switch_Sw::PG_File_specified) {
+			if (m_pModelInfo->m_ActMin >= IEmergenceDates[IEmergenceCount]) {
+				out = 1.;
+				Emergence_Done[index] = false;
+				auto year = PGUtil::YearFunction(m_pModelInfo->JDayNum);
+				GrowingStage[index] = 1.;
+				IEmergenceCount++;
+				f_GrainStart = GrainStart(GrainSI_Step, GrainSI_StepDay, GrainSI_ThresDay, GrainSI_StepTemp, GrainSI_ThresTemp);
+			}
+		}
+		else if ((Emergence_Switch_Sw(Emergence_Switch) == Emergence_Switch_Sw::Temperature_Sum|| Winter_Regulation_Sw(Winter_Regulation) == Winter_Regulation_Sw::on )&&DormingStartDayNum[index]<1.) {
 			out = max(0., Min_GSI[index]) + f_EmergenceWithMoistControl(index, NDrivTAir, NDrivTheta[0], T_Step);
 			if (out >= 1.) {
 				f_GrainStart = GrainStart(GrainSI_Step, GrainSI_StepDay, GrainSI_ThresDay, GrainSI_StepTemp, GrainSI_ThresTemp);
@@ -1853,7 +1921,7 @@ auto Growth_Stage = [&](size_t index) {
 			out = max(0., Min_GSI[index]);
 			SpringDevDayNum[index] = 0.;
 			GrowingStage[index] = 0.;
-		}
+		}	
 		else
 			Emergence_Done[index] = false;
 	}
@@ -1985,7 +2053,7 @@ for (size_t jj = 1; jj < m_pModelStructure->m_NumActPlantElements; jj++)
 CN_RatioPlant();
 	
 auto PreviousSeason = SpringDev;
-	for(size_t i=0; i<P_State[_LEAF][_N_].size(); i++) {
+	for(size_t i=0; i<P_State[_LEAF][_N_].size(); i++) { // Loop over plants
 
 
 		GrowthStageIndex[i]=Growth_Stage(i);
@@ -1997,12 +2065,13 @@ auto PreviousSeason = SpringDev;
 		ConditionalUpdateOfPlantAge(i);
 		if(Growth_Sw(Growth)>=Growth_Sw::Water_use_efficiency) {		
 			
-			if(GrowthStageIndex[i]>=1&& GrowthStageIndex[i]<1.1&&Min_GSI[i]<=1.&&!Emergence_Done[i]&&Max_GSI[i]>1.) { //Emergence
+			if(GrowthStageIndex[i]>=1&& GrowthStageIndex[i]<1.1&&Min_GSI[i]<1.&&!Emergence_Done[i]&&Max_GSI[i]>1.) { //Emergence
 				EmergenceAndRelatedUpdates(i);
 			}  				
 			else if(GrowthStageIndex[i]>1&& GrowthStageIndex[i]<=2&&P_State[_MOBILE][_N_][i]>1.E-4&&SpringDev) 
 				LeafShootingFromMobilePool(i);	
 			else if (GrowthStageIndex[i] >= 1 && GrowthStageIndex[i] < 1.1) {
+				int koll;
 
 			}
 		}
@@ -2743,6 +2812,7 @@ void NC_Plant::At_Harvest(bool WithGrazingEvent) {
 				HarvestFrac = P_HarvFracGrain[i];
 			}
 			P_LitterFall[_GRAIN][jj][i] = LitterFrac* (P_State[_GRAIN][jj][i] - (P_State[_GRAIN][jj][i]*HarvestFrac))*1. / T_Step;
+
 			P_LitterFall[_NEWMOBILE][jj][i] = P_State[_NEWMOBILE][jj][i] * 1. / T_Step;
 			if (SimPlantAge[i] >= Max_Plant_LifeTime[i] * 365. - 365 || HarvFracStem[i] == 1 || LitterFracStem[i] == 1.)
 				P_LitterFall[_MOBILE][jj][i] = P_State[_MOBILE][jj][i] * 1. / T_Step;
@@ -3401,7 +3471,7 @@ void NC_Plant::At_YearShifting() {//year shift for P added by HH
 
 	}
 
-	if (yearshift) {
+	if(yearshift) {
 		for (size_t jj = 0; jj < m_pModelStructure->m_NumActPlantElements; jj++) {
 			for (size_t j = LEAF_OLD_LEAF; j <= COARSE_ROOT_OLD_COARSE_ROOT; j++) {
 				auto root = P_State[_ROOT][0];
@@ -3414,10 +3484,8 @@ void NC_Plant::At_YearShifting() {//year shift for P added by HH
 			}
 		}
 	}
-
-
-
 }
+
 void NC_Plant::TraceElementUptake() {
 
 	for(size_t i=0; i<P_State[_STEM][_C_].size(); i++) {
@@ -3557,7 +3625,7 @@ void NC_Plant::Summation_Fluxes() {
 		for (size_t j = 1; j <= _OLD_COARSE_ROOT; j++) {
 			TotPlantLitter[jj] += sum(P_LitterFall[j][jj]);
 			if (j == _OLD_STEM) TotAbovePlantLitter[jj] = TotPlantLitter[jj];
-			for (size_t iplant = 0; iplant <P_LitterFall[j][jj].size(); iplant++) {
+			for (size_t iplant = 0; iplant < size(P_LitterFall[j][jj]); iplant++) {
 				TotalPlantLitterFall[jj][iplant] += P_LitterFall[j][jj][iplant];
 			}
 			

@@ -333,7 +333,7 @@ vector<string> create_Init_Tables(CommonModelInfo* pinfo) {
         drop(W, tablename);
         sql = create(tablename);
         sql += "(Id_Simulations SERIAL PRIMARY KEY,";
-        sql += "name Varchar(128),";
+        sql += "name Varchar(128) UNIQUE,";
         sql += "creator Varchar(128) Default '-',";
         sql += "runno Integer,";
         sql += "comment Varchar(128) Default '-');";
@@ -1898,66 +1898,82 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
                 if (posend > pos) {
                     shortname = r.filename.substr(pos + 1, posend - pos - 1);
                 }
+  
+                string testname = shortname;
+                // Test of File already exist in archive
 
-                sql = "INSERT INTO FileNameArchive VALUES (default,'";
-                sql += r.filename + "','";
-                sql += shortname + "',";
-                sql += to_string(r.NumVar) + ",";
-                sql += to_string(r.NumRec) + ",";
-                sql += to_string(r.NumRepetions) + ",";
-                sql += to_string(r.NormalTimeStep) + ",'{";
-
-                insertvector(r.Name); sql += "}','{"; insertvector_i(r.I_Units); sql += "}','{"; insertvector(r.Id);
-                sql += "}','{"; insertvector(r.Pos); sql += "}','{";
-                insertvector_r(r.Min); sql += "}','{"; insertvector_r(r.Max); sql += "}','{";
-                insertvector(r.Country); sql += "}','{"; insertvector(r.Station); sql += "}','{";
-                insertvector_d(r.Latitude); sql += "}','{"; insertvector_d(r.Longitude); sql += "}','{"; insertvector_d(r.Altitude);
-                sql += "}'";
-                sql += ") returning Id_FileName; ";
-                }
+                sql = "SELECT Id_filename, filename, shortname FROM FileNameArchive WHERE shortname = '"+shortname+"'";
                 result rr = W.exec(sql.c_str());
-                for (auto row : rr)  id_fileName = row[0].as<int>();
-
-
-                for (size_t i = 0; i < r.NumVar; i++) {
-                    sql = "INSERT INTO FileNameArchive_Descriptions VALUES (";
-                    sql += to_string(id_fileName) + ",";
-                    sql += to_string(i + 1) + ",'";
-                    sql += r.Name[i] + "',";
-                    sql += to_string(r.I_Units[i]) + ",'";
-                    sql += "x ','";
-                    sql += r.Id[i] + "','";
-                    sql += r.Pos[i] + "','";
-                    sql += r.Country[i] + "','";
-                    sql += r.Station[i] + "',";
-                    sql += to_string(r.Latitude[i]) + ",";
-                    sql += to_string(r.Longitude[i]) + ",";
-                    sql += to_string(r.Altitude[i]) + ");";
-                    result rr = W.exec(sql.c_str());
+                bool file_exist = false;
+                for (auto row : rr) {
+                    id_fileName = row[0].as<int>();
+                    file_exist = true;
+                    cout << "file exist - a new link will be made to : " << r.filename << endl;
                 }
 
-                for (const tuple<int, int, vector<float>>rec : pg) {
-                    sql = "INSERT INTO FileNameArchive_Data VALUES (";
-                    sql += to_string(id_fileName) + ",";
-                    sql += to_string(get<1>(rec)) + ",'{";
-                    vector<float> var = get<2>(rec);
-                    for (int i = 0; i < r.NumVar; i++) {
-                        sql += to_string(get<2>(rec)[i]);
-                        if (i < r.NumVar - 1) sql += ",";
+                if (!file_exist) {
+                    sql = "INSERT INTO FileNameArchive VALUES (default,'";
+                    sql += r.filename + "','";
+                    sql += shortname + "',";
+                    sql += to_string(r.NumVar) + ",";
+                    sql += to_string(r.NumRec) + ",";
+                    sql += to_string(r.NumRepetions) + ",";
+                    sql += to_string(r.NormalTimeStep) + ",'{";
+
+                    insertvector(r.Name); sql += "}','{"; insertvector_i(r.I_Units); sql += "}','{"; insertvector(r.Id);
+                    sql += "}','{"; insertvector(r.Pos); sql += "}','{";
+                    insertvector_r(r.Min); sql += "}','{"; insertvector_r(r.Max); sql += "}','{";
+                    insertvector(r.Country); sql += "}','{"; insertvector(r.Station); sql += "}','{";
+                    insertvector_d(r.Latitude); sql += "}','{"; insertvector_d(r.Longitude); sql += "}','{"; insertvector_d(r.Altitude);
+                    sql += "}'";
+                    sql += ") returning Id_FileName; ";
+
+                    result rr = W.exec(sql.c_str());
+                    for (auto row : rr)  id_fileName = row[0].as<int>();
+
+
+                    for (size_t i = 0; i < r.NumVar; i++) {
+                        sql = "INSERT INTO FileNameArchive_Descriptions VALUES (";
+                        sql += to_string(id_fileName) + ",";
+                        sql += to_string(i + 1) + ",'";
+                        sql += r.Name[i] + "',";
+                        sql += to_string(r.I_Units[i]) + ",'";
+                        sql += "x ','";
+                        sql += r.Id[i] + "','";
+                        sql += r.Pos[i] + "','";
+                        sql += r.Country[i] + "','";
+                        sql += r.Station[i] + "',";
+                        sql += to_string(r.Latitude[i]) + ",";
+                        sql += to_string(r.Longitude[i]) + ",";
+                        sql += to_string(r.Altitude[i]) + ");";
+                        result rr = W.exec(sql.c_str());
                     }
-                    sql += "}');";
+
+                    for (const tuple<int, int, vector<float>>rec : pg) {
+                        sql = "INSERT INTO FileNameArchive_Data VALUES (";
+                        sql += to_string(id_fileName) + ",";
+                        sql += to_string(get<1>(rec)) + ",'{";
+                        vector<float> var = get<2>(rec);
+                        for (int i = 0; i < r.NumVar; i++) {
+                            sql += to_string(get<2>(rec)[i]);
+                            if (i < r.NumVar - 1) sql += ",";
+                        }
+                        sql += "}');";
+                        W.exec(sql.c_str());
+                    }
+                }
+
+
+
+                if (r.NumVar != 0 || file_exist) {
+                    sql = "INSERT INTO filenamearchive_uses VALUES (";
+                    sql += to_string(r.key_simulation) + ",";
+                    sql += to_string(id_fileName) + ");";
                     W.exec(sql.c_str());
                 }
-
-            
-
-            if (r.NumVar != 0) {
-                sql = "INSERT INTO filenamearchive_uses VALUES (";
-                sql += to_string(r.key_simulation) + ",";
-                sql += to_string(id_fileName) + ");";
-                W.exec(sql.c_str());
+                W.commit();
             }
-            W.commit();
+
         }
 
     }

@@ -154,9 +154,9 @@ bool NC_Plant_Functions::Def()
 	Define(pSw, "Cleaning operation", 0, "off|All Years|Single Years", "Nitrogen and Carbon > 0|Growth >0");
 
 	pSw = new Sw(&Sowing_Switch, PLANT, GENERAL, TRANSPORT, INITB, NORMAL);
-	Define(pSw, "Sowing", 0, "off|Fixed dayNo|Temperature Sum|Multiple DayNo", "Nitrogen and Carbon > 0|Growth >0", 701);
+	Define(pSw, "Sowing", 0, "off|Fixed dayNo|Temperature Sum|Multiple DayNo|PG File specified", "Nitrogen and Carbon > 0|Growth >0", 701);
 	pSw = new Sw(&Emergence_Switch, PLANT, GENERAL, TRANSPORT, REALLOCATION, NORMAL);
-	Define(pSw, "Emergence", 0, "off|Fixed dayNo|Temperature Sum|Multiple DayNo", "Nitrogen and Carbon > 0|Growth >0", 701);
+	Define(pSw, "Emergence", 0, "off|Fixed dayNo|Temperature Sum|Multiple DayNo|PG File specified", "Nitrogen and Carbon > 0|Growth >0", 701);
 
 	pSw = new Sw(&Seedling_Management, PLANT, GENERAL, TRANSPORT, INITB, NORMAL);
 	Define(pSw, "Seedling Management", 0, "off|After Final Harvest|Specific Years", "Nitrogen and Carbon > 0");
@@ -1167,10 +1167,10 @@ bool NC_Plant_Functions::Def_GrowthStages()
 	funcname = "Logistic Growth Response Function";
 
 	pP = new P(&SowingDayNo, pNumPlants, PLANT, TIME, TRANSPORT, EMERGENCE, NORMAL); initv.assign(p_Plant->NumPlants, 120.);
-	Define(pP, pNumPlants, "Sowing Dayno", initv, "#", "Nitrogen and Carbon >= 1|Sowing >0", 0., 365.);
+	Define(pP, pNumPlants, "Sowing Dayno", initv, "#", "Nitrogen and Carbon >= 1|Sowing >0|Sowing <4 ", 0., 365.);
 	mTab_Start.push_back(pP);
 	pP = new P(&EmergenceDayNo, pNumPlants, PLANT, TIME, TRANSPORT, EMERGENCE, NORMAL); initv.assign(p_Plant->NumPlants, 135.);
-	Define(pP, pNumPlants, "Emergence Dayno", initv, "#", "Nitrogen and Carbon >= 1|Sowing >0", 0., 365.);
+	Define(pP, pNumPlants, "Emergence Dayno", initv, "#", "Nitrogen and Carbon >= 1|Emergence >0|Emergence <4", 0., 365.);
 	mTab_Start.push_back(pP);
 	pP = new P(&C_Seed, pNumPlants, PLANT, CARBON, TRANSPORT, EMERGENCE, NORMAL); initv.assign(p_Plant->NumPlants, 1.);
 	Define(pP, pNumPlants, "C Seed", initv, UNIT_TYPES::MASS_UNIT, "Nitrogen and Carbon >= 1|Sowing>0", 0.01, 1000.);
@@ -1178,6 +1178,13 @@ bool NC_Plant_Functions::Def_GrowthStages()
 
 	pTab = new Tab(&mTab_Start, PLANT, CARBON, TRANSPORT, EMERGENCE, NORMAL);
 	Define(pTab, "Start of growth", "Sowing Dayno|Emergence Dayno|C Seed", "Nitrogen and Carbon > 0");
+
+	F* pF = new F(&m_PG_Sowing, PLANT, WATER, FYS_SHAPE, PLANT_MANAGEMENT, NORMAL);
+	Define(pF, "Sowing date data", "SowingDates.bin", "Sowing =4");
+
+	pF = new F(&m_PG_Emergence, PLANT, WATER, FYS_SHAPE, PLANT_MANAGEMENT, NORMAL);
+	Define(pF, "Emergence date data", "EmergenceDates.bin", "Emergence =4");
+
 
 	mTab_Seedlings.clear();
 	pP = new P(&Seedling_Year, pNumPlants, PLANT, TIME, TRANSPORT, EMERGENCE, NORMAL); initv.assign(p_Plant->NumPlants, 2012.);

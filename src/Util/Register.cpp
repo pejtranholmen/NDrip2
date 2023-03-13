@@ -35,6 +35,8 @@ void Register::OpenRegister(bool read) {
 		else {
 			m_register.clear();
 			WriteRegisterFile();
+			m_register.close();
+
 		}
 	}
 

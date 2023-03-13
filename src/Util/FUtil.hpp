@@ -10,6 +10,8 @@
 #include <string>
 #include <fstream>
 #include <ios>
+#include "../Util/Register.h"
+
 
 //#include "../NewBase/ModelMap.h"
 
@@ -17,6 +19,14 @@
 #ifndef MISSING
 #define MISSING -1.1E38f
 #endif
+#ifndef OPEN_REGISTER
+
+static std::unique_ptr<Register> p_Register;
+#define OPEN_REGISTER 1.1
+
+#endif
+
+
 
 using namespace std;
 
@@ -134,7 +144,12 @@ static vector<string> GetFileList(string type) {
 			value = FUtil::GetDocumentPath();
 
 		}
-		//return p_Register->GetString(item);
+		if (p_Register == nullptr) 	p_Register = make_unique<Register>();
+		auto koll= p_Register->GetString(item);
+		if (koll.size() == 0) {
+			p_Register->SetString(item, value);
+		}
+		return p_Register->GetString(item);
 
 #endif
 		return value;
@@ -146,9 +161,12 @@ static vector<string> GetFileList(string type) {
 		return Comp;
 #else
 #ifdef MS_CODE
-		//int koll=p_Register->GetInt(item);
-		//if (koll < 0) p_Register->SetInt(item, value);
-		//return p_Register->GetInt(item);
+		if (p_Register == nullptr) {
+			p_Register = make_unique<Register>();
+		}
+		int koll=p_Register->GetInt(item);
+		if (koll < 0) p_Register->SetInt(item, value);
+		return p_Register->GetInt(item);
 #else 
 #ifdef LINUX2
 		return 1;
@@ -162,8 +180,10 @@ static vector<string> GetFileList(string type) {
 		CWinApp* pApp = AfxGetApp();
 		pApp->WriteProfileInt(_T("CoupModel"), CString(item.c_str()), value);
 #else
-
-		//p_Register->SetInt(item, value);
+		if (p_Register == nullptr) {
+			p_Register = make_unique<Register>();
+		}
+		p_Register->SetInt(item, value);
 
 #endif
 	}
@@ -172,8 +192,10 @@ static vector<string> GetFileList(string type) {
 		CWinApp* pApp = AfxGetApp();
 		pApp->WriteProfileString(_T("CoupModel"), CString(item.c_str()), CString(value.c_str()));
 #else  
-
-		//p_Register->SetString(item, value);
+		if (p_Register == nullptr) 	p_Register = make_unique<Register>();
+		p_Register->SetString(item, value);
+		p_Register->SaveToFile(); 
+		//
 
 #endif
 	}

@@ -428,10 +428,18 @@ vector<double>  HarvestLAIValue;
 ;
 // New Harvest variables 21 november 2009;
 size_t         NumValidHarvest, IHarvestInput,ICountHarvest;
+
 ;
 ;
 // New option How to Harvest 28 March 2006;
 vector<size_t> IHarvestDates ;// Variables in PG-file PhotoInput;
+
+// New for Sowing and Emergence from PG file reading
+vector<size_t> ISowingDates, IEmergenceDates;
+size_t ISowingCount, IEmergenceCount;
+size_t ISowingIndex, IEmergenceIndex;
+
+
 ;
 size_t HarvestStyle;
 ;
@@ -473,7 +481,7 @@ double m_LatestSowingDay;
 bool m_NewDay;
 
 
-CPG m_PG_HarvestDate, m_PG_PlantBiomass, m_PG_Grazing;
+CPG m_PG_HarvestDate, m_PG_PlantBiomass, m_PG_Grazing, m_PG_Sowing, m_PG_Emergence;
 
 //   Positions in Additional Driving variable file for Nitrogen and Carbon, allocatable for NumPlants
 vector<ININFO> CAtmNewMobile_Position, LAI_Position, RootDepth_Position;

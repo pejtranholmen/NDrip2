@@ -2333,9 +2333,7 @@ bool NewMap::DeleteDoc_From_Postgres(int pkey) {
 #ifdef COUP_POSTGRES
 	string current_str, sql;
 	try {
-
 		if (!m_pCommonModelInfo->ID_MapsForPostgresReady) m_pCommonModelInfo->ID_MapsForPostgresReady = DefineUniqueIdMaps(m_pCommonModelInfo, this);
-
 		pqxx::connection c = initconnection("Select from postgres");
 		pqxx::work txn{ c };
 		{
@@ -2366,11 +2364,11 @@ bool NewMap::DeleteDoc_From_Postgres(int pkey) {
 					num = rownum[0].as<int>();
 				}
 				if (num == 1) {
-					r = txn.exec("DELETE FROM modified_timeseries_inputs WHERE id_filename = " + to_string(id_filename));
-					r = txn.exec("DELETE FROM filenamyearchive WHERE id_filename = " + to_string(id_filename));
+					r = txn.exec("DELETE FROM modified_timeseries_inputs WHERE id_filename = " + to_string(id_filename));			
 					r = txn.exec("DELETE FROM filenamearchive_uses WHERE id_filename = " + to_string(id_filename));
-					r = txn.exec("DELETE FROM filenamearchive_data WHERE id_filename = " + to_string(id_filename));
 					r = txn.exec("DELETE FROM filenamearchive_descriptions WHERE id_filename = " + to_string(id_filename));
+					r = txn.exec("DELETE FROM filenamearchive_data WHERE id_filename = " + to_string(id_filename));
+					r = txn.exec("DELETE FROM filenamyearchive WHERE id_filename = " + to_string(id_filename));
 				
 				}
 
@@ -2434,6 +2432,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 			};
 			if (!keyfind) return false;
 		}
+		cout << m_DocFileName << endl;
 		pqxx::result r = txn.exec("SELECT * FROM runinfo  WHERE id_simulations = " + to_string(pkey));
 		auto row = r.begin();
 		current_str = "RunInfo";
@@ -2786,10 +2785,14 @@ bool NewMap::WriteDoc_To_Postgres() {
 	t.comment = m_DocFile2.m_Comments;
 	t.simno = m_DocFile.m_SimulationRunNo;
 	t.name = m_DocFileName;
-	cout << m_DocFileName << endl;
-
+	t.creator = FUtil::GetProfileStringStd("Creator", "NN");
+	
 
 	int pkey = transfer_Document(t);
+	if (pkey == -1) {
+		cout << "Document already exist - please change name or remove previous document: "+ m_DocFileName<<endl;
+		return false;
+	}
 	// Runinfo
 	{ //Runinfo
 		run_info_document r;

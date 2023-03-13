@@ -31,8 +31,27 @@ bool NC_SoilManagement::Ini()	{
 	//m_pModelStructure = ((Simulator*)m_pModelInfo)->GetSimStructurePointer();
 	if(Microbes==0) RateCoefSurf_Hum=0.;
 	if(LitterPools==0) RateCoefSurf_L2=0.;
-	
-	
+
+	if (Deep_Ploughing_Sw(Ploughing) == Deep_Ploughing_Sw::PG_File_Specified) {
+		m_PG_Deep_Ploughing.Open(m_PG_Deep_Ploughing.GetFileName());
+		auto num = m_PG_Deep_Ploughing.GetNumRecords();
+		IPloughingDates.resize(num);
+		for (size_t i = 0; i < num; i++)
+			IPloughingDates[i] = m_PG_Deep_Ploughing.GetLongTime(i + 1);
+		for (int i = num - 1; i >= 0; i--)
+			if (m_pModelInfo->m_ActMin < IPloughingDates[i]) IPloughingCount = i;
+		m_PG_Deep_Ploughing.CloseFile();
+	}
+	if (SurfaceCultivation_Sw(SurfaceCultivation) == SurfaceCultivation_Sw::PG_File_Specified) {
+		m_PG_SurfaceCult.Open(m_PG_SurfaceCult.GetFileName());
+		auto num = m_PG_SurfaceCult.GetNumRecords();
+		ISurfaceCultDates.resize(num);
+		for (size_t i = 0; i < num; i++)
+			ISurfaceCultDates[i] = m_PG_SurfaceCult.GetLongTime(i + 1);
+		for (int i = num - 1; i >= 0; i--)
+			if (m_pModelInfo->m_ActMin < ISurfaceCultDates[i]) ISurfaceCultCount = i;
+		m_PG_SurfaceCult.CloseFile();
+	}
 
 	return true;
 }
@@ -67,24 +86,43 @@ Soil_Frost* pSoil=&p_Soil->m_SoilFrost;
 	bool OK;
 	Do_Cultivating=false;
 
-
-
-	if(int(m_pModelInfo->JDayNum)>0&&(int(m_pModelInfo->JDayNum)==int(SurfaceCultDay)||int(m_pModelInfo->JDayNum)==int(PloughingDay))) {
-
+	if (SurfaceCultivation_Sw(SurfaceCultivation) == SurfaceCultivation_Sw::PG_File_Specified) {
+		if (m_pModelInfo->m_ActMin >= ISurfaceCultDates[ISurfaceCultCount]) {
+			Do_Cultivating = true;
+			ISurfaceCultCount++;
+		}
+	}
+	else if(int(m_pModelInfo->JDayNum)>0&&(int(m_pModelInfo->JDayNum)==int(SurfaceCultDay)||int(m_pModelInfo->JDayNum)==int(PloughingDay))) {
  		Do_Cultivating=true;
 	}
 	
-	if(int(m_pModelInfo->JDayNum)==int(PloughingDay)&&PloughingDay>0) {
-		auto GetDepthDistributionofLitterFall = [&](size_t i, size_t PlantComp, size_t PlantElement) {
-			DEPTH_type out;
-			out = p_Plant->f_WaterUptakeDistribution(p_NC_Plant->P_LitterFall[PlantComp][PlantElement][i], p_Plant->SimRootDepth[i]);
-			return out.Dist;
 
-		};
-		//Reset all Fluxes to zero
-		for (size_t jj = 0; jj < m_pModelStructure->m_NumActPlantElements; jj++)
-			for (size_t j = 0; j < 2; j++)
-				LitterInputToSoilLayers[j][jj].assign(pSoil->NL, 0.);
+	if (Deep_Ploughing_Sw(Ploughing) == Deep_Ploughing_Sw::PG_File_Specified) {
+		if (m_pModelInfo->m_ActMin >= IPloughingDates[IPloughingCount]) {
+			IPloughingCount++;
+			Do_Ploughing = true;
+		}
+		else
+			Do_Ploughing = false;
+	}
+	else if(int(m_pModelInfo->JDayNum)==int(PloughingDay)&&PloughingDay>0) {
+  			Do_Ploughing=true;
+	}
+	else
+			Do_Ploughing=false;
+
+	if (Do_Ploughing) {
+		
+			auto GetDepthDistributionofLitterFall = [&](size_t i, size_t PlantComp, size_t PlantElement) {
+				DEPTH_type out;
+				out = p_Plant->f_WaterUptakeDistribution(p_NC_Plant->P_LitterFall[PlantComp][PlantElement][i], p_Plant->SimRootDepth[i]);
+				return out.Dist;
+
+			};
+			//Reset all Fluxes to zero
+			for (size_t jj = 0; jj < m_pModelStructure->m_NumActPlantElements; jj++)
+				for (size_t j = 0; j < 2; j++)
+					LitterInputToSoilLayers[j][jj].assign(pSoil->NL, 0.);
 			//Do i=1, NumPlant
 			DEPTH_type out;
 			for (size_t i = 0; i < p_Plant->NumPlants; i++) {
@@ -94,7 +132,7 @@ Soil_Frost* pSoil=&p_Soil->m_SoilFrost;
 				for (size_t jj = 0; jj < m_pModelStructure->m_NumActPlantElements; jj++) {
 					for (size_t j = _ROOT; j <= _OLD_COARSE_ROOT; j++) {
 						LitterFallToLayers = GetDepthDistributionofLitterFall(i, j, jj);
-						if (j <= _COARSE_ROOT || LitterPools_Sw(LitterPools) == LitterPools_Sw::one) {
+						if (LitterPools_Sw(LitterPools) == LitterPools_Sw::one) {
 							for (size_t layer = 0; layer < pSoil->NL; layer++) {
 								LitterInputToSoilLayers[_L1][jj][layer] += LitterFallToLayers[layer];
 							}
@@ -108,10 +146,11 @@ Soil_Frost* pSoil=&p_Soil->m_SoilFrost;
 					}
 				}
 			}
-  			Do_Ploughing=true;
-	}
-	else
-			Do_Ploughing=false;
+		
+		
+		
+		
+		}
 	
  
 }

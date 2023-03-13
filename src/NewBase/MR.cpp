@@ -1,6 +1,6 @@
 
 #include "./MR.h"
-#include "../Util/FUtil.hpp"
+#include "../Util/FUtil.h"
 #include "../Util/StatUtil.h"
 #include "../Util/ModelUtil.h"
 #include "../SoilData/PlotPF/PFCurve.h"
@@ -2988,7 +2988,7 @@ bool MR::LinkedChangeToSwitches(Sw *pSw1, size_t option) {
 			break;
 		case 117: // N Fertilization Switch
 			SetSwValue("EnableInputN",0);
-			if(pSw1->GetIntValue()==2||GetSwValue("Manure Input")==1)
+			if(pSw1->GetIntValue()==2||GetSwValue("Manure Input")==1|| pSw1->GetIntValue() == 6)
 				SetSwValue("EnableInputN",1);
 			return true;
 			break;

@@ -26,6 +26,10 @@ public:
 	void SetInt(std::string item, int value);
 	bool IsRegisterOpen() {return m_IsOpen;};
 	void OpenRegister(bool read = true);
+	void SaveToFile() {
+		OpenRegister(false);
+		OpenRegister(true);
+	}
 
 private:
 	size_t ReadRegisterFile();

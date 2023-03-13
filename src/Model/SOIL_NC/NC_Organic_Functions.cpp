@@ -124,7 +124,7 @@ bool NC_Organic_Functions::Def() {
 			condition = "";
 			if (jj == _P_) condition = "|Phosphorus>0";
 			if (j == _L2) condition += "|LitterPools >0";
-			name += "SurfaceL " + Comp[j];
+			name += " SurfaceL " + Comp[j];
 			pTs = new Ts(&SurfaceLitterMixingIntoUppermostlayer[j][jj], SOILSURFACE, elements(jj + CARBON), STORAGE, NON_LIVING, NORMAL);
 			Define(pTs, name, 0.,UNIT_TYPES::MASSFLOW_UNIT, "Nitrogen and Carbon >= 1" + condition);
 		}

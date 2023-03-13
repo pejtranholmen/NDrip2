@@ -1134,7 +1134,6 @@ int PGUtil::LengthOfMonth(unsigned int min) {
 
 string PGUtil::CheckedForExistingBinFileName(string filename)
 {
-    cout << "original file name: " << filename << endl;
 	string filenameout;
 	if (!FUtil::IsFileExisting(filename)) {
 

@@ -837,6 +837,7 @@ bool PG_Stream::Open(string filename, bool ShowError)
 bool PG_Stream::ReOpen(bool write) 
 {	
 	bool result;
+	
 	if(!m_Closed) return false;
 	if(m_MainPGStreamReadWrite.is_open()&&!m_WriteEnabled&&m_MainPGStreamReadWrite.good()&&!write) return true;
 	if(write) {

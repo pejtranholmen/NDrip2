@@ -216,7 +216,7 @@ plotpar.Y_ScalingCoef = 6;
 	plotpar.Y_ScalingCoef = 0;
 		
 	pPs= new Ps(&CH4_OxidationReactionRate,SIMPROFILE,METHANE, STORAGE,METHANE_OXIDATION, NORMAL); 
-	Define(pPs, "CH4 AerobicOxRate", 0.1, UNIT_TYPES::RATECOEF_UNIT, "Nitrogen and Carbon >=1|Methane Model>0", 0., 1.); ps_vec.push_back(pPs);
+	Define(pPs, "CH4 AerobicOxRate", 0.1, UNIT_TYPES::RATECOEF_UNIT, "Nitrogen and Carbon >=1|Methane Model>0", 0., 50., 0., 1.); ps_vec.push_back(pPs);
 	
 	pFunc = new Func(TOTPROFILE, METHANE, NOFPROC, METHANE_OXIDATION, NORMAL);
 	Define(pFunc, functorprop, funcname, ps_vec, plotpar);	ps_vec.clear();
@@ -236,7 +236,7 @@ plotpar.Y_ScalingCoef = 6;
 
 
 	pPs= new Ps(&CH4_HalfRateOxConstant,SIMPROFILE,METHANE, STORAGE,METHANE_OXIDATION, NORMAL); 
-	Define(pPs,   "CH4 HalfRateOxConstant",2.3E-07, UNIT_TYPES::MASS_RATIO_UNIT,"Nitrogen and Carbon >=1|Methane Model>0",0.,1.E-5);	ps_vec.push_back(pPs);
+	Define(pPs,   "CH4 HalfRateOxConstant",2.3E-07, UNIT_TYPES::MASS_RATIO_UNIT,"Nitrogen and Carbon >=1|Methane Model>0",0.,10.,0.,1.E-5);	ps_vec.push_back(pPs);
 	
 	pFunc = new Func(TOTPROFILE, METHANE, NOFPROC, METHANE_OXIDATION, NORMAL);
 	Define(pFunc, functorprop, funcname, ps_vec, plotpar);	ps_vec.clear();
@@ -295,7 +295,7 @@ plotpar.Y_Label = "Relative Rate (-)";
 		plotpar.Y_Label = "Methane_Oxidation Rate (mg/m3/day)";
 
 	pPs = new Ps(&CH4_PlantOxidationRate, SIMPROFILE, METHANE, STORAGE, METHANE_OXIDATION, NORMAL);
-		Define(pPs, "CH4 PlantOxidationRate", 4.2E-05, UNIT_TYPES::MASS_RATIO_UNIT, "Nitrogen and Carbon >=1|Methane Model>0|PlantType>0", 0., 1.E-3); ps_vec.push_back(pPs);
+		Define(pPs, "CH4 PlantOxidationRate", 4.2E-05, UNIT_TYPES::MASS_RATIO_UNIT, "Nitrogen and Carbon >=1|Methane Model>0|PlantType>0", 0.,10., 0., 1.E-3); ps_vec.push_back(pPs);
 		ps_vec.push_back((Ps*)m_pModelMap->GetPsPointer("CH4 PlantOxShapeCoef"));
 	
 	pFunc = new Func(TOTPROFILE, METHANE, NOFPROC, METHANE_OXIDATION, NORMAL);

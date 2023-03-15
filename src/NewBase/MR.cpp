@@ -1,6 +1,5 @@
 
 #include "./MR.h"
-#include "../Util/FUtil.h"
 #include "../Util/StatUtil.h"
 #include "../Util/ModelUtil.h"
 #include "../SoilData/PlotPF/PFCurve.h"

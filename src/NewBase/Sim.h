@@ -40,6 +40,7 @@ public:
 #else 
 	bool MakeSingleRun(bool DB_Source=false);
 	bool MakeMultiRun(bool DB_Source = false);
+	bool RunModel_Using_Postgres(int pkey, bool UpdateCurrentKey = true);
 	
 #endif
 	Simulator m_Simulator;

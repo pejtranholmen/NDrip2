@@ -2,7 +2,7 @@
 
 #include <NewBase/CommonModelInfo.h>
 #include <NewBase/ModelMap.h>
-#include <NewBase/Doc.h>
+#include <NewBase/Sim.h>
 #include <Simulator/DefineModel.h>
 #include <NewBase/ModelCompNames.hpp>
 #include "./FUtil.hpp"
@@ -48,25 +48,32 @@ int main(int argc, char* argv[]) {
         int selectedkey;
         if (ans.size() > 0) {
             selectedkey = FUtil::AtoInt(ans);
-            cout << "Delete selected Document (Y/N) :";
+            cout << "ReRun selected Document (Y/N) :";
             cin >> ans;
             if (ans.find('y') != string::npos || ans.find('Y') != string::npos) {
-                if (pDoc->DeleteDoc_From_Postgres(selectedkey))
-                    cout << "Deleted document with key :" << selectedkey << endl;
-                else
-                    cout << "Failed to Delete document :" << selectedkey << endl;
+                pDoc->RunModel_Using_Postgres(selectedkey, true);
             }
             else {
-                cout << "Download selected Document (Y/N) :";
+                cout << "Delete selected Document (Y/N) :";
                 cin >> ans;
                 if (ans.find('y') != string::npos || ans.find('Y') != string::npos) {
-                    if (pDoc->SelectDoc_From_Postgres(selectedkey, true, path))
-                        cout << "Selected document with key :" << selectedkey << endl;
+                    if (pDoc->DeleteDoc_From_Postgres(selectedkey))
+                        cout << "Deleted document with key :" << selectedkey << endl;
                     else
-                        cout << "Failed to Select document :" << selectedkey << endl;
+                        cout << "Failed to Delete document :" << selectedkey << endl;
                 }
-                else
-                    ans.clear();
+                else {
+                    cout << "Download selected Document (Y/N) :";
+                    cin >> ans;
+                    if (ans.find('y') != string::npos || ans.find('Y') != string::npos) {
+                        if (pDoc->SelectDoc_From_Postgres(selectedkey, true, path))
+                            cout << "Selected document with key :" << selectedkey << endl;
+                        else
+                            cout << "Failed to Select document :" << selectedkey << endl;
+                    }
+                    else
+                        ans.clear();
+                }
             }
         }
     }

@@ -32,6 +32,8 @@ CPG::CPG() {
 	m_WithinYearForResiduals=false;
 	m_UpdatedMultiAccepted=m_UpdatedMultiAll=false;
 	m_ApplyConditionCheck = false;
+	m_AllValuesAssigned = false;
+	m_OnlyMemoryUse = false;
 }
 CPG::CPG(string filename)
 {
@@ -61,7 +63,9 @@ CPG::CPG(string filename)
 
 
 	pg.status.FileVersion=1;
+	m_AllValuesAssigned = false;
 	m_IncreaseTimeTest= m_IncreaseTime=false;
+	m_OnlyMemoryUse = false;
 
 }
 CPG::~CPG()
@@ -464,16 +468,6 @@ size_t CPG::GetCalcVar()
 void CPG::SetCalcVarNew(size_t var)
 {
 	m_CalcVarNew=var;
-}
-void CPG::SetVarUnitType(size_t VarNo, size_t Repit, UNIT_TYPES unit)
-{
-	if (Repit > 0 && Repit != string::npos) {
-		size_t add = 0;
-		add = (Repit - 1)*pg.Shape.NumVar;
-		VarNo += add;
-	}
-//	if (pg.Des.addinfo.size() >= VarNo)
-//		pg.Des.addinfo[VarNo - 1].Unit = unit;
 }
 void CPG::SetVarElementType(size_t VarNo, size_t Repit, elements elem)
 {

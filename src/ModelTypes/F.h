@@ -12,6 +12,7 @@ public:
 	~F(void);
 	void Def(size_t ModuleNo,std::string name, std::string value,std::string conditions);
 	bool CheckFileNameAndAssignNameToPGClass() {
+		if (m_PGPointer->AreAllValuesAssigned()) return true;
         bool res=m_PGPointer->Open(m_FileName, false);
 		if(res) { m_PGPointer->CloseFile(), m_Exist=true;}
 			else m_Exist=false; 

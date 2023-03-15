@@ -83,11 +83,11 @@ bool Meteorological_Data::Ini()	{
 		if(m_pModelInfo->ActualNoMulRun<=1||ClimIndexFileName_Sw(ClimIndexFileName) == ClimIndexFileName_Sw::SINGLE_PG_FILE) {
 			//m_PG_Meteor.ReOpen();
 			string koll = m_PG_Meteor.GetFileName();
-			if (!m_PG_Meteor.ReadContentOfPGFileAndOpenMainPGStreamForReading(m_PG_Meteor.GetFileName())) {
-				Message("Error when reading Meteorological input file\n" + m_PG_Meteor.GetFileName() + "\nPlease check file status");
-				return false;
-
-			};
+			if(!m_PG_Meteor.AreAllValuesAssigned())
+				if (!m_PG_Meteor.AreAllValuesAssigned()&&!m_PG_Meteor.ReadContentOfPGFileAndOpenMainPGStreamForReading(m_PG_Meteor.GetFileName())) {
+					Message("Error when reading Meteorological input file\n" + m_PG_Meteor.GetFileName() + "\nPlease check file status");
+					return false;
+				};
 			m_pModelInfo->Run_Res_Id=CheckEcoDriv1();
 			m_PG_Meteor.ResetPos();
 			if (!m_pModelInfo->Run_Res_Id) {
@@ -437,15 +437,13 @@ bool Meteorological_Data::CheckEcoDriv1()
 
 	int  Imiss,  IrrigCount;//	! Local Variable
 	int RadInLong_Count, RadGlob_Count, Prec_Count, Tair_Count, HumRel_Count, VapourAir_Count;
-	int WSpeed_Count, RNT_Count, Cloud_Count, DBSun_Count, TempDiff_Count, TrafficCount;     
-	if(!m_PG_Meteor.ReOpen()) {
-		m_PG_Meteor.Open(m_PG_Meteor.GetFileName());
-		m_PG_Meteor.CloseFile();
-		if(!m_PG_Meteor.ReOpen()) return false;
-
-
-
-	}
+	int WSpeed_Count, RNT_Count, Cloud_Count, DBSun_Count, TempDiff_Count, TrafficCount;   
+	if(!m_PG_Meteor.AreAllValuesAssigned())
+		if(!m_PG_Meteor.ReOpen()) {
+			m_PG_Meteor.Open(m_PG_Meteor.GetFileName());
+			m_PG_Meteor.CloseFile();
+			if(!m_PG_Meteor.ReOpen()) return false;
+		}
    m_pModelInfo->Run_Res_Id=true;
    m_PG_Meteor.CheckEquiDistance();
 

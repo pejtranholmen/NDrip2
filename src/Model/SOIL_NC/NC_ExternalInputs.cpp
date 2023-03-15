@@ -76,6 +76,7 @@ bool NC_ExternalInputs::Ini()	{
 			}
 
 		}
+		if(!m_PG_Manure.AreAllValuesAssigned())
 		if(!m_PG_Manure.Open(filename)) {
 		        Message("ERROR - Manure/Fertilization Driving variable file not found");
 			return false;		        
@@ -392,7 +393,9 @@ bool NC_ExternalInputs::CheckEcoDriv4() {
    FertNIpos.shift=ManNHIpos.shift=ManNLNIpos.shift=CNBEDIpos.shift=ManFNIpos.shift=CNFECIpos.shift=ManDepthIpos.shift=0;
    FertNIpos.discrete = ManNHIpos.discrete = ManNLNIpos.discrete = CNBEDIpos.discrete = ManFNIpos.discrete = CNFECIpos.discrete = ManDepthIpos.discrete = true;
    bool ResetReadWrite=true;
-   if(!m_PG_Manure.ReOpen()) return false;
+
+   if (!m_PG_Manure.AreAllValuesAssigned())
+	if(!m_PG_Manure.ReOpen()) return false;
    m_PG_Manure.SetEndPoints_ValidValue();
    FertNIpos.shift = ManNHIpos.shift = ManNLNIpos.shift = CNBEDIpos.shift = ManFNIpos.shift = CNFECIpos.shift = ManDepthIpos.shift = 720;
 

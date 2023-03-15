@@ -166,7 +166,7 @@ struct Condition {
 	int		value;
 };
 
-struct definitions {enum datatype data; enum elements elem; enum fysprocess fproc; enum bioprocess bproc; enum userlevel ulev;};
+struct definitions { enum datatype data; enum elements elem; enum fysprocess fproc; enum bioprocess bproc; enum userlevel ulev; enum class UNIT_TYPES unittype; };
 
 class SimB
 	{
@@ -248,7 +248,8 @@ class SimB
 		enum datatype GetDataType() {return _def.data;};
 
 		std::string GetDepName(size_t) const;
-		virtual std::string GetUnit() const {return _unit;};		
+		virtual std::string GetUnit() const {return _unit;};	
+		UNIT_TYPES GetUnitType() const { return _def.unittype; };
 		std::string GetDepUnit(size_t) const;	   			// Get name of dependent variables 
 		std::string GetProcessName() const;
 		std::string GetElementName() const;

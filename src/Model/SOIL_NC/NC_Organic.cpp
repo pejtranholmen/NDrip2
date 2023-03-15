@@ -113,7 +113,7 @@ bool NC_Organic::Ini()	{
 	}
 	if (LitterPools_Sw(LitterPools) == LitterPools_Sw::one) {
 		RateCoefSurf_L2 = 0.;
-		for (size_t i = 0; i < p_Plant->NumPlants; i++) p_NC_Plant->Root_FracLitter2[i];
+		for (size_t i = 0; i < p_Plant->NumPlants; i++) p_NC_Plant->Root_FracLitter2[i] = 0.;
 
 	}
 	if(!m_pModelInfo->StartStateValue) {

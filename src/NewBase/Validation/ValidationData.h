@@ -16,7 +16,7 @@ public:
 	virtual ~ValidationData();
 	bool Init(NewMap *pDoc, int itype=0);
 	F* ValidationFilePointer(size_t index=0);
-	void SetPointersToOutputValidationFiles();
+	void SetPointersToOutputValidationFiles(bool OnlyMemoryUse=false);
 
 	bool IsSomeValidationMade() { if (GetNumberSelectedTSV_Val() > 0 || GetNumSumVarVariables() > 0)  return true; else return false; };
 	

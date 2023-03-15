@@ -78,7 +78,6 @@ public:
 	void SetCalcVar(size_t);
 	size_t GetCalcVarNew();
 	void SetCalcVarNew(size_t);
-	void SetVarUnitType(size_t VarNo, size_t Repit, UNIT_TYPES unit);
 	void SetVarElementType(size_t VarNo, size_t Repit, elements elem);
 
 	bool FileExist();
@@ -278,6 +277,12 @@ public:
 	bool	EstimateWithinDayStatistics();
 	bool	EstimateMultiStatistics(bool all=false, std::vector<size_t> *acceptedruns=nullptr);
 	bool	GetReplaceMode();
+	void    SetAllValuesAssigned(bool value) {
+				m_AllValuesAssigned = value;
+	}
+	bool    AreAllValuesAssigned() { return m_AllValuesAssigned; };
+	void	SetOnlyMemoryUse(bool value) { m_OnlyMemoryUse = value; };
+	bool	IsOnlyForMemoryUse() { return m_OnlyMemoryUse; }
 
 
 	bool	m_UpdatedMultiAccepted,m_UpdatedMultiAll;
@@ -303,6 +308,8 @@ protected:
 	size_t m_NumWithinYear, m_NumWithinDay,m_numWithinDayTot;
 	size_t m_withinYearAllocated;
 	bool m_WithinYearForResiduals;
+	bool m_AllValuesAssigned;
+	bool m_OnlyMemoryUse;
 private:
 	std::vector<IF_CONDITIONS> m_IfVector;
 	bool CheckConditions(size_t var_rec);

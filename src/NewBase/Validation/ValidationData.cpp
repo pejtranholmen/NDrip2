@@ -1477,19 +1477,31 @@ int ValidationData::GetSumVarIndex(int outtype, SimB *pBase, int TabIndex, int O
 		Index=((OutSingle*)pBase)->GetSumVarIndex(size_t(OutputType)+6);
 	return Index;
 }
-void ValidationData::SetPointersToOutputValidationFiles() {
+void ValidationData::SetPointersToOutputValidationFiles(bool OnlyMemoryUse) {
 
 	if (m_pSimDoc == nullptr) return;
 	for(size_t i=0;i<MAXSIMVAL;i++) {
 		//if(ValidationFilePointer(i+1)->m_Exist) {
 			F* pF=m_pSimDoc->ValidationFilePointer(i+1);
 			string filename=m_pSimDoc->GetOutputFileName(i+1);
-			if(FUtil::IsFileExisting(filename)) {
-				CPG *pPG= new CPG;
-				pPG->Open(filename, false);
-				pF->SetPGResPointer(pPG);
-				pPG->CloseFile();
-				m_PGCreatedPGFiles.push_back(pPG);
+			if (OnlyMemoryUse) {
+				CPG* res_PG_pointer;
+				res_PG_pointer=pF->GetPGResPointer();
+				if (res_PG_pointer == nullptr) {
+					res_PG_pointer = new CPG();				
+					m_PGCreatedPGFiles.push_back(res_PG_pointer);
+				}
+				res_PG_pointer->SetOnlyMemoryUse(true);
+				pF->SetValue(filename);
+			}
+			else {
+				if (FUtil::IsFileExisting(filename)) {
+					CPG* pPG = new CPG;
+					pPG->Open(filename, false);
+					pF->SetPGResPointer(pPG);
+					pPG->CloseFile();
+					m_PGCreatedPGFiles.push_back(pPG);
+				}
 			}
 		//}
 	}

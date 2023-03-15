@@ -96,6 +96,7 @@ public:
 	std::string	GetVarDes(size_t, size_t repit=1);
 	std::string	GetVarName(size_t, size_t repit=1);
 	std::string	GetVarUnit(size_t, size_t repit=1);
+	UNIT_TYPES GetVarUnitType(size_t, size_t repit = 1);
 	int 	GetVarI_Unit(size_t, size_t repit = 1);
 	std::string	GetVarId(size_t, size_t repit=1);
 	std::string	GetVarPos(size_t, size_t repit=1);
@@ -112,6 +113,7 @@ public:
 
 	void	SetVarName(size_t, std::string, size_t repit=1);
 	void	SetVarUnit(size_t, std::string, size_t repit=1);
+	void	SetVarUnitType(size_t, UNIT_TYPES, size_t repit = 1);
 	void	SetVarId(size_t, std::string, size_t repit=1);
 	void	SetVarPos(size_t, std::string, size_t repit=1);
 	void	SetVarMin(size_t, float, size_t repit=1);

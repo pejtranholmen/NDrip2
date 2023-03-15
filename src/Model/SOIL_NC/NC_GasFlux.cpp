@@ -537,7 +537,7 @@ double OxidationRatio;
 
 			if (Methane_Plant_Oxidation_Sw(Methane_Plant_Oxidation) > Methane_Plant_Oxidation_Sw::off) {
 				double RespRate = p_NC_Plant->CRootsAtmLayer[i] + p_NC_Plant->CCoarseRootsAtmLayer[i];
-				f_PlantRootRespRegulation(RespRate);
+				CH4_OxidationPlantRoot[i] = f_PlantRootRespRegulation(RespRate);
 			}
             else
                 CH4_OxidationPlantRoot[i]=0.;

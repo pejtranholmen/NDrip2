@@ -135,6 +135,85 @@ static bool uploadpgFile(std::string filename) {
     }
     return 1;
 };
+static bool load_pg_file(int pkey, map<string, CPG*> links_to_pg_pointers) {
+    connection c = initconnection("load data to timeserie stucture");
+    pqxx::work txn{ c };
+
+    pqxx::result rr = txn.exec("SELECT id_filename, filename, numvar, numrecords FROM filenamearchive  WHERE id_filename = " + to_string(pkey));
+
+    int numvar = 0, numrec = 0;
+    string filename;
+    for (auto row_inner : rr) {
+        numvar = row_inner["numvar"].as<int>();
+        numrec = row_inner["numrecords"].as<int>();
+        filename = row_inner["filename"].as<string>();
+    }
+    auto it=links_to_pg_pointers.find(filename);
+    CPG* pPG;
+    if (it != links_to_pg_pointers.end())
+        pPG = it->second;
+    else
+        pPG = nullptr;
+    if (pPG != nullptr) {
+        pPG->SetFileName(filename);
+        pPG->SetCompleteRead(true);
+        pPG->AdjustSize(numrec, numvar, 1);
+    }
+    else
+        return false;
+    rr = txn.exec("SELECT varno, name, i_unit,unit, id, pos, country, station, latitude, longitude, altitude FROM filenamearchive_descriptions  WHERE id_filename = " + to_string(pkey));
+    for (auto row_inner : rr) {
+        int varno = row_inner["varno"].as<int>();
+        string name = row_inner["name"].as<string>();
+        int i_unit = row_inner["i_unit"].as<int>();
+        string unit = row_inner["unit"].as<string>();
+        string id = row_inner["id"].as<string>();
+        string pos = row_inner["pos"].as<string>();
+        string country = row_inner["country"].as<string>();
+        string station = row_inner["station"].as<string>();
+        auto latitude = row_inner["latitude"].as<double>();
+        auto longitude = row_inner["longitude"].as<double>();
+        auto altitude = row_inner["altitude"].as<double>();
+        pPG->SetVarName(varno, name);
+        pPG->SetVarUnit(varno, unit);
+        pPG->SetVarId(varno, id);
+        pPG->SetVarPos(varno, pos);
+        pPG->SetVarCountry(varno, country);
+        pPG->SetVarStation(varno, station);
+        pPG->SetVarLat(varno, latitude);
+        pPG->SetVarLong(varno, longitude);
+        pPG->SetVarAlt(varno, altitude);
+   }
+
+    rr = txn.exec("SELECT pgmintime, pgvarvalues FROM filenamearchive_data WHERE id_filename = " + to_string(pkey) + " ORDER BY pgmintime ASC");
+    size_t recno = 1;
+    for (auto row_inner : rr) {
+        size_t min = row_inner[0].as<int>();
+        pPG->SetLongTime(recno, min);
+        auto pvector = row_inner[1].as_array();
+        size_t count = 1;
+        auto next = pvector.get_next();
+        next = pvector.get_next();
+        while (next.second.size() > 0) {
+
+            float value;
+            while (next.second.size() > 0) {
+                value = stof(string(next.second));
+                pPG->SetVarValue(count, recno, value);
+                next = pvector.get_next();
+                count++;
+            }
+        }
+        recno++;
+    }
+    if (recno - 1 == numrec) {
+        pPG->SetAllValuesAssigned(true);
+        cout << "All values assigned to : " << filename << endl;
+    }
+    return true;
+
+
+}
 static bool download_pg_file(int pkey, string localdirectory) {
 
    
@@ -309,14 +388,14 @@ vector<string> create_Init_Tables(CommonModelInfo* pinfo) {
         sql += "NumRecords Integer,";
         sql += "NumRepetions Integer,";
         sql += "NormalTimeStep Integer,";
-        sql += "Name Varchar(24)[],";
+        sql += "Name Varchar(32)[],";
         sql += "I_Units Integer[], ";
         sql += "Id Varchar(24)[], ";
         sql += "Pos Varchar(24)[], ";
         sql += "MinValue REAL[], ";
         sql += "MaxValue REAL[], ";
-        sql += "Country Varchar(24)[], ";
-        sql += "Station Varchar(24)[], ";
+        sql += "Country Varchar(32)[], ";
+        sql += "Station Varchar(32)[], ";
         sql += "Latitude double precision[], ";
         sql += "Longitude double precision[], ";
         sql += "Altitude double precision[]);";
@@ -362,7 +441,7 @@ vector<string> create_Init_Tables(CommonModelInfo* pinfo) {
         sql += "ValFileIndex Integer ,";
         sql += "output_type Integer ,";
         sql += "groupname varchar(36),";
-        sql += "name varchar(36),";
+        sql += "name varchar(32),";
         sql += "LocalIndex Integer,";
         sql += "ValFileNumber Integer ,";
         sql += "ValFile_ResultIndex Integer ,";
@@ -391,7 +470,7 @@ vector<string> create_Init_Tables(CommonModelInfo* pinfo) {
         sql += "(Id_Simulations Integer References Simulations(Id_Simulations),";
         sql += "ItemType Integer,";
         sql += "Id_Group Integer References Groups(id_group),";
-        sql += "name Varchar(36),";
+        sql += "name Varchar(32),";
         sql += "vectorindex Integer ,";
         sql += "NumChanges Integer ,";
         sql += "MinDates Integer[],";
@@ -405,7 +484,7 @@ vector<string> create_Init_Tables(CommonModelInfo* pinfo) {
         sql = create(tablename);
         sql += "(Id_FileName Integer References FileNameArchive(Id_FileName),";
         sql += "VarNo Integer ,";
-        sql += "Name Varchar(24),";
+        sql += "Name Varchar(32),";
         sql += "I_Unit Integer,";
         sql += "Unit Varchar(12),";
         sql += "Id Varchar(24),";
@@ -1841,6 +1920,7 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
                 result rr = W.exec(sql.c_str());
                 id_fileName = 0;
                 for (auto row : rr) {
+      
                     id_fileName = row[0].as<int>();
                 }
             }
@@ -1849,6 +1929,7 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
                 cerr << e.what() << std::endl;
                 cerr << "file: " << r.filename << std::endl;
                 W.commit();
+
                 c = initconnection("modified_timeseries_inputs");
                 work W{ c };
 
@@ -1859,7 +1940,7 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
                     int count = 0;
                     for (string str : s) {
                         count++;
-                        if (str.size() > 0) sql += '"' + str + '"';
+                        if (str.size() > 0&&str.size()<25) sql += '"' + str + '"';
                         else sql += "null";
                         if (count < s.size()) sql += ",";
                     }
@@ -1891,7 +1972,8 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
                         if (count < s.size()) sql += ",";
                     }
                 };
-                string shortname;
+                
+                string shortname=r.filename;
                 auto posend = r.filename.rfind(".");
                 auto pos = r.filename.rfind("/");
                 if (pos == string::npos)  pos = r.filename.rfind("\\");
@@ -1961,6 +2043,8 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
                         sql += "}');";
                         W.exec(sql.c_str());
                     }
+
+                    cout << "All data from time serie data inserted into table from :" << shortname << endl;
                 }
 
 
@@ -1970,6 +2054,7 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
                     sql += to_string(r.key_simulation) + ",";
                     sql += to_string(id_fileName) + ");";
                     W.exec(sql.c_str());
+                    cout << "New link to : " << shortname << " to " << to_string(id_fileName) << endl;
                 }
                 W.commit();
             }
@@ -1979,6 +2064,7 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
     }
     catch (const std::exception& e) {
         cerr << e.what() << std::endl;
+        cerr << sql << std::endl;
         char a = 0xb2;
         auto pos1 = sql.find(a);
         if (pos1 != string::npos) {

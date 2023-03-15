@@ -323,6 +323,29 @@ string Sim::GetCurrentSubDirectoryFile()
 {
 	return m_CurrentSubDirectoryFile;
 }
+
+bool Sim::RunModel_Using_Postgres(int pkey, bool UpdateOnly) {
+	if (SelectDoc_From_Postgres(pkey, false)) {
+		// Run Model
+		m_PG_OutPutFile.SetOnlyMemoryUse(true);
+
+		return MakeSingleRun(UpdateOnly);
+		vector<SimB*> vall;
+		vall = GetPtrVector(PGFILE, false);
+		for (SimB* pSimB : vall) {
+			F* pF = static_cast<F*>(pSimB);
+			string name = pF->GetName();
+			auto pPG1=pF->GetPointer();
+			auto pPG2 = pF->GetPGResPointer();
+			auto koll1=pPG1->GetFileName();
+			auto kolle2=pPG2->GetFileName();
+		}
+	}
+
+
+
+
+}
 void Sim::SetCurrentName_SimNo(int NewNo)
 {
 	string numstr, newPathName;
@@ -393,7 +416,9 @@ bool Sim::MakeSingleRun(bool DB_Source)
 	if (DB_Source == true) {
 		m_IsUsingDB_Source = true;
 		m_ValidationData.Init(this);
+		m_ValidationData.SetPointersToOutputValidationFiles(true);
 		m_MStorage.Init(this);
+		m_DocFile.m_SimulationRunNo++;
 	}
 
 
@@ -404,8 +429,10 @@ bool Sim::MakeSingleRun(bool DB_Source)
 	p_ModelInfo->SetRunning(true);
 	p_ModelInfo->SetRunDoc(this);
 
+
 	bool simresult;
 	simresult = true;
+	
 	if (!m_Simulator.Start())  simresult = false;
 	if (simresult) if (!m_Simulator.Run()) simresult = false;
 	if (simresult) if (!m_Simulator.End()) simresult = false;
@@ -416,12 +443,12 @@ bool Sim::MakeSingleRun(bool DB_Source)
 		m_Protect = false;
 		History_Add(12, "Single Run Completed");
 		SetFinishedSimulation();
-		m_ValidationData.SetPointersToOutputValidationFiles();
+		if(!DB_Source)	m_ValidationData.SetPointersToOutputValidationFiles();
 
 		cout << "Simulation Completed" << endl;
 #ifndef NO_FILES
         FUtil::WriteProfileInt("SimulationRunNo", m_DocFile.m_SimulationRunNo + 1);
-		return WriteDocFile();
+		return WriteDocFile("", DB_Source);
 #else
         return true;
 #endif
@@ -860,7 +887,7 @@ bool Sim::CheckAndUpdateFileName(bool MultiRun, bool DB_Source) {
 	}
 	else {
 		iposXml = true;
-		SimulationRunNo = m_DocFile.m_SimulationRunNo;
+		SimulationRunNo = m_DocFile.m_SimulationRunNo++;
 
 	}
 	string NumStr = FUtil::ItoNumAscii(SimulationRunNo);
@@ -894,7 +921,7 @@ bool Sim::CheckAndUpdateFileName(bool MultiRun, bool DB_Source) {
 	m_DocFile.m_SimulationRunNo = SimulationRunNo;
 	
 #ifndef NO_FILES
-	if (!WriteDocFile()) return false;
+	if(!DB_Source&&!WriteDocFile()) return false;
 #endif
 
 	return true;

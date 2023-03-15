@@ -993,6 +993,17 @@ int CPGFile::GetVarI_Unit(size_t index, size_t repit)
 	else
 		return 0;
 }
+UNIT_TYPES CPGFile::GetVarUnitType(size_t index, size_t repit)
+{
+	size_t add = 0;
+	add = (repit - 1) * pg.Shape.NumVar;
+	index += add;
+	if (pg.Des.addinfo.size() >= index)
+		return pg.Des.addinfo[index - 1].Unit;
+	else
+		return UNIT_TYPES::NO_UNIT;
+	
+}
 string CPGFile::GetVarId(size_t index, size_t repit)
 {	size_t add=0;
 	add=(repit-1)*pg.Shape.NumVar;
@@ -1038,6 +1049,15 @@ void CPGFile::SetVarUnit(size_t index, string str, size_t repit)
 	else
 		pg.Des.base.Unit.push_back(str);
 
+}
+void CPGFile::SetVarUnitType(size_t index, UNIT_TYPES value, size_t repit)
+{
+	size_t add = 0;
+	add = (repit - 1) * pg.Shape.NumVar;
+	index += add;
+
+	if (pg.Des.addinfo.size() >= index)
+		pg.Des.addinfo[index - 1].Unit = value;
 }
 void CPGFile::SetVarId(size_t index, string str, size_t repit)
 {	size_t add=0;

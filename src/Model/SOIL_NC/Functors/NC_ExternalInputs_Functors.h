@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <functional>
-enum class N_Fertilization_Sw { off,Parameters,PG_file,Plant_Stage_Table,Year_Based_Table_1_app,Year_Based_Table_3_app };
+enum class N_Fertilization_Sw { off,Parameters,PG_file,Plant_Stage_Table,Year_Based_Table_1_app,Year_Based_Table_3_app, PG_File_AppDatesOnly };
 enum class FertlizationIndexFileName_Sw{ off,Using_Single_PG_file,Using_Multi_PG_file };
 enum class DepositionIndexFileName_Sw{ off,Using_Single_PG_file,Using_Multi_PG_file };
 enum class N_Irrigation_Sw{ off,on };

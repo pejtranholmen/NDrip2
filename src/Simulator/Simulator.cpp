@@ -174,7 +174,6 @@ bool Simulator::Start(bool MultiFlag, bool First)
 	if(!MultiFlag) {
 		m_pModelInfo->m_SimStart=clock();
 		m_pSim->m_PG_OutPutFile.SetCompleteRead(true);
-
 		if (!m_pSim->m_PG_OutPutFile.CreateNewFile(m_pModelInfo->m_NumOutputs, m_pModelInfo->m_OutRecord*m_pSim->m_DocFile.m_TimePeriodScaleFactor, 1)) {
 			((Sim*)m_pSim)->AddToRunReport("Failed to create output file - Check if file may be too many records and variables");
 #ifndef COUPSTD
@@ -427,6 +426,7 @@ bool Simulator::Run(bool MultiFlag)
 bool Simulator::End(bool Multi, bool Final, bool First)
 {
 	m_pModelInfo->Set_Sim_EndParameters();
+
 	m_StructureModel.End();
 	m_pModelInfo->m_UsedTime=clock()- m_pModelInfo->m_SimStart;
 
@@ -692,7 +692,9 @@ bool Simulator::Store_Write(bool MultiFlag, bool Final)
 		for(size_t i=0;i<m_Outputs.size(); i++) {
 			m_pSim->m_PG_OutPutFile.SetVarName(i+1,m_Outputs[i].pBase->GetName());
 			m_pSim->m_PG_OutPutFile.SetVarUnit(i+1,m_Outputs[i].pBase->GetUnit());
+			m_pSim->m_PG_OutPutFile.SetVarUnitType(i + 1, m_Outputs[i].pBase->GetUnitType());
 			m_pSim->m_PG_OutPutFile.SetVarId(i+1,FUtil::STD_ItoAscii(m_pSim->m_DocFile.m_SimulationRunNo) );
+
 			if(m_Outputs[i].pBase->GetDataType()==SIMPROFILE&&m_Outputs[i].pBase->Is_Vector()) {
 				size_t index=m_Outputs[i].TabIndex;
 				if(index<m_SoilModel.m_SoilFrost.DepthMidpLayer.size()) {
@@ -720,21 +722,27 @@ bool Simulator::Store_Write(bool MultiFlag, bool Final)
 				m_pSim->m_PG_OutPutFile.SetVarId(i+1,str);
 			}
 
-			m_pSim->m_PG_OutPutFile.SetVarLat(count+1, m_StructureModel.m_Additional.Y_coordinate);
-			m_pSim->m_PG_OutPutFile.SetVarLong(count+1, m_StructureModel.m_Additional.X_coordinate);
-			m_pSim->m_PG_OutPutFile.SetVarAlt(count+1, m_StructureModel.m_Additional.Z_coordinate);
+			m_pSim->m_PG_OutPutFile.SetVarLat(i+1, m_StructureModel.m_Additional.Y_coordinate);
+			m_pSim->m_PG_OutPutFile.SetVarLong(i+1, m_StructureModel.m_Additional.X_coordinate);
+			m_pSim->m_PG_OutPutFile.SetVarAlt(i+1, m_StructureModel.m_Additional.Z_coordinate);
 
 		}
 		m_pSim->m_PG_OutPutFile.ReCalculateMinMax();
-		if(!m_pSim->m_PG_OutPutFile.SaveAs(((ModelFiles*)m_pSim)->GetNewOutputFileName(), true)) {
-#ifdef LINUX2
-			string koll = ((ModelFiles*)m_pSim)->GetNewOutputFileName();
-			cerr << koll << endl;
-			return false;	
-#endif
-			
-		};
+		m_pSim->m_PG_OutPutFile.SetNormalTimeInterval(m_pModelInfo->m_OutInterval);
 
+		string filename = ((ModelFiles*)m_pSim)->GetNewOutputFileName();
+		if (!m_pSim->m_PG_OutPutFile.IsOnlyForMemoryUse()) {
+			if (!m_pSim->m_PG_OutPutFile.SaveAs(((ModelFiles*)m_pSim)->GetNewOutputFileName(), true)) {
+#ifdef LINUX2
+				string koll = ((ModelFiles*)m_pSim)->GetNewOutputFileName();
+				cerr << koll << endl;
+				return false;
+#endif
+
+			};
+		}
+		else
+			m_pSim->m_PG_OutPutFile.SetFileName(filename);
 
 
 
@@ -1012,6 +1020,7 @@ bool Simulator::Valid_Ini(bool MultiFlag, bool First) {
 			CPG *pPGNew=pF->GetPointer();
 			it=File_And_Index.find(pPGNew);
 			if(it==File_And_Index.end()) {
+				if(!pPGNew->AreAllValuesAssigned())
 				if(!pF->CheckFileNameAndAssignNameToPGClass()) {
 #ifndef COUPSTD	
 	auto choice=MFC_Util::MessageBoxReturn("Simulation completed with errors \nValidation File not find ","Write Result Write Error" ,MB_YESNO|MB_ICONQUESTION|MB_TASKMODAL);
@@ -1184,7 +1193,8 @@ bool Simulator::Valid_End(bool Multi, bool Final, bool First) {
 			//pPG->WriteNewPGFileRecord();
 			if(First) {
 				pPG->ReCalculateMinMax();
-				pPG->SaveAs(((ModelFiles*)m_pSim)->GetNewOutputFileName(int(i+1)), true);
+				if(!pPG->IsOnlyForMemoryUse())
+					pPG->SaveAs(((ModelFiles*)m_pSim)->GetNewOutputFileName(int(i+1)), true);
 			}
 		}
 
@@ -1238,7 +1248,12 @@ bool Simulator::Valid_End(bool Multi, bool Final, bool First) {
 
 			}*/
 			pPG->ReCalculateMinMax();
-			pPG->SaveAs(((ModelFiles*)m_pSim)->GetNewOutputFileName(int(i+1)), true);
+			string newfilename = ((ModelFiles*)m_pSim)->GetNewOutputFileName(int(i + 1));
+			if (!pPG->IsOnlyForMemoryUse())
+				pPG->SaveAs(newfilename, true);
+			else
+				pPG->SetFileName(newfilename);
+
 		}
 	}
 	Valid_Evaluation(Multi, Final);

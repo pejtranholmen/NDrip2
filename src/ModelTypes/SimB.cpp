@@ -21,6 +21,7 @@ SimB::SimB()
 	_def.fproc = fysprocess::STORAGE;
 	_def.bproc = bioprocess::NOBPROC;
 	_def.ulev = userlevel::NORMAL;
+	_def.unittype = UNIT_TYPES::NO_UNIT;
 	_ModuleNo = string::npos;
 
 }
@@ -34,6 +35,7 @@ SimB::SimB(simtype d_vt, datatype d_v, elements el_v, userlevel user_v)
 	_def.fproc=NOFPROC;
 	_def.bproc=NOBPROC;
 	_def.ulev=user_v;
+	_def.unittype = UNIT_TYPES::NO_UNIT;
 }
 SimB::SimB(simtype d_vt, datatype d_v, elements el_v, fysprocess fproc, bioprocess bproc, userlevel user_v)
 {
@@ -44,6 +46,7 @@ SimB::SimB(simtype d_vt, datatype d_v, elements el_v, fysprocess fproc, bioproce
 	_def.fproc=fproc;
 	_def.bproc=bproc;
 	_def.ulev=user_v;
+	_def.unittype = UNIT_TYPES::NO_UNIT;
 }
 SimB::SimB(simtype d_vt, datatype d_v, elements el_v)
 {
@@ -54,6 +57,7 @@ SimB::SimB(simtype d_vt, datatype d_v, elements el_v)
 	_def.fproc=NOFPROC;
 	_def.bproc=NOBPROC;
 	_def.ulev=NORMAL;
+	_def.unittype = UNIT_TYPES::NO_UNIT;
 }
 SimB::SimB(simtype d_vt, definitions def) 
 {

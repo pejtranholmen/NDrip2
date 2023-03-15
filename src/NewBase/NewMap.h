@@ -42,10 +42,11 @@ public:
 	bool Read_SimB_FromXmlFile(pugi::xml_node node);
 	bool WriteSimB_ToXmlFile(pugi::xml_node node, simtype, doc_enabled def = doc_enabled::ALL);
 
-	bool WriteDoc_To_Postgres();
+	bool WriteDoc_To_Postgres(bool UpdatedRecord=false, bool DB_Source=false);
 	bool ReDefinePostgresDataBase();
 	bool SelectDoc_From_Postgres(int pkey, bool download=false, string localdirectory="");
 	bool DeleteDoc_From_Postgres(int pkey);
+
 	vector<pair<int, string>> GetDataBaseSimulations();
 
 	bool CheckStart_EndTime();
@@ -59,7 +60,7 @@ public:
 			// updates all variable interactions
 	void SetPathName(string filename) {m_DocFileName=filename; m_CurrentFile=filename;};
 	bool ReadDocFile(string filename="");
-	bool WriteDocFile(string localdirectory="");
+	bool WriteDocFile(string localdirectory="", bool DB_Source=false);
 	bool ReadXmlDocFile(string filename);
 
 

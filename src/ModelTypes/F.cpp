@@ -50,7 +50,17 @@ bool F::ResetValNumbers()
 }
 bool F::CallDataDescription() {
 	if(m_DataDescription.size()>0) return true;
-	if(CheckFileNameAndAssignNameToPGClass() ) {
+	if (m_PGPointer->AreAllValuesAssigned()) {
+		m_DataDescription.clear();
+		string str1, str2;
+		for (size_t i = 0; i < m_PGPointer->GetNumVariables(); i++) {
+			str1 = m_PGPointer->GetVarName(i + 1); FUtil::trim(str1);
+			str2 = m_PGPointer->GetVarId(i + 1); FUtil::trim(str2);
+			m_DataDescription.push_back(str1 + ' ' + str2);
+		}
+		return true;
+	}
+	else if(CheckFileNameAndAssignNameToPGClass() ) {
 		m_DataDescription.clear();
 		m_PGPointer->ReOpen();
 		string str1,str2;

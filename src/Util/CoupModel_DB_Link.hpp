@@ -16,6 +16,9 @@ using namespace pqxx;
 
 namespace coup_pg {
     static bool LocalHost{ false };
+    enum class DB_RUN_ACTION { RUN_STORE_ON_CURRENT, RUN_STORE_AS_NEWRECORD };
+    static DB_RUN_ACTION db_action=DB_RUN_ACTION::RUN_STORE_ON_CURRENT;
+
     static connection initconnection(string work_to_be) {
         string init, ans;
         
@@ -214,7 +217,7 @@ static bool load_pg_file(int pkey, map<string, CPG*> links_to_pg_pointers) {
 
 
 }
-static bool download_pg_file(int pkey, string localdirectory) {
+static bool download_pg_file(int pkey, string localdirectory, bool ExportToCSV, CommonModelInfo* pinfo) {
 
    
     connection c = initconnection("create pg file");
@@ -260,6 +263,9 @@ static bool download_pg_file(int pkey, string localdirectory) {
         auto longitude = row_inner["longitude"].as<double>();
         auto altitude = row_inner["altitude"].as<double>();
         pg.SetVarName(varno, name);
+        if (i_unit > 0 && i_unit < 100) {
+            unit = pinfo->GetUnitString(UNIT_TYPES(i_unit));
+        }
         pg.SetVarUnit(varno, unit);
         pg.SetVarId(varno, id);
         pg.SetVarPos(varno, pos);
@@ -291,7 +297,29 @@ static bool download_pg_file(int pkey, string localdirectory) {
         }
         recno++;
     }
-    if (pg.WritePGFile()) {
+    if (ExportToCSV) {
+        string str = pg.GetFileName();
+        auto pos = str.rfind('.');
+        string newname;
+        if (pos != string::npos)
+            newname = str.substr(0, pos + 1) + "csv";
+        else
+            newname = str + ".csv";
+        str=pg.ExportToFile(newname);
+        if (str.size() > 0) {
+            cout << "time serie file created : " << str << endl;
+            return true;
+        }
+        else
+            return false;
+
+    }
+    else if (pg.ReCalculateMinMax()) {
+        if (filename.find('.') == string::npos) {
+            filename += ".BIN";
+        }
+        pg.SaveAs(filename, true);
+        pg.CloseFile();
         cout << "pg file created : " << filename << endl;
         return true;
     }
@@ -414,11 +442,13 @@ vector<string> create_Init_Tables(CommonModelInfo* pinfo) {
         sql += "(Id_Simulations SERIAL PRIMARY KEY,";
         sql += "name Varchar(128) UNIQUE,";
         sql += "creator Varchar(128) Default '-',";
+        sql += "time TIMESTAMP,";
+        sql += "sitename Varchar(32) Default '-',";
         sql += "runno Integer,";
         sql += "comment Varchar(128) Default '-');";
         W.exec(sql.c_str());
         sql = "INSERT INTO Simulations VALUES( ";
-        sql += "Default, 'first_test','PEJ',1,'When using Default of everything');";
+        sql += "Default, 'first_test','PEJ',NOW(),Default,1,'When using Default of everything');";
         W.exec(sql.c_str());
 
         tablenames.push_back(tablename);
@@ -1649,6 +1679,7 @@ vector<string> create_Additional_Tables(CommonModelInfo* pinfo, NewMap* pDoc) {
 
 };
 
+
 int transfer_Document(struct sim_doc_simulation str) {
     try {
         connection c = initconnection("Simulations Table");
@@ -1656,9 +1687,14 @@ int transfer_Document(struct sim_doc_simulation str) {
 
         string sql = "INSERT INTO Simulations VALUES ( ";
         sql += "Default,'";
-        sql += str.name + "',";
+        if (str.sitename.size() > 0 && str.name.find(str.sitename)==string::npos) 
+            sql += str.sitename + "_"+str.name+"',";
+        else 
+            sql += str.name + "',";
         if (str.creator.size() == 0) sql += "Default,";
-        else sql += "'" + str.creator + "',";
+        else sql += "'" + str.creator + "',NOW(),";
+        if (str.sitename.size() == 0) sql += "Default,";
+        else sql += "'" + str.sitename + "',";
         sql += to_string(str.simno) + ",";
         if (str.comment.size() == 0) sql += "Default";
         else sql += "'" + str.comment + "'";
@@ -2061,7 +2097,7 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
 
         }
 
-    }
+      }
     catch (const std::exception& e) {
         cerr << e.what() << std::endl;
         cerr << sql << std::endl;
@@ -2459,14 +2495,44 @@ int transfer_ensemble_statistics(int pkey, NewMap* pDoc) {
         return -1;
     }
 }
+int CleanFileAchivesFromUnUsedFiles() {
+    try {
+        connection c = initconnection("Clean FileArchive");
+        pqxx::work W{ c };
+        vector<int> id_filesExist, id_filesUsed, deleted;
+        string sql = "SELECT id_filename FROM FileNameArchive";
+        result rr = W.exec(sql.c_str());
+        for (auto row : rr) {
+            id_filesExist.push_back(row[0].as<int>());
+        }
+        sql = "SELECT Id_FileName FROM filenamearchive_uses";
+        rr = W.exec(sql.c_str());
+        for (auto row : rr) {
+            id_filesUsed.push_back(row[0].as<int>());
+        }
+        for (auto pkeyfile : id_filesExist) {
+            bool NotUsed = true;
+            for (auto pkeyUsed : id_filesUsed) {
+                if (pkeyfile == pkeyUsed) NotUsed = false;
+            }
+            if (NotUsed) {
+                auto r = W.exec("DELETE FROM filenamearchive_descriptions WHERE id_filename = " + to_string(pkeyfile));
+                r = W.exec("DELETE FROM filenamearchive_data WHERE id_filename = " + to_string(pkeyfile));
+                r = W.exec("DELETE FROM filenamearchive WHERE id_filename = " + to_string(pkeyfile));
+                deleted.push_back(pkeyfile);
+            }
+        }
+        W.commit();
+        cout << to_string(deleted.size()) << " Was deleted from filetables" << endl;
+    }
 
+    catch (const std::exception& e) {
+        cerr << e.what() << std::endl;
+        return -1;
+    }
 
-
-
-
-
-
-
+return 0;
+}
 };
 using namespace coup_pg;
 #endif

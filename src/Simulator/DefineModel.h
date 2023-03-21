@@ -37,7 +37,7 @@ private:
 
 };
 class StateVectorUpdate {
-	StateVectorUpdate(double& x, vector<double>& fluxin, double& tstep) : X(x), fluxin(fluxin) {};
+	StateVectorUpdate(double& x, vector<double>& fluxin, double& tstep) : X(x), fluxin(fluxin), tstep(tstep) {};
 
 	void operator() () {
 		for (double F : fluxin) {
@@ -54,7 +54,7 @@ private:
 };
 
 class VectorStateVectorUpdate {
-	VectorStateVectorUpdate(vector<pair<double&, double&>>& fluxin, double& tstep) : fluxin(fluxin) {};
+	VectorStateVectorUpdate(vector<pair<double&, double&>>& fluxin, double& tstep) : fluxin(fluxin), tstep(tstep) {};
 
 	void operator() () {
 		for (pair<double&, double&> F : fluxin) {
@@ -65,7 +65,6 @@ class VectorStateVectorUpdate {
 
 
 private:
-	double X;
 	vector<pair<double&, double&>> fluxin;
 	double tstep;
 

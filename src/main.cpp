@@ -17,19 +17,37 @@ int main(int argc, char* argv[]) {
 
     auto path = FUtil::GetCurrentPath();
     auto kolla = FUtil::GetFileList(".xml");
-
+    unique_ptr<Register> p_Register = make_unique<Register>();
 
     string answer;
 
-    string currentcreator=FUtil::GetProfileStringStd("Creator", "NN");
+    pair<string, unique_ptr<Register>> p = FUtil::GetProfileStringStd("Creator", "NN", move(p_Register));
+
+    string currentcreator = p.first; p_Register = move(p.second);
 
     cout << "Current Creator Id :" << currentcreator<<" Enter string to change: ";
     cin >> answer;
 
     if (answer.size() > 2) {
-        FUtil::WriteProfileStringStd("Creator", answer);
+        p_Register=FUtil::WriteProfileString("Creator", answer, move(p_Register));
 
     }
+    p = FUtil::GetProfileStringStd("SiteNameId", "-", move(p_Register));
+    
+    string current_site = p.first; p_Register = move(p.second);
+    
+    cout << "Current SiteName Id :" << current_site << " Enter string to change: ";
+    cin >> answer;
+
+    if (answer.size() > 2&&answer.size()<25)   p_Register=FUtil::WriteProfileString("SiteNameId", answer, move(p_Register));
+
+    
+    p = FUtil::GetProfileStringStd("Comment", "NN", move(p_Register));
+    string current_comment = p.first; p_Register = move(p.second);
+
+    cout << "Current Comment Id :" << current_comment << " Enter string to change: ";
+    cin >> answer;
+    if (answer.size() > 2 && answer.size() < 25)  p_Register= FUtil::WriteProfileString("Comment", answer, move(p_Register));
     
     if (argc == 1 && kolla.size() > 0) {
 

@@ -12,7 +12,7 @@ class P : public Par
 		P(std::vector<double> *target, NE* num, enum datatype data, enum elements elem, enum fysprocess fproc, enum bioprocess bproc, enum userlevel ulev);	
 		
 		~P(void);
-		P(void) {P();};
+		P(void) {};
 		void SetValue(vector<double> vec) {*_ptarget=vec;};
 		double GetValue(size_t index) { if (_ptarget->size() > index) return _ptarget->at(index); else return MISSING; };
 		std::vector<double> GetVector() { return *_ptarget;}

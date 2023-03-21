@@ -1136,7 +1136,7 @@ string PGUtil::CheckedForExistingBinFileName(string filename)
 {
 	string filenameout;
 	if (!FUtil::IsFileExisting(filename)) {
-
+		unique_ptr<Register> p_reg = make_unique<Register>();
 
 		auto iposBIN = filename.rfind(".BIN");
 		if (iposBIN != string::npos) {
@@ -1146,7 +1146,8 @@ string PGUtil::CheckedForExistingBinFileName(string filename)
 
 
 		string UserDirectory = "";
-		UserDirectory = FUtil::GetProfileStringStd("UserDirectory", UserDirectory);
+		pair<string, unique_ptr<Register>> p = FUtil::GetProfileStringStd("UserDirectory", UserDirectory, move(p_reg));
+		UserDirectory = p.first; p_reg = move(p.second);
 		size_t numo;
 		cout << UserDirectory << endl;
 
@@ -1161,7 +1162,8 @@ string PGUtil::CheckedForExistingBinFileName(string filename)
 
 		string testname = UserDirectory + filename;
 		if (!FUtil::IsFileExisting(testname)) {
-			UserDirectory = FUtil::GetProfileStringStd("UserSubDirectory", UserDirectory);
+			pair<string, unique_ptr<Register>> p = FUtil::GetProfileStringStd("UserSubDirectory", UserDirectory, move(p_reg));
+			UserDirectory = p.first; p_reg = move(p.second);
 			size_t ust = testname.rfind("\\");
 			string file = testname.substr(ust + 1);
 

@@ -3,6 +3,7 @@
 #include "../NewBase/ModelMap.h"
 #include "../ModelTypes/NewModelType.h"
 #include "./PLANT/WaterUptake.h"
+#include "../PG/PGUtil.h"
 #ifndef STD
 #include "../stdafx.h"
 #include "../MainFrm.h"
@@ -21,6 +22,8 @@ SimModule::SimModule()
 	Count_Call=0;
 	m_NumErrors = 0;
 	m_pModelStructure = nullptr;
+	m_pg_util = new PGUtil();
+
 	//pT_Step = &pModel->T_Step; 
 
 
@@ -187,10 +190,13 @@ void SimModule::Define(Sw* ptr, string name, int value,string options, string co
 }
 void SimModule::Define(Xs* ptr, string name, double value, UNIT_TYPES UNIT, string conditions)
 {
+	ptr->SetUnitType(UNIT);
 	Define(ptr, name, value, p_ModelInfo->GetUnitString(UNIT), conditions);
 }
 void SimModule::Define(Xs* ptr,  string name, double value, string unit, string conditions)
 {
+	if (ptr->GetUnitType() == UNIT_TYPES::NO_UNIT)
+		ptr->SetUnitType(m_pg_util->GetUnitType(unit));
    string AllConditions;
    AllConditions=ModuleConditions;
    if(conditions.size()>0) {
@@ -203,10 +209,13 @@ void SimModule::Define(Xs* ptr,  string name, double value, string unit, string 
 }
 void SimModule::Define(Ts* ptr, string name, double value, UNIT_TYPES UNIT, string conditions)
 {
+	ptr->SetUnitType(UNIT);
 	Define(ptr, name, value, p_ModelInfo->GetUnitString(UNIT), conditions);
 }
 void SimModule::Define(Ts* ptr,  string name, double value, string unit, string conditions)
 {
+	if (ptr->GetUnitType() == UNIT_TYPES::NO_UNIT)
+		ptr->SetUnitType(m_pg_util->GetUnitType(unit));
    string AllConditions;
    AllConditions=ModuleConditions;
    if(conditions.size()>0) {
@@ -219,10 +228,13 @@ void SimModule::Define(Ts* ptr,  string name, double value, string unit, string 
 }
 void SimModule::Define(Gs* ptr, string name, double value, UNIT_TYPES UNIT, string conditions)
 {
+	ptr->SetUnitType(UNIT);
 	Define(ptr, name, value, p_ModelInfo->GetUnitString(UNIT), conditions);
 }
 void SimModule::Define(Gs* ptr,  string name, double value, string unit, string conditions)
 {
+	if (ptr->GetUnitType() == UNIT_TYPES::NO_UNIT)
+		ptr->SetUnitType(m_pg_util->GetUnitType(unit));
    string AllConditions;
    AllConditions=ModuleConditions;
    if(conditions.size()>0) {
@@ -235,10 +247,13 @@ void SimModule::Define(Gs* ptr,  string name, double value, string unit, string 
 }
 void SimModule::Define(Ds* ptr, string name, double value, UNIT_TYPES UNIT, string conditions)
 {
+	ptr->SetUnitType(UNIT);
 	Define(ptr, name, value, p_ModelInfo->GetUnitString(UNIT), conditions);
 }
 void SimModule::Define(Ds* ptr,  string name, double value, string unit, string conditions)
 {
+	if (ptr->GetUnitType() == UNIT_TYPES::NO_UNIT)
+		ptr->SetUnitType(m_pg_util->GetUnitType(unit));
    string AllConditions;
    AllConditions=ModuleConditions;
    if(conditions.size()>0) {
@@ -251,12 +266,14 @@ void SimModule::Define(Ds* ptr,  string name, double value, string unit, string 
 } 
 void SimModule::Define(Ps* ptr, string name, double value, UNIT_TYPES UNIT, string conditions, double emin, double emax, double wmin, double wmax, int recalc, int UserLevel, int view)
 {
-
+	ptr->SetUnitType(UNIT);
 	Define(ptr, name, value, p_ModelInfo->GetUnitString(UNIT), conditions, emin, emax, wmin, wmax, recalc, UserLevel, view);
 	
 }
 void SimModule::Define(Ps* ptr, string name, double value, string unit, string conditions, double emin, double emax, double wmin, double wmax,int recalc, int UserLevel, int view)
 {
+	if (ptr->GetUnitType() == UNIT_TYPES::NO_UNIT)
+		ptr->SetUnitType(m_pg_util->GetUnitType(unit));
    string AllConditions;
    AllConditions=ModuleConditions;
    if(conditions.size()>0) {
@@ -284,11 +301,15 @@ void SimModule::Define(NE* ne, string name)
 
 void SimModule::Define(P* ptr, NE* ptrNE, string name, vector<double> vvalue, UNIT_TYPES UNIT, string conditions, double emin, double emax, double wmin, double wmax, int recalc, int views, int view)
 {
+	ptr->SetUnitType(UNIT);
 	Define(ptr,  ptrNE, name,  vvalue,p_ModelInfo->GetUnitString(UNIT) , conditions,  emin,  emax,  wmin, wmax,  recalc, views,  view);
 }
 
 void SimModule::Define(P* ptr,NE* ptrNE,string name, vector<double> vvalue, string unit, string conditions, double emin, double emax, double wmin, double wmax, int recalc, int views, int view)
 {
+	if (ptr->GetUnitType() == UNIT_TYPES::NO_UNIT)
+		ptr->SetUnitType(m_pg_util->GetUnitType(unit));
+
    string AllConditions;
    AllConditions=ModuleConditions;
    if(conditions.size()>0) {
@@ -435,11 +456,15 @@ void SimModule::Define(Func* ptr, FunctorProp myf, string name, vector<P*> P_Vec
 }*/
 void SimModule::Define(X* ptr, NE* ptrNE, string name, vector<double> vvalue, UNIT_TYPES UNIT, string conditions)
 {
+	ptr->SetUnitType(UNIT);
+	
 	Define(ptr, ptrNE, name, vvalue, p_ModelInfo->GetUnitString(UNIT), conditions);
 }
 
 void SimModule::Define(X* ptr, NE* ptrNE, string name, vector<double> vvalue, string unit, string conditions)
 {
+	if (ptr->GetUnitType() == UNIT_TYPES::NO_UNIT)
+		ptr->SetUnitType(m_pg_util->GetUnitType(unit));
    string AllConditions;
    AllConditions=ModuleConditions;
    if(conditions.size()>0) {
@@ -453,10 +478,14 @@ void SimModule::Define(X* ptr, NE* ptrNE, string name, vector<double> vvalue, st
 }
 void SimModule::Define(T* ptr, NE* ptrNE, string name, vector<double> vvalue, UNIT_TYPES UNIT, string conditions)
 {
+	ptr->SetUnitType(UNIT);
 	Define(ptr, ptrNE, name, vvalue, p_ModelInfo->GetUnitString(UNIT), conditions);
 }
 void SimModule::Define(T* ptr, NE* ptrNE, string name, vector<double> vvalue, string unit, string conditions)
 {
+	if (ptr->GetUnitType() == UNIT_TYPES::NO_UNIT)
+		ptr->SetUnitType(m_pg_util->GetUnitType(unit));
+
    string AllConditions;
    AllConditions=ModuleConditions;
    if(conditions.size()>0) {
@@ -471,10 +500,14 @@ void SimModule::Define(T* ptr, NE* ptrNE, string name, vector<double> vvalue, st
 }
 void SimModule::Define(G* ptr, NE* ptrNE, string name, vector<double> vvalue, UNIT_TYPES UNIT, string conditions)
 {
+	ptr->SetUnitType(UNIT);
 	Define(ptr, ptrNE, name, vvalue,p_ModelInfo->GetUnitString(UNIT), conditions);
 }
 void SimModule::Define(G* ptr, NE* ptrNE,string name, vector<double> vvalue, string unit, string conditions)
 {
+	if (ptr->GetUnitType() == UNIT_TYPES::NO_UNIT)
+		ptr->SetUnitType(m_pg_util->GetUnitType(unit));
+
    string AllConditions;
    AllConditions=ModuleConditions;
    if(conditions.size()>0) {
@@ -488,10 +521,13 @@ void SimModule::Define(G* ptr, NE* ptrNE,string name, vector<double> vvalue, str
 }
 void SimModule::Define(D* ptr, NE* ptrNE, string name, vector<double> vvalue, UNIT_TYPES UNIT, string conditions)
 {
+	ptr->SetUnitType(UNIT);
 	Define(ptr, ptrNE, name, vvalue, p_ModelInfo->GetUnitString(UNIT), conditions);
 }
 void SimModule::Define(D* ptr, NE* ptrNE, string name, vector<double> vvalue, string unit, string conditions)
 {
+	if (ptr->GetUnitType() == UNIT_TYPES::NO_UNIT)
+		ptr->SetUnitType(m_pg_util->GetUnitType(unit));
    string AllConditions;
    AllConditions=ModuleConditions;
    if(conditions.size()>0) {

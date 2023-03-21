@@ -61,6 +61,7 @@ enum class DATA_TYPES {
 	SIM_PERFORMANCE, SIM_PAR, SIM_OUTSUM, SIM_SUMVAR, PGDATA, MEASURED_VAL, SIM_OUTSUM_X, SIM_OUTSUM_Y
 };
 
+
 enum sumtype { INITIAL, FINAL, MINVALUE, MAXVALUE, MEANVALUE, ACCVALUE };
 enum valtype { R2VALUE, INTERCEPT, SLOPE, MERROR, RMSE, LOGLIKE, NSE };
 enum vartype { NO_USE, DATEAXIS, MULTIRUN_NUM, PGVAR, SUMVAR, VALVAR, PARVAR, PGREPIT, PGYEAR, PGMONTH, PGDAY, PGHOUR, PGDEPTH, PGVARVALID, GEO_LAT, GEO_LONG, GEO_ALT, VAR_MIN, VAR_MAX, VAR_MISSING, VAR_FIRST, VAR_LAST, VAR_MEAN, VALVARSUM };
@@ -184,6 +185,7 @@ class SimB
 		void SetName(std::string str) {_name=str;};
 		void SetConditions(std::string str) {cond=str;};
 		void SetUnit(std::string str) {_unit=str;};
+		void SetUnitType(UNIT_TYPES value) { _def.unittype = value;};
 		//void SetDefValue(double value) { _orgFValue=value;};
 		virtual bool IsEnabled() {if(_enabled) return false; return true;};
 		bool IsDBEnabled() {return _DBenabled;};

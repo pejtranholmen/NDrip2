@@ -383,6 +383,7 @@ class ModelBase : public ModelMap{
 	size_t m_NumOutPuts;
 	size_t m_UserLevel;
 	string m_DocFileName;
+	string m_SiteName;
 	string m_UserDirectory;
 	string m_CurrentFile, m_CurrentDirectory, m_StartDirectory, m_CurrentSubDirectory;
 	string m_DataBaseDirectory, m_PreviousMultiMBinFile;

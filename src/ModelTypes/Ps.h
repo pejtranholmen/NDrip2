@@ -113,11 +113,11 @@ class Ps :	public Par
 
 	private:
 
-	double _orgFValue;
-	double *_ptarget; 
-	double _min,_max, _wmin, _wmax;
-	double _DBvalue;
-	double _oldValue;
+		double _orgFValue{ 0. };
+		double* _ptarget{ nullptr };
+	double _min{ 0. },_max{ 1. }, _wmin{ 0. }, _wmax{ 1. };
+	double _DBvalue{ 0. };
+	double _oldValue{ 0. };
 	std::vector<double> _mr_Tab_Value;
 	vector<long> ChaDateLong;
 	vector<double> ChaParValue;
@@ -125,13 +125,13 @@ class Ps :	public Par
 	MR_PAR _mr;
 	string _ViewTitle;
 	string _Process;
-	size_t _mrMonitoring;
-	size_t m_n_bins;
-	size_t view;
+	size_t _mrMonitoring{ 0 };
+	size_t m_n_bins{ 0 };
+	size_t view{ 0 };
 	string GLegend, GLeftTitle, GXTitle;
-	double GXmin, GXmax;
-	size_t GPointType, GraphType;
+	double GXmin{ 0. }, GXmax{ 1. };
+	size_t GPointType{ 0 }, GraphType{ 0 };
 
-	bool _IsOldValue;
+	bool _IsOldValue{ false };
 };
 

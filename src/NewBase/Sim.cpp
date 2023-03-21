@@ -292,7 +292,6 @@ Sim::Sim()
 	m_SimulationPriority=0;
 	m_Simulator.SetSimPointer(this);
 	m_UserDirectory="";
-
 }
 Sim::~Sim()
 {
@@ -324,27 +323,12 @@ string Sim::GetCurrentSubDirectoryFile()
 	return m_CurrentSubDirectoryFile;
 }
 
-bool Sim::RunModel_Using_Postgres(int pkey, bool UpdateOnly) {
+bool Sim::RunModel_Using_Postgres(int pkey) {
+
 	if (SelectDoc_From_Postgres(pkey, false)) {
-		// Run Model
 		m_PG_OutPutFile.SetOnlyMemoryUse(true);
-
-		return MakeSingleRun(UpdateOnly);
-		vector<SimB*> vall;
-		vall = GetPtrVector(PGFILE, false);
-		for (SimB* pSimB : vall) {
-			F* pF = static_cast<F*>(pSimB);
-			string name = pF->GetName();
-			auto pPG1=pF->GetPointer();
-			auto pPG2 = pF->GetPGResPointer();
-			auto koll1=pPG1->GetFileName();
-			auto kolle2=pPG2->GetFileName();
-		}
+		return MakeSingleRun(true, pkey);
 	}
-
-
-
-
 }
 void Sim::SetCurrentName_SimNo(int NewNo)
 {
@@ -411,17 +395,26 @@ bool Sim::FixSumIndex()
 }
 
 #ifdef COUPSTD
-bool Sim::MakeSingleRun(bool DB_Source) 
+bool Sim::MakeSingleRun(bool DB_Source, int pkey) 
 {
 	if (DB_Source == true) {
 		m_IsUsingDB_Source = true;
 		m_ValidationData.Init(this);
 		m_ValidationData.SetPointersToOutputValidationFiles(true);
 		m_MStorage.Init(this);
-		m_DocFile.m_SimulationRunNo++;
+		if (GetDB_Action() != 0) {
+			unique_ptr<Register> reg_pointer = make_unique<Register>();
+			pair<int, unique_ptr<Register>> pn = FUtil::GetProfileIntNo("SimulationRunNo", 1, move(reg_pointer));
+			int testno = pn.first; reg_pointer = move(pn.second);
+
+			if (m_DocFile.m_SimulationRunNo <= testno) {
+				m_DocFile.m_SimulationRunNo = testno;
+			}
+			m_DocFile.m_SimulationRunNo++;
+		}
 	}
 
-
+	m_DocFile.m_TimeModified = time(nullptr);
 	SetSingleSimulation();
 	ApplyOptStartValues();
 	if (!CheckAndUpdateFileName(false, DB_Source)) return false;
@@ -447,8 +440,8 @@ bool Sim::MakeSingleRun(bool DB_Source)
 
 		cout << "Simulation Completed" << endl;
 #ifndef NO_FILES
-        FUtil::WriteProfileInt("SimulationRunNo", m_DocFile.m_SimulationRunNo + 1);
-		return WriteDocFile("", DB_Source);
+		if (pkey > 0&& GetDB_Action() == 0) DeleteDoc_From_Postgres(pkey);
+        return WriteDocFile("", DB_Source);
 #else
         return true;
 #endif
@@ -488,7 +481,11 @@ bool Sim::MakeMultiRun(bool DB_Source) {
 	MR_Storage_Init();
 
 	string UserDirectory = "";
-	UserDirectory = FUtil::GetProfileStringStd("UserDirectory", UserDirectory);
+	{
+		auto RegPointer = make_unique<Register>();
+		pair<string, unique_ptr<Register>> p = FUtil::GetProfileStringStd("UserDirectory", UserDirectory, move(RegPointer));
+		UserDirectory = p.first; RegPointer = move(p.second);
+	}
 	int numo = UserDirectory.size();
 	m_UserDirectory = UserDirectory;
 	if (UserDirectory.rfind("\\") != numo - 1)
@@ -872,7 +869,8 @@ bool Sim::CheckAndUpdateFileName(bool MultiRun, bool DB_Source) {
 	if (iposXml == string::npos) xmlType = false;
 	int SimulationRunNo;
 	if (!DB_Source) {
-		SimulationRunNo = FUtil::GetProfileIntNo("SimulationRunNo", 1);
+		pair<int, unique_ptr<Register>> p = FUtil::GetProfileIntNo("SimulationRunNo", 1);
+		SimulationRunNo = p.first;
 		if (SimulationRunNo < 0) {
 			if (iposExt != string::npos && iposSim != string::npos) {
 				if (iposSim - iposExt == 7) {
@@ -931,6 +929,7 @@ bool Sim::CheckAndUpdateFileName(bool MultiRun, bool DB_Source) {
 
 bool Sim::CreateNewDocFromCurrentDoc() {
 
+	auto reg_pointer = make_unique<Register>();
 	string pzPathName, Num, newPathName;
 	int ipos_sim, iposext, iposMul;
 	// Create new document
@@ -950,7 +949,8 @@ bool Sim::CreateNewDocFromCurrentDoc() {
 	int PreviousRunNo;
 	//if (!m_pSimDoc->CDocument::OnSaveDocument(pzPathName)) return;
 #ifdef COUPSTD
-	m_DocFile.m_SimulationRunNo = FUtil::GetProfileIntNo("SimulationRunNo", 1);
+	 pair<int, unique_ptr<Register>> p= FUtil::GetProfileIntNo("SimulationRunNo", 1, move(reg_pointer));
+	 m_DocFile.m_SimulationRunNo = p.first; reg_pointer = move(p.second);
 	PreviousRunNo = 0;
 #else
 	PreviousRunNo = m_DocFile.m_SimulationRunNo;
@@ -960,12 +960,13 @@ bool Sim::CreateNewDocFromCurrentDoc() {
 
 
 	m_DocFile.m_SimulationRunNo = (m_DocFile.m_SimulationRunNo - 1) % 999999 + 1;
-	FUtil::WriteProfileInt("SimulationRunNo", m_DocFile.m_SimulationRunNo);
-	m_DocFile.m_SimulationRunNo = FUtil::GetProfileIntNo("SimulationRunNo", m_DocFile.m_SimulationRunNo);
+	reg_pointer=FUtil::WriteProfileInt("SimulationRunNo", m_DocFile.m_SimulationRunNo, move(reg_pointer));
+	p= FUtil::GetProfileIntNo("SimulationRunNo", m_DocFile.m_SimulationRunNo, move(reg_pointer));
+	m_DocFile.m_SimulationRunNo = p.first; reg_pointer = move(p.second);
 
 	if (m_DocFile.m_SimulationRunNo == PreviousRunNo) {
 		m_DocFile.m_SimulationRunNo++;
-		FUtil::WriteProfileInt("SimulationRunNo", m_DocFile.m_SimulationRunNo);
+		reg_pointer=FUtil::WriteProfileInt("SimulationRunNo", m_DocFile.m_SimulationRunNo, move(reg_pointer));
 	}
 	Num = FUtil::ItoNumAscii(m_DocFile.m_SimulationRunNo);
 
@@ -999,7 +1000,7 @@ bool Sim::CreateNewDocFromCurrentDoc() {
 	if (m_MultiRun_Array.size() > 0) {
 
 		m_DocFile.m_SimulationRunNo+=MR_Get_NumberofRuns();
-		FUtil::WriteProfileInt("SimulationRunNo", m_DocFile.m_SimulationRunNo);
+		reg_pointer=FUtil::WriteProfileInt("SimulationRunNo", m_DocFile.m_SimulationRunNo, move(reg_pointer));
 
 	}
 

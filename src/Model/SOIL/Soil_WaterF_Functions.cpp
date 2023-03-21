@@ -55,14 +55,14 @@ bool Soil_WaterF_Functions::Def()
 	
 //	CALL Ts(Group_18, SoilInfil,"SoilInfil",  DBLE(0.), "mm/day","")
 	pG= new G(&Theta,pNL, SIMPROFILE, WATER, STORAGE, NOBPROC, NORMAL);
-	Define(pG, pNL,"WaterContent", initv,"vol %","");
+	Define(pG, pNL,"WaterContent", initv,UNIT_TYPES::WATERCONTENT_UNIT,"");
 	pG= new G(&ThetaB,pNL, SIMPROFILE, WATER, STORAGE, NOBPROC, NORMAL);	
-	Define(pG, pNL, "ThetaB",initv,"vol %","WaterEq = 1|Kalle = 1");
+	Define(pG, pNL, "ThetaB",initv, UNIT_TYPES::WATERCONTENT_UNIT,"WaterEq = 1|Kalle = 1");
  	pG= new G(&Psi,pNL, SIMPROFILE, WATER, STORAGE, NOBPROC, NORMAL);
-	Define(pG, pNL,"PressureHead",initv,"cm water","");
+	Define(pG, pNL,"PressureHead",initv,UNIT_TYPES::PRESSUREHEAD_UNIT,"");
  	pG= new G(&ThetaTotal,pNL, SIMPROFILE, WATER, STORAGE, NOBPROC, NORMAL);
 
-	Define(pG, pNL,"TotalWaterContent", initv, "vol %","");
+	Define(pG, pNL,"TotalWaterContent", initv, UNIT_TYPES::WATERCONTENT_UNIT,"");
  	pG= new G(&HysEffect, pNL, SIMPROFILE, WATER, STORAGE, NOBPROC, NORMAL);
 
 	Define(pG, pNL, "HysEffect", initv, "-","Hysteresis = 1");
@@ -79,13 +79,13 @@ bool Soil_WaterF_Functions::Def()
 	Define(pPs ,"InitialFlowRate", 0.1,"mm/day","Initial water conditions = 2", 1.E-10,10.);
 	pPs=new Ps(&IniPsiValue,  SINGLE, WATER, STORAGE, NOBPROC, DETAILED);
 
-	Define(pPs, "InitialPressuredHead", 60.,"cm water","Initial water conditions = 0|Nitrogen and Carbon < 2", 1.,1.E5);
+	Define(pPs, "InitialPressuredHead", 60.,UNIT_TYPES::PRESSUREHEAD_UNIT,"Initial water conditions = 0|Nitrogen and Carbon < 2", 1.,1.E5);
 	pPs=new Ps(&IniThetaValue,  SINGLE, WATER, STORAGE, NOBPROC, DETAILED);
 
-	Define(pPs,"InitialWaterContent", 20.,"vol %","Initial water conditions = 1",1.,100.);
+	Define(pPs,"InitialWaterContent", 20.,UNIT_TYPES::WATERCONTENT_UNIT,"Initial water conditions = 1",1.,100.);
 	pPs=new Ps(&IniGWLev,  SINGLE, WATER, STORAGE, NOBPROC, DETAILED);
 
-	Define(pPs, "InitialGroundWater", -1.,"m","Instate = 0|GroundWaterFlow > 0",-100.,0.);
+	Define(pPs, "InitialGroundWater", -1.,UNIT_TYPES::LENGTH_UNIT,"Instate = 0|GroundWaterFlow > 0",-100.,0.);
 	pPs=new Ps(&AScaleSorp,  SINGLE, VAPOUR, TRANSPORT, NOBPROC, DETAILED);
 
 	Define(pPs, "AScaleSorption", 0.5, "-","Crack = 1",0.001,1000.);
@@ -94,20 +94,20 @@ bool Soil_WaterF_Functions::Def()
 	Define(pPs,"HysThetaD", 0.2,"-","Hysteresis = 1",0.01,10.);
 	pPs=new Ps(&HysThetaMax,  SINGLE, WATER, TRANSPORT, NOBPROC, DETAILED);
 
-	Define(pPs,"HysThetamax", 10.,"Vol %","Hysteresis = 1",1.,50.);
+	Define(pPs,"HysThetamax", 10.,UNIT_TYPES::WATERCONTENT_UNIT,"Hysteresis = 1",1.,50.);
 	pPs=new Ps(&HysPF1,  SINGLE, WATER, TRANSPORT, NOBPROC, DETAILED);
 
-	Define(pPs, "HysPF1", 1.5,"pF-value","Hysteresis = 1", 0.5,4.);
+	Define(pPs, "HysPF1", 1.5,UNIT_TYPES::NO_UNIT,"Hysteresis = 1", 0.5,4.);
 	pPs=new Ps(&HysPF2,  SINGLE, WATER, TRANSPORT, NOBPROC, DETAILED);
 
-	Define(pPs	,"HysPF2", 4.0,"pF-value","Hysteresis = 1",0.5,5.);
+	Define(pPs	,"HysPF2", 4.0, UNIT_TYPES::NO_UNIT,"Hysteresis = 1",0.5,5.);
 	pPs=new Ps(&HysKExp,  SINGLE, WATER, TRANSPORT, NOBPROC, DETAILED);
 
 	Define(pPs,"HysKExp", 0.5,"-","Hysteresis = 1",0.01, 2.0);
 					
 	pPs=new Ps(&BarrierLevel,  SINGLE, WATER, TRANSPORT, NOBPROC, DETAILED);
 
-	Define(pPs,"BarrierLevel", -0.4,"m","Soil Water Barrier = 1",-100.,-0.01);
+	Define(pPs,"BarrierLevel", -0.4,UNIT_TYPES::LENGTH_UNIT,"Soil Water Barrier = 1",-100.,-0.01);
 	pPs=new Ps(&BarrierEfficiency,  SINGLE, VAPOUR, TRANSPORT, NOBPROC, DETAILED);
 
 	Define(pPs ,"BarrierEfficiency", 0.9,"-","Soil Water Barrier = 1",0.001,1.0);

@@ -142,6 +142,13 @@ void NewMap::SetLocalHost(bool value) {
 bool NewMap::GetLocalHost() {
 	return coup_pg::LocalHost;
 }
+void NewMap::SetDB_Action(size_t value) {
+	coup_pg::db_action = DB_RUN_ACTION(value);
+}
+size_t NewMap::GetDB_Action() {
+	return size_t(coup_pg::db_action);
+};
+
 
 string NewMap::WriteEntireModelToXmlFile(doc_enabled enable_level, string localdirectory)
 {
@@ -354,6 +361,7 @@ bool NewMap::WriteSimB_ToXmlFile(pugi::xml_node node, simtype type, doc_enabled 
 				else if (type == PGFILE) {
 					F* pF = static_cast<F*>(v_all[isw]);
 					string str = pF->GetStrValue();
+					if (str.find('.') == string::npos) str += ".Bin";
 					FUtil::trim_xmlstring(str);
 					n.append_attribute("PG_File") = str.c_str();
 				}
@@ -533,6 +541,14 @@ bool NewMap::Read_SimB_FromXmlFile(pugi::xml_node node) {
 					}
 					else if (type == simtype::PGFILE) {
 						auto pF = static_cast<F*>(GetPtr(type, item_name));
+
+						if (pF==nullptr&&item_name.find("ValidationFile") == 0) {
+							auto nc = item_name.size();
+							string num = item_name.substr(14);
+							if (num.size() == 1) item_name = item_name.substr(0, 14) + "_0" + num;
+							else if (num.size() == 2) item_name = item_name.substr(0, 14) + "_" + num;
+							pF = static_cast<F*>(GetPtr(type, item_name));
+						}
  						
 
 						if (pF == nullptr) {
@@ -630,7 +646,7 @@ bool NewMap::WriteHeaderToXmlFile(pugi::xml_node node) {
 
 	general.append_attribute("ExeFileDate") = exdate.c_str();
 
-	//   if(m_DocFile2.m_DateRun.size()>0 ) node.append_attribute("SimulationDate")= m_DocFile2.m_DateRun.c_str();
+	if(m_DocFile2.m_DateRun.size()>0 ) node.append_attribute("SimulationDate")= m_DocFile2.m_DateRun.c_str();
 	general.append_attribute("MultiSimulation") = m_DocFile.m_MultiRunning;
 	general.append_attribute("Finished") = m_DocFile.m_FinishedSimulation;
 	general.append_attribute("MBinFile") = m_DocFile2.m_Multi_MBin_File.c_str();
@@ -684,12 +700,16 @@ bool NewMap::Read_Header_FromXmlFile(pugi::xml_node node) {
 		m_FileVersionNumberRead=item.attribute("FileVersionNumber").as_int();
 		m_DocFile2.m_OriginFileName = item.attribute("OrignalFileName").as_string();
 		m_DocFile2.m_ExeFileDate = item.attribute("ExeFileDate").as_string();
+		m_DocFile2.m_DateRun = item.attribute("SimulationDate").as_string();
 		m_DocFile.m_MultiRunning = item.attribute("MultiSimulation").as_bool();
 		m_DocFile.m_FinishedSimulation = item.attribute("Finished").as_bool();
 		m_DocFile2.m_Multi_MBin_File = item.attribute("MBinFile").as_string();
 		m_DocFile2.m_Comments = item.attribute("Comments").as_string();
 		m_DocFile2.m_RunId = item.attribute("RunId").as_string(); 
 		m_DocFile.m_SimulationRunNo = item.attribute("SimNumber").as_uint();
+		m_DocFile.m_TimeCreated = item.attribute("Date_Created").as_uint();
+		m_DocFile.m_TimeModified = item.attribute("Date_Modification").as_uint();
+
 		auto sim_period = item.next_sibling();
 		RunOpt.longMinStart=sim_period.attribute("SimStartMin").as_uint();
 		auto datestart = sim_period.attribute("SimStartDate").as_string();
@@ -2267,6 +2287,7 @@ bool NewMap::WriteDocFile(string localdirectory, bool DB_Source)
 	if (m_IsUsingDB_Source) {
 	
 		 if (localdirectory.size() == 0) {
+
 			  WriteDoc_To_Postgres(true,DB_Source);
 		 }
 		 else {
@@ -2336,10 +2357,14 @@ bool NewMap::WriteDocFile(string localdirectory, bool DB_Source)
 
 bool NewMap::DeleteDoc_From_Postgres(int pkey) {
 #ifdef COUP_POSTGRES
+	if (pkey == -1) {
+		return CleanFileAchivesFromUnUsedFiles();
+	}
+
 	string current_str, sql;
 	try {
 		if (!m_pCommonModelInfo->ID_MapsForPostgresReady) m_pCommonModelInfo->ID_MapsForPostgresReady = DefineUniqueIdMaps(m_pCommonModelInfo, this);
-		pqxx::connection c = initconnection("Select from postgres");
+		pqxx::connection c = initconnection("Delete records from postgres");
 		pqxx::work txn{ c };
 		{
 			pqxx::result r = txn.exec("DELETE FROM runinfo WHERE id_simulations = " + to_string(pkey)) ;
@@ -2407,7 +2432,7 @@ bool NewMap::DeleteDoc_From_Postgres(int pkey) {
 #endif
 
 }
-bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirectory) {
+bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirectory, bool TimeSerieAsCSV) {
 #ifdef COUP_POSTGRES
 	string current_str;
     try {
@@ -2417,6 +2442,8 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 		pqxx::connection c = initconnection("Select from postgres");
 		pqxx::work txn{ c };
 		{
+			m_DocFile.m_TimeCreated = time(nullptr);
+
 			bool keyfind = false;
 			pqxx::result r= txn.exec("SELECT * FROM simulations WHERE id_simulations = " + to_string(pkey));
 			for (auto row : r) {
@@ -2427,12 +2454,13 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 					auto dotpos = name.find(".");
 					if (dotpos != string::npos) name = name.substr(0, dotpos);
 					m_CurrentFile=name;
-					if (name.rfind('_') != string::npos) {
+					if ( name.rfind('_') != string::npos) {
 						string str;
 						str = name.substr(name.rfind('_')+1);
 						m_DocFile.m_SimulationRunNo = FUtil::AtoInt(str);
 					}
-					m_DocFileName = name+".xml";				
+					m_DocFileName = name+".xml";
+					m_SiteName = row["sitename"].as<string>();
 				};
 			};
 			if (!keyfind) return false;
@@ -2693,38 +2721,33 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 			CPG* pPG;
 			int id_timeserie = row["id_timeserie"].as<int>();
 			string name = p_ModelInfo->GetTimeSeriesName(id_timeserie);
+			bool savefilename_as_modelfilename = true;
+			bool save_as_Output_Files=false;
 			if (download) {
+				
 				F* pF = GetF(name);
 				string filename = row["filename"].as<string>();
-				bool savefilename_as_modelfilename=true;
-				if (name.find("Validation File") != string::npos) {
-					string finaloutvalname;
-					if (id_timeserie == 18) finaloutvalname = GetOutputFileName(1).c_str();
-					else if (id_timeserie < 26) finaloutvalname = GetOutputFileName(id_timeserie - 9);
-					else if (id_timeserie < 24)  finaloutvalname = GetOutputFileName(id_timeserie - 24);
-					if (filename.find(finaloutvalname) != string::npos) savefilename_as_modelfilename = false;
-				}
-				if (localdirectory.size() > 0&&savefilename_as_modelfilename) {
+				
+				if (localdirectory.size() > 0) {
 					filename = localdirectory + FUtil::FileNameOnly(filename);
 					pF->SetValue(filename);
 				}
 				else {
 					pF->SetValue(filename);
 				}
+
+				if (name == "Output File"||name.find("ValidationOutput")!=string::npos)	save_as_Output_Files = true;
+				if (!TimeSerieAsCSV) save_as_Output_Files = true;
+				if (save_as_Output_Files) {
+					pPG = pF->GetPointer();
+					links_to_pg_pointers.insert(pair<string, CPG*>(FUtil::FileNameOnly(filename,true), pPG));
+				}
+
 			}
 			else {
 				F* pF = GetF(name);
 				string filename = row["filename"].as<string>();
-				bool savefilename_as_modelfilename = true;
-				if (name.find("Validation File") != string::npos) {
-					string finaloutvalname;
-					if (id_timeserie == 20) finaloutvalname = GetOutputFileName(1).c_str();
-					else if (id_timeserie < 28) finaloutvalname = GetOutputFileName(id_timeserie - 11);
-					else if (id_timeserie < 36)  finaloutvalname = GetOutputFileName(id_timeserie - 34);
-					if (filename.find(finaloutvalname) != string::npos) savefilename_as_modelfilename = false;
-				}
-				else if (name == "Output File")	savefilename_as_modelfilename = false;
-
+				if (name == "Output File")	savefilename_as_modelfilename = false;
 				if (savefilename_as_modelfilename) {
 					pPG = pF->GetPointer();
 					links_to_pg_pointers.insert(pair<string, CPG*>(filename, pPG));
@@ -2735,20 +2758,30 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 		r = txn.exec("SELECT id_simulations, id_filename FROM filenamearchive_uses  WHERE id_simulations = " + to_string(pkey));
 		current_str = "filenamearchives";
 		for (auto row : r) {
-			int id_timeserie = row["id_simulations"].as<int>();
+			int id_simulat = row["id_simulations"].as<int>();
 			int id_filename = row["id_filename"].as<int>();
 			bool donotload_outputs = false;
-			string name = p_ModelInfo->GetTimeSeriesName(id_timeserie);
-			if (name == "Output File" || name.find("Validation File") != string::npos) donotload_outputs = true;
+			bool SaveToFile = false;
+			
 			pqxx::result rr = txn.exec("SELECT id_filename, filename, numvar, numrecords FROM filenamearchive  WHERE id_filename = " + to_string(id_filename));
-
+			string filename;
 			for (auto row_inner : rr) {
 				int numvar = row_inner["numvar"].as<int>();
 				int numrec = row_inner["numrecords"].as<int>();
-				string filename = row_inner["filename"].as<string>();
+				filename = row_inner["filename"].as<string>();
 			}
-			if(download)
-			    download_pg_file(id_filename, localdirectory);
+			if (download) {
+				for (auto link : links_to_pg_pointers) {
+					if (filename.find(link.first)!=string::npos) SaveToFile = true;
+				}
+				if (SaveToFile) {
+					if (TimeSerieAsCSV) {
+						download_pg_file(id_filename, localdirectory, TimeSerieAsCSV, m_pCommonModelInfo);
+					}
+					else
+						download_pg_file(id_filename, localdirectory, TimeSerieAsCSV, m_pCommonModelInfo);
+				}
+			}
 			else if(links_to_pg_pointers.size()>0&&!donotload_outputs) {
 				load_pg_file(id_filename,links_to_pg_pointers);
 
@@ -2790,7 +2823,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 			m_Val_Array.push_back(vst);
 		}
 
-		if (download) {
+		if (download&&!TimeSerieAsCSV) {
 			m_IsUsingDB_Source = true;
 			WriteDocFile(localdirectory);
 
@@ -2808,26 +2841,49 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 
 };
 
-bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source) {
+bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source ) {
 #ifdef COUP_POSTGRES
 
 	if (!m_pCommonModelInfo->ID_MapsForPostgresReady) m_pCommonModelInfo->ID_MapsForPostgresReady=DefineUniqueIdMaps(m_pCommonModelInfo, this);
+	
 
 	if (UpdatedRecord) {
 		auto name = m_DocFileName;
 		if (name.rfind('_') != string::npos) {
 			string str;
 			str = name.substr(0, name.rfind('_')+1);
-			m_DocFileName = str + FUtil::STD_ItoAscii(m_DocFile.m_SimulationRunNo) + ".xml";
+			m_DocFileName = str + FUtil::ItoNumAscii(m_DocFile.m_SimulationRunNo) + ".xml";
 		}
 	}
-
-
+	
+	m_DocFile2.m_DateRun = FUtil::GetCurrentDateTime();
+	bool keyfind = false;
 	sim_doc_simulation t;
 	t.comment = m_DocFile2.m_Comments;
 	t.simno = m_DocFile.m_SimulationRunNo;
-	t.name = m_DocFileName;
-	t.creator = FUtil::GetProfileStringStd("Creator", "NN");
+	t.name = FUtil::FileNameOnly(m_DocFileName,true);
+	unique_ptr<Register> reg_pointer = make_unique<Register>();
+
+	pair<string, unique_ptr<Register>> p = FUtil::GetProfileStringStd("Creator", "NN", move(reg_pointer));
+	t.creator = p.first; reg_pointer = move(p.second);
+	if (m_SiteName.size() == 0) {
+		p = FUtil::GetProfileStringStd("SiteNameId", "-", move(reg_pointer));
+		t.sitename = p.first; reg_pointer = move(p.second);
+	}
+	else t.sitename = m_SiteName;
+	if (t.comment.size() == 0) {
+		p= FUtil::GetProfileStringStd("Comment", "-", move(reg_pointer));
+	    t.comment = p.first; reg_pointer = move(p.second);
+	}
+	
+	// Set SimulationRunNo
+
+	pair<int, unique_ptr<Register>> pn = FUtil::GetProfileIntNo("SimulationRunNo", 1, move(reg_pointer));
+	auto maxno = max(int(m_DocFile.m_SimulationRunNo), pn.first);
+	if (maxno == int(m_DocFile.m_SimulationRunNo)) reg_pointer = FUtil::WriteProfileInt("SimulationRunNo", maxno, move(reg_pointer));
+
+
+	m_SiteName = t.sitename;
 	
 
 	int pkey = transfer_Document(t);
@@ -3005,18 +3061,23 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source) {
 			string name = pF->GetName();
 			string OutputValFile, PGFileName;
 			bool store_outputfile = false;
+			CPG* pPG = pF->GetPointer();
+			PGFileName = pPG->GetFileName();
 			
-			if (name.find("Validation File") != string::npos) {
+			if (name.find("ValidationFile") != string::npos) {
 				string strnum = name.substr(15);
 				int ival = FUtil::AtoInt(strnum);
 				OutputValFile = outputfiledir + "V" + FUtil::STD_ItoAscii(ival) + "_";
-				OutputValFile += outputfilename;
-				
+				OutputValFile += outputfilename;			
 				if(!DB_Source)
 					if (!FUtil::IsFileExisting(OutputValFile)) OutputValFile.clear();
 			}
-			CPG* pPG = pF->GetPointer();
-			PGFileName =pPG->GetFileName();
+			else if (name.find("ValidationOutputFile") != string::npos) {
+				if (DB_Source) {
+
+				}
+
+			}
 
 			if (name == "Output File") {
 				if (DB_Source) {
@@ -3024,8 +3085,6 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source) {
 					pPG = pF->GetPointer();
 					PGFileName = pPG->GetFileName();
 				}
-
-
 				auto pos = PGFileName.rfind("COUP_");
 				outputfilename = PGFileName.substr(pos);
 				outputfiledir = PGFileName.substr(0, pos);
@@ -3033,10 +3092,10 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source) {
 
 
 
-			auto set_info_file = [&vrecs, &record,&DB_Source](int key, string name, string filename, CPG* pPG) {
+			auto set_info_file = [&vrecs, &record,&DB_Source](int key, string name, string filename, string sitename, CPG* pPG) {
 				timeserie_set ss;
+				bool file_exist = true;
 				ss.key_simulation = key;
-
 				ss.id_timeserie = p_ModelInfo->GetTimeSeriesId(name);
 				ss.filename = filename;
 
@@ -3052,9 +3111,10 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source) {
 						f = FUtil::GetDocumentPath() + shortname;
 						auto koll = pPG->Open(f);
 						cout << "file not open:" << f << endl;
-						cin >> ans;
+						file_exist=false;
 					}
 				}
+				if (file_exist) {
 					ss.NumVar = pPG->GetNumVariables();
 					ss.NumRec = pPG->GetNumRecords();
 					ss.NumRepetions = pPG->GetNumRepititions();
@@ -3085,14 +3145,16 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source) {
 						vrecs.push_back(record);
 
 					}
-				transfer_Modified_TimeSeries(ss, vrecs);
-
+					if (ss.filename != FUtil::FileNameOnly(ss.filename, true)) {
+						ss.filename = sitename+"_" + FUtil::FileNameOnly(ss.filename, true);
+					}
+					transfer_Modified_TimeSeries(ss, vrecs);
+					cout << ss.filename << endl;
+				}
+				else
+					cout << "File Does not exist : " << ss.filename << endl;
 			};
-			cout << PGFileName << endl;
-
-
-			set_info_file(pkey, name, PGFileName,pPG );
-			if (OutputValFile.size() > 0) 	set_info_file(pkey, name, OutputValFile,pPG);
+			set_info_file(pkey, name, PGFileName,m_SiteName, pPG );
 		}
 	}
 	// Validation

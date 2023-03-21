@@ -328,11 +328,6 @@ bool Meteorological_Data_Functions::Def()
 	pDs = new Ds(&SpoolRunOn, ATMBOUNDARY,TEMPERATURE, NOFPROC, NOBPROC, NORMAL);
 	Define(pDs,"SPool RunOn",0.,UNIT_TYPES::WATERFLOW_UNIT,"LateralInput >= 1|WaterEq > 0");
 
-	
-
-
-
-	
 
 return FunctionDef();
 }

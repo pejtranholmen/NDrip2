@@ -10,7 +10,6 @@
 #include "../Util/pugixml.hpp"
 enum class doc_enabled { ALL, ENABLED, NOT_DEFAULT };
 
-
 class NewMap :public MR{
 
 public:
@@ -44,8 +43,8 @@ public:
 
 	bool WriteDoc_To_Postgres(bool UpdatedRecord=false, bool DB_Source=false);
 	bool ReDefinePostgresDataBase();
-	bool SelectDoc_From_Postgres(int pkey, bool download=false, string localdirectory="");
-	bool DeleteDoc_From_Postgres(int pkey);
+	bool SelectDoc_From_Postgres(int pkey, bool download=false, string localdirectory="", bool OnlyTimeSerieAsCSV=false);
+	bool DeleteDoc_From_Postgres(int pkey=-1);
 
 	vector<pair<int, string>> GetDataBaseSimulations();
 
@@ -95,6 +94,8 @@ public:
 	bool ID_MapsForPostgresReady = false;
 	void SetLocalHost(bool status);
 	bool GetLocalHost();
+	void SetDB_Action(size_t value);
+	size_t GetDB_Action();
 
 #ifndef COUPSTD
 	CPlotStorage m_PlotStorage;

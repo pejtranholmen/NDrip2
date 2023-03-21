@@ -19,14 +19,6 @@
 #ifndef MISSING
 #define MISSING -1.1E38f
 #endif
-#ifndef OPEN_REGISTER
-
-static std::unique_ptr<Register> p_Register;
-#define OPEN_REGISTER 1.1
-
-#endif
-
-
 
 using namespace std;
 
@@ -67,24 +59,23 @@ struct TestAlfaFunctor
 namespace FUtil
 {
 	static bool LocalHost = true;
-	static char delimchar=',';
+	static char delimchar = ',';
 	static string cur_path;
-
-
 
 	static void SetDocumentPath(string path) {
 		cur_path = path;
-    }
+	}
 	static std::string GetDocumentPath() {
 		return cur_path;
 	}
 
 
-static std::string GetCurrentPath() {
+	static std::string GetCurrentPath() {
 		std::string path;
 #ifdef MS_CODE
 		char* buff;
 		buff = _getcwd(nullptr, 0);
+		if (buff == nullptr) return "";
 		path = buff; path += "\\";
 #else
 		path = "temp";
@@ -94,7 +85,7 @@ static std::string GetCurrentPath() {
 	};
 
 
-static vector<string> GetFileList(string type) {
+	static vector<string> GetFileList(string type) {
 		vector<string> out;
 		struct stat sb;
 		string path;
@@ -102,7 +93,7 @@ static vector<string> GetFileList(string type) {
 #ifdef LINUX2
 		path = "/temp";
 		return out;
-			
+
 #else
 		namespace fs = std::filesystem;
 		path = GetCurrentPath();
@@ -128,77 +119,88 @@ static vector<string> GetFileList(string type) {
 		return out;
 #endif
 
-}
+	}
 
 
 
-	static std::string GetProfileStringStd(std::string item, std::string value) {
+
 
 #ifndef COUPSTD
+	static std::string GetProfileStringStd(std::string item, std::string value) {
 		CWinApp* pApp = AfxGetApp();
 		CString Comp = pApp->GetProfileString(_T("CoupModel"), CString(item.c_str()), CString(value.c_str()));
 		return CT2A(Comp).m_psz;
+		return value;
+	}
 #else 
+	static pair<std::string, unique_ptr<Register>> GetProfileStringStd(std::string item, std::string value, unique_ptr<Register>  p_Register=nullptr) {
+
 		if (item == "UserDirectory") {
 
 			value = FUtil::GetDocumentPath();
 
 		}
 		if (p_Register == nullptr) 	p_Register = make_unique<Register>();
-		auto koll= p_Register->GetString(item);
+		auto koll = p_Register->GetString(item);
 		if (koll.size() == 0) {
 			p_Register->SetString(item, value);
 		}
-		return p_Register->GetString(item);
-
-#endif
-		return value;
+		return pair<string, unique_ptr<Register>>(p_Register->GetString(item), move(p_Register));
 	}
-	static int GetProfileIntNo(string item, int value) {
+#endif
+
+
 #ifndef COUPSTD
+	static int GetProfileIntNo(string item, int value) {
 		CWinApp* pApp = AfxGetApp();
 		int Comp = pApp->GetProfileInt(_T("CoupModel"), CString(item.c_str()), value);
 		return Comp;
 #else
 #ifdef MS_CODE
-		if (p_Register == nullptr) {
-			p_Register = make_unique<Register>();
-		}
-		int koll=p_Register->GetInt(item);
+	static pair<int, unique_ptr<Register>> GetProfileIntNo(string item, int value, unique_ptr<Register>  p_Register=nullptr) {
+		int koll = p_Register->GetInt(item);
 		if (koll < 0) p_Register->SetInt(item, value);
-		return p_Register->GetInt(item);
-#else 
-#ifdef LINUX2
-		return 1;
-#endif
-#endif
-#endif
-		return value;
+		return pair<int, unique_ptr<Register>>(p_Register->GetInt(item), move(p_Register));
 	}
-	static void WriteProfileInt(string item, int value) {
+
+#endif
+#endif
+
+
 #ifndef COUPSTD
+	static void WriteProfileInt(string item, int value) {
+
 		CWinApp* pApp = AfxGetApp();
 		pApp->WriteProfileInt(_T("CoupModel"), CString(item.c_str()), value);
+}
 #else
+	static unique_ptr<Register> WriteProfileInt(string item, int value, unique_ptr<Register> p_Register) {
+
 		if (p_Register == nullptr) {
 			p_Register = make_unique<Register>();
 		}
 		p_Register->SetInt(item, value);
+		p_Register->SaveToFile();
+		return move(p_Register);
+	}
 
 #endif
-	}
-	static 	void WriteProfileStringStd(string item, string value) {
+
+	
 #ifndef COUPSTD
+	static 	void WriteProfileStringStd(string item, string value) {
 		CWinApp* pApp = AfxGetApp();
 		pApp->WriteProfileString(_T("CoupModel"), CString(item.c_str()), CString(value.c_str()));
-#else  
-		if (p_Register == nullptr) 	p_Register = make_unique<Register>();
-		p_Register->SetString(item, value);
-		p_Register->SaveToFile(); 
-		//
-
-#endif
 	}
+#else  
+	static 	unique_ptr<Register> WriteProfileString(string item, string value, unique_ptr<Register> p_Register) {
+	
+		p_Register->SetString(item, value);
+		p_Register->SaveToFile();
+		return move(p_Register);
+	};
+#endif
+
 
 
 	static std::string arrayToString(std::vector <float> v) {
@@ -224,16 +226,8 @@ static vector<string> GetFileList(string type) {
 		string fileout;
 		filestream->open(filename, ios::out);
 		if (!filestream->is_open()) {
-
-			string UserDirectory = "";
-			UserDirectory = GetProfileStringStd("UserDirectory", UserDirectory);
-			string testname;
-			auto ipos = filename.find("\\");
-			while (ipos != string::npos) {
-				filename = filename.substr(ipos + 1);
-				ipos = filename.find("\\");
-			}
-			testname = UserDirectory + filename;
+			auto UserDirectory = FUtil::GetCurrentPath();
+			auto testname = UserDirectory + filename;
 			filestream->open(testname, ios::out);
 			if (!filestream->is_open()) {
 #ifndef COUPSTD
@@ -260,16 +254,8 @@ static vector<string> GetFileList(string type) {
 		string fileout;
 		filestream->open(filename, ios::binary | ios::in);
 		if (!filestream->is_open()) {
-
-			string UserDirectory = "";
-			UserDirectory = GetProfileStringStd("UserDirectory", UserDirectory);
-			string testname;
-			auto ipos = filename.find("\\");
-			while (ipos != string::npos) {
-				filename = filename.substr(ipos + 1);
-				ipos = filename.find("\\");
-			}
-			testname = UserDirectory + filename;
+			auto UserDirectory = FUtil::GetCurrentPath();
+			auto testname = UserDirectory + filename;
 			filestream->open(testname, ios::in | ios::binary);
 			if (!filestream->is_open()) {
 #ifndef COUPSTD
@@ -444,7 +430,7 @@ static vector<string> GetFileList(string type) {
 		else return "false";
 	}
 	static string	STD_ItoAscii(int v) {
-		char buf[100];
+		char buf[100]; 
 		auto n = snprintf(buf, 60, "%d", v);
 		string str;
 		str.assign(buf, n);
@@ -544,14 +530,21 @@ static vector<string> GetFileList(string type) {
 		delimchar = delim;
 	}
 
-	static string FileNameOnly(string urlname)
+	static string FileNameOnly(string urlname, bool NoExtension=false)
 	{
 		auto rpos = urlname.rfind("\\");
+		if (rpos == string::npos) {
+			rpos = urlname.rfind("/");
+		}
 		if (rpos != string::npos) {
-
 			string str = urlname.substr(rpos + 1);
+			if (NoExtension) {
+				auto posend = str.rfind(".");
+				if (posend != string::npos) return str.substr(0,posend);
+			}
 			return str;
 		}
+			
 		return urlname;
 	}
 	static string DirectoryNameOnly(string urlname)
@@ -701,6 +694,17 @@ static vector<string> GetFileList(string type) {
 #endif
 		return buf;
 	}
+	static string ItoNum2Ascii(int v) {
+		//CString Num;
+		char buf[100];
+		v = v % 100;
+#ifdef MS_CODE
+		sprintf_s(buf, "%02u", v);
+#else
+		sprintf(buf, "%02u", v);
+#endif
+		return buf;
+	}
 	static string GetString(char* buf) {
 		string out;
 		size_t i = 0;
@@ -738,7 +742,7 @@ static vector<string> GetFileList(string type) {
 	static int GetOptionIndex(string optionlist, string str)
 	{
 
-		int  index;
+		int  index=0;
 		vector<string> v;
 		auto ipos = optionlist.find("\n");
 		size_t pos = 0;
@@ -758,10 +762,10 @@ static vector<string> GetFileList(string type) {
 	}
 	static string GetOptionString(string optionlist, int Index)
 	{
-		int ipos = optionlist.find("\n");
+		size_t ipos = optionlist.find("\n");
 		int count = 0;
 		string str = "";
-		while (ipos > 0) {
+		while (ipos > 0&&ipos!=string::npos) {
 			str = optionlist.substr(0, ipos);
 			optionlist = optionlist.substr(ipos + 1);
 			ipos = optionlist.find("\n");

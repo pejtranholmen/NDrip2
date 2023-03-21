@@ -38,14 +38,15 @@ public:
 #ifndef COUPSTD
 	Link m_Link;
 #else 
-	bool MakeSingleRun(bool DB_Source=false);
+	bool MakeSingleRun(bool DB_Source=false, int pkey=-1);
 	bool MakeMultiRun(bool DB_Source = false);
-	bool RunModel_Using_Postgres(int pkey, bool UpdateCurrentKey = true);
+	bool RunModel_Using_Postgres(int pkey);
 	
 #endif
 	Simulator m_Simulator;
 	string  m_UserSubDirectory;
 	string m_OrgPathName;
+	
 	bool CheckAndUpdateFileName(bool MultiRun=false, bool DB_Source=false);
 	bool CreateNewDocFromCurrentDoc();
 

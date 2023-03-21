@@ -10,6 +10,7 @@
 #include "../Simulator/ModelInfo.h"
 #include "../NewBase/ModelMap.h"
 #include "../Util/StatUtil.h"
+class PGUtil;
 
 using namespace StatUtil;
 using namespace ModelFunctions;
@@ -229,6 +230,7 @@ protected:
 	size_t Count_Call;
 	size_t m_NumErrors;
 	ModelInfo* m_pModelInfo;
+	PGUtil* m_pg_util;
 private:
 	size_t NE_elem[10];
 	

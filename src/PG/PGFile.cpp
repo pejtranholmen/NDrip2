@@ -674,7 +674,6 @@ string CPGFile::ExportToFile(string filename, bool split, bool secondhalf)
 					if(secondhalf)
 						Record_No=Num_To_Save+i+1;
 
-
 					if(GetVarValue(j+1,Record_No)>-1.E37)
 						str+=","+FUtil::STD_FtoAscii(GetVarValue(j+1,Record_No));
 					else
@@ -1406,7 +1405,7 @@ bool CPGFile::FindKeyValues()
 	ifstream file;
 	string filename;
 
-
+#ifndef COUPSTD
   	string lDataBaseDirectory;
 	lDataBaseDirectory=FUtil::GetProfileStringStd("DataBaseDirectory",lDataBaseDirectory);
 	filename=lDataBaseDirectory;
@@ -1417,13 +1416,13 @@ bool CPGFile::FindKeyValues()
 		string str, str2;
 		str=" Problems when reading file with coordinates";
 		str2="Please check following file from Noaa :"+filename;
-#ifndef COUPSTD
+
 		MFC_Util::MessageBox(str.c_str(),str2.c_str(),IDOK);
-#endif
+
 		return false;
 
 	}
-
+#endif
 	string line;
 	size_t nrep=GetNumRepititions();
 	SetInfoMode();
@@ -1816,6 +1815,7 @@ unsigned int CPGFile::GetNumRepititions()
 }
 void CPGFile::SetNormalTimeInterval(unsigned int t)
 {
+	if (t == 0 && GetNumRecords() > 1) t = (GetLongTimeEnd() - GetLongTimeStart()) / (GetNumRecords() - 1);
 	pg.status.NormalTimeInterval=t;
 }
 unsigned int CPGFile::GetNormalTimeInterval()

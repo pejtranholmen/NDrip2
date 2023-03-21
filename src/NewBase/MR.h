@@ -1,10 +1,7 @@
 #pragma once
-
-
 #include "./Validation/ValidationData.h"
 #include "./Validation/SmartFlexibleValidation.h"
 #include "../PG/PGBase.h"
-
 #include "./Bayes/BayesStatistics.h"
 #include "./Nelder_Mead/optimizer.h"
 
@@ -16,7 +13,6 @@ struct PAR_OPTIONS
 
 };
 enum class NelderMeadOjective{ SSE,AIC, BIC };
-
 
 class MR : public BayesStatistics,public NelderMeadOptimizer, public SmartFlexibleValidation
 {

@@ -20,7 +20,9 @@ string GetDB::GetDBSimFileDate(string group, string Key, bool modified)
 #ifndef COUPSTD
 	file = MFC_Util::GetProfileStringStd("DataBaseDirectory", file);
 #else
-	file = FUtil::GetProfileStringStd("DataBaseDirectory", file);
+	pair<string, unique_ptr<Register>> p = FUtil::GetProfileStringStd("DataBaseDirectory", file);
+	file = p.first;
+
 #endif
 	file += group + "\\DB_" + group + "_" + Key;
 	file += ".Sim";
@@ -38,7 +40,8 @@ bool GetDB::Ini_DBBase() {
 #ifndef COUPSTD
 	  directory =MFC_Util::GetProfileStringStd("DataBaseDirectory", directory);
 #else
-	  directory=FUtil::GetProfileStringStd("DataBaseDirectory", directory);
+	  pair<string, unique_ptr<Register>> p =FUtil::GetProfileStringStd("DataBaseDirectory", directory);
+	  directory = p.first;
 #endif
 	  size_t icount=0;
 	  if(m_pSimDoc==nullptr) return false;
@@ -169,7 +172,8 @@ bool GetDB::WriteHeaderFile(size_t index) {
 #ifndef COUPSTD
 	 directory = MFC_Util::GetProfileStringStd("DataBaseDirectory", directory);
 #else
-	 directory=FUtil::GetProfileStringStd("DataBaseDirectory", directory);
+	 pair < string, unique_ptr < Register >> p =FUtil::GetProfileStringStd("DataBaseDirectory", directory);
+	 directory = p.first;
 #endif
 
 	 size_t adjust = 0;
@@ -286,8 +290,8 @@ size_t GetDB::CreateNewHeader(size_t db_index) {
 	
 	head.Details+="Edit this text to include method of estimation and \r\nreferences to publications/reports. \r\n";
 	//CWinApp* pApp = AfxGetApp();
-	string signature=FUtil::GetProfileStringStd( "Signature", "NN");
-	
+	pair < string, unique_ptr < Register >> p=FUtil::GetProfileStringStd( "Signature", "NN");
+	auto signature = p.first;
 	headnew.CreateDate = FUtil::GetCurrentDateTime();
 	headnew.ModifiedDate = "";
 	headnew.CreatedBy=FUtil::GetWindowUser();
@@ -381,7 +385,8 @@ CDB* GetDB::CreateNewDBObject_FromCSVFile(string FileName)
 				headnew.ModifiedBy = FUtil::GetWindowUser();
 				SetNewHeader(pCDB->Get_DB_Index(), GetCurrentKeyIndex(), headnew);
 				
-				NewOutPutFileName= FUtil::GetProfileStringStd("DataBaseDirectory", "");
+				pair<string, unique_ptr<Register>> p= FUtil::GetProfileStringStd("DataBaseDirectory", "");
+				NewOutPutFileName = p.first;
 				NewOutPutFileName += DataBaseName + "\\DB_" + DataBaseName + "_" + GetKeyString(header.IdUser, header.IdNum);
 				NewOutPutFileName += ".Sim";
 				m_Rw.OpenDocFileout(NewOutPutFileName);

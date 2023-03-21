@@ -77,17 +77,21 @@ bool History::History_Add(SimB *pBase,int iType, int Lindex, time_t t, float v, 
 	pBase->AddHistoryIndex(Lindex,i);
 
 
-
 	Node.tvalue=t;
 	Node.value=v;
 	Node.strvalue=FUtil::STD_FtoAscii(v);
-	if(User=="")
-		User=FUtil::GetProfileStringStd("Signature", User);
-	string Comp=FUtil::GetProfileStringStd("ComputerName", User);
+	unique_ptr<Register> RegPointer;
+	RegPointer = make_unique<Register>();
+	if (User == "") {	
+		pair<string, unique_ptr<Register>> p = FUtil::GetProfileStringStd("Signature", User, move(RegPointer));
+		unique_ptr<Register> RegPointer = move(p.second); User = p.first;
 
-	Node.User=User;
+	}
+	Node.User = User;
+	pair<string, unique_ptr<Register>> p =FUtil::GetProfileStringStd("ComputerName", User, move(RegPointer));
+	Node.Computer = p.first;
 	Node.RunNo=m_DocFile.m_SimulationRunNo;
-	Node.Computer=FUtil::GetProfileStringStd("ComputerName", User);
+
 	m_History_Array.push_back(Node);
 	return true;
 
@@ -109,10 +113,17 @@ bool History::History_Add(SimB *pBase, int iType, int Lindex, time_t t, string s
 	Node.value=float(MISSING);
 	Node.strvalue=str;
 	Node.RunNo=m_DocFile.m_SimulationRunNo;
-	if(User=="")
-		User=FUtil::GetProfileStringStd("Signature", User);
-	Node.User=User;
-	Node.Computer=FUtil::GetProfileStringStd("ComputerName", User);
+	unique_ptr<Register> RegPointer;
+	RegPointer = make_unique<Register>();
+	if (User == "") {
+		pair<string, unique_ptr<Register>> p = FUtil::GetProfileStringStd("Signature", User, move(RegPointer));
+		unique_ptr<Register> RegPointer = move(p.second); User = p.first;
+	}
+	Node.User = User;
+	pair<string, unique_ptr<Register>> p = FUtil::GetProfileStringStd("ComputerName", User, move(RegPointer));
+	Node.Computer = p.first;
+
+
 	m_History_Array.push_back(Node);
 	return true;
 
@@ -245,16 +256,17 @@ bool History::History_Add(size_t index, string strvalue)
 	if(i>0)
 		Node= m_History_Array[i-1];
 
-
+	/*
  	string User,Computer;
 
 	User=FUtil::GetProfileStringStd("Signature", User);
 	Computer=FUtil::GetProfileStringStd("ComputerName", Computer);
-	
-	Node.tvalue=time(nullptr);
-	Node.LocalIndex=index;
 	Node.User=User;
 	Node.Computer=Computer;
+	*/
+	Node.tvalue=time(nullptr);
+	Node.LocalIndex=index;
+
 	auto ityp = size_t(HIST_INFO::RUN_INFO);// p_ModelInfo->GetTypeIndex("RunInfo");
 	Node.RunInfoType=ityp;
 	Node.pBase=pBase;

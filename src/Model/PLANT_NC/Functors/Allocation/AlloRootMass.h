@@ -463,7 +463,7 @@ private:
 
 class GrainFillingSupply {
 public:
-    GrainFillingSupply() {};
+    GrainFillingSupply() { range = 0.2; threshold = 3.; };
 	GrainFillingSupply(vector<vector<double>> C_coef, vector<vector<double>> N_coef, vector<vector<double>> P_coef) :
 		C_coef(C_coef), N_coef(N_coef), P_coef(P_coef) {
 		range = 0.2; threshold = 3.;

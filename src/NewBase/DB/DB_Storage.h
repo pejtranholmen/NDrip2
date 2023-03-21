@@ -6,7 +6,7 @@
 class Doc;
 struct DB_OldHeader
 {
-	size_t Type;
+	size_t Type{ 0 };
 	string Name;
 	string SiteName;
 	string Latitude;
@@ -15,8 +15,8 @@ struct DB_OldHeader
 	string DriveFile;
 	string Details;
 	string IdUser;
-	size_t IdNum;
-	string keyId;
+	size_t IdNum{ 0 };
+	string keyId ;
 };
 struct DB_NewHeader
 {

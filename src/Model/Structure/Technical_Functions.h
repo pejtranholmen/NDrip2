@@ -87,7 +87,7 @@ vector<double> IndexParGroups;
 
 size_t TimeSerieOutputLevels, ValidationOutputLevels, BayesianStepFunction, BayesianLikelihoodFunction;
 size_t BoxCoxTransformed;
-CPG FileValidation[16], OutputFile;
+CPG FileValidation[16], OutputFile, FileOutputVal[16];
 ifstream m_DataBaseCSV;
 ifstream m_MultiParStream[5];
 size_t DataBaseCSV;

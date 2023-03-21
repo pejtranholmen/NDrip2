@@ -1485,14 +1485,7 @@ void ValidationData::SetPointersToOutputValidationFiles(bool OnlyMemoryUse) {
 			F* pF=m_pSimDoc->ValidationFilePointer(i+1);
 			string filename=m_pSimDoc->GetOutputFileName(i+1);
 			if (OnlyMemoryUse) {
-				CPG* res_PG_pointer;
-				res_PG_pointer=pF->GetPGResPointer();
-				if (res_PG_pointer == nullptr) {
-					res_PG_pointer = new CPG();				
-					m_PGCreatedPGFiles.push_back(res_PG_pointer);
-				}
-				res_PG_pointer->SetOnlyMemoryUse(true);
-				pF->SetValue(filename);
+				m_pSimDoc->ValidationResultPG_Pointer(i)->SetFileName(filename);
 			}
 			else {
 				if (FUtil::IsFileExisting(filename)) {

@@ -273,7 +273,7 @@ bool CResiduals::OpenFile(string filename, bool SetFileName)
 		m_ResidualFile.open(m_FileName, ios::binary|ios::out|ios::in);
 		if(!m_ResidualFile.is_open()) {
 			string UserDirectory="";
-			UserDirectory=FUtil::GetProfileStringStd("UserDirectory", UserDirectory);
+			UserDirectory = FUtil::GetCurrentPath();// ProfileStringStd("UserDirectory", UserDirectory);
 			string testname;
 			int ipos=filename.find("\\");
 			while(ipos>=0) {

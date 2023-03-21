@@ -23,7 +23,7 @@ if(USE_POSTGRES)
 
     find_package(libpqxx CONFIG REQUIRED)
     message("libpq will be used")
-    add_compile_definitions(COUP_POSTGRES )
+    add_compile_definitions(COUP_POSTGRES DEBUG_FIX)
 
 endif()
 

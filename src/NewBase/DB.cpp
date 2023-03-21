@@ -373,7 +373,8 @@ bool DB::ReadFrom_DB_Object(string ID_DB_Group, string Key, bool deletefile, boo
 			string strApp=m_AppString;
 			m_SimFileName="DB_Plant_";
 #ifdef COUPSTD
-			m_DataBaseDirectory = FUtil::GetProfileStringStd("DataBaseDirectory", m_DataBaseDirectory);
+			pair<string, unique_ptr<Register>> p = FUtil::GetProfileStringStd("DataBaseDirectory", m_DataBaseDirectory);
+			m_DataBaseDirectory = p.first;
 #else
 			if (m_DataBaseDirectory.size() == 0) m_DataBaseDirectory = MFC_Util::GetProfileStringStd("DataBaseDirectory", m_DataBaseDirectory);
 

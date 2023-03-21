@@ -76,7 +76,7 @@ public:
 	
 	bool	SetRepititionIdNo(size_t, bool resetindex=false);
 	bool    CheckMissingNumbers();
-	void    SetNormalTimeInterval(unsigned int);
+	void    SetNormalTimeInterval(unsigned int=0);
 	unsigned int GetNormalTimeInterval();
 	size_t	RemoveMissingRecords();
 	bool	RemoveRepetition(size_t RepNo);

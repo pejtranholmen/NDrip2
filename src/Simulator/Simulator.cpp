@@ -681,11 +681,7 @@ bool Simulator::Store_Write(bool MultiFlag, bool Final)
 				cout << "Completed writing to Multi PG OutFile: " + m_pSim->m_PG_MultiOutputFile.GetFileName() +'\n';
 			else
 				cout << "Error when writing to Multi PG OutFile: " + m_pSim->m_PG_MultiOutputFile.GetFileName() + '\n';
-
 #endif
-
-
-
 		}
 	}
 	else {
@@ -1090,7 +1086,12 @@ bool Simulator::Valid_Ini(bool MultiFlag, bool First) {
 
 		// Create New file with Simulated outputs at validation time points (one for each simulation to be deleted if not used as archive)
 		if(m_ValPGFile[i].simvalfile==nullptr) {
-			m_ValPGFile[i].simvalfile= new CPG();
+			m_ValPGFile[i].simvalfile = ((NewMap*)m_pSim)->ValidationResultPG_Pointer(i);
+			if (m_ValPGFile[i].simvalfile == nullptr) {
+				cout << "Error to get pointer to Validation Output structure " << endl;
+				return false;
+			}
+	//	m_ValPGFile[i].simvalfile= new CPG();
 			m_ValPGFile[i].simvalfile->SetCompleteRead(true);
 			auto rec=m_ValPGFile[i].file->GetNumRecords();
 			m_ValPGFile[i].simvalfile->CreateNewFile(m_ValPGFile[i].varindex.size(),rec,1);
@@ -1173,13 +1174,15 @@ bool Simulator::Valid_End(bool Multi, bool Final, bool First) {
 		for(size_t i=0; i<m_ValPGFile.size(); i++) {
 			if(m_ValPGFile[i].file==nullptr) continue;
 			CPG *pPG=m_ValPGFile[i].simvalfile;
+			pPG->SetNormalTimeInterval();
+
 			for(size_t j=0; j<m_ValPGFile[i].val_listindex.size(); j++) {
 				size_t LL=m_ValPGFile[i].val_listindex[j];
 				string str;
 				str=m_pSim->m_Val_Array[LL].Name;
 				if(m_pValVar[LL].TabIndex>=0) str+='('+FUtil::STD_ItoAscii(m_pValVar[LL].TabIndex+1)+')';
 				pPG->SetVarName(j+1,str);
-				pPG->SetVarUnit(j+1,m_pValVar[LL].pBase->GetUnit());
+				pPG->SetVarUnitType(j+1,m_pValVar[LL].pBase->GetUnitType());
 				pPG->SetVarId(j+1,FUtil::STD_ItoAscii(m_pSim->m_DocFile.m_SimulationRunNo) );
 			}
 			PGPOS pos=pPG->GetPos(m_pModelInfo->m_ActMin);
@@ -1206,6 +1209,7 @@ bool Simulator::Valid_End(bool Multi, bool Final, bool First) {
 		for(size_t i=0; i<m_ValPGFile.size(); i++) {
 			if(m_ValPGFile[i].file==nullptr) continue;
 			CPG *pPG=m_ValPGFile[i].simvalfile;
+			pPG->SetNormalTimeInterval();
 			for(size_t j=0; j<m_ValPGFile[i].val_listindex.size(); j++) {
 				size_t LL=m_ValPGFile[i].val_listindex[j];
 				string str;
@@ -1213,7 +1217,7 @@ bool Simulator::Valid_End(bool Multi, bool Final, bool First) {
 				if(m_pValVar[LL].pBase->Is_Vector()) 
 					 str+='('+FUtil::STD_ItoAscii(m_pValVar[LL].TabIndex+1)+')';
 				pPG->SetVarName(j+1,str);
-				pPG->SetVarUnit(j+1,m_pValVar[LL].pBase->GetUnit());
+				pPG->SetVarUnitType(j+1,m_pValVar[LL].pBase->GetUnitType());
 				pPG->SetVarId(j+1,FUtil::STD_ItoAscii(m_pSim->m_DocFile.m_SimulationRunNo) );
 			}
 			PGPOS pos = pPG->GetPos(m_pModelInfo->m_ActMin);
@@ -1259,12 +1263,6 @@ bool Simulator::Valid_End(bool Multi, bool Final, bool First) {
 	Valid_Evaluation(Multi, Final);
 	if(Final||!Multi) {
 		if (m_ValPGFile.size() == 0) return true;
-		for(size_t i=0; i<m_ValPGFile.size(); i++) {
-			delete m_ValPGFile[i].simvalfile;
-		//	delete m_ValPGFile[i].file;
-
-		}
-
 		m_ValPGFile.clear();
 		m_ValTest.clear();
 	}

@@ -5,6 +5,7 @@
 struct sim_doc_simulation {
     string name;
     string creator;
+    string sitename;
     int simno;
     string comment;
 };

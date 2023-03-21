@@ -118,13 +118,7 @@ fstream PG_Stream::GetLocalReadOnlyStream(string filename)
 	driveFile.open(filename, ios::in | ios::binary);
 	if (!driveFile.is_open()) {
 		string UserDirectory = "";
-		UserDirectory = FUtil::GetProfileStringStd("UserDirectory", UserDirectory);
-		size_t numo;
-		numo = UserDirectory.size();
-		if (UserDirectory.rfind("\\") != numo - 1) {
-			UserDirectory += "\\";
-			numo++;
-		}
+		UserDirectory = FUtil::GetCurrentPath();
 		size_t n = filename.rfind("\\");
 		filename = filename.substr(n + 1);
 		pg.status.FileName = UserDirectory + filename;
@@ -136,6 +130,7 @@ fstream PG_Stream::GetLocalReadOnlyStream(string filename)
 		}
 
 		if (!driveFile.is_open()) {
+#ifndef COUPSTD
 			string UserDirectory = "";
 			UserDirectory = FUtil::GetProfileStringStd("UserSubDirectory", UserDirectory);
 			string testname;
@@ -148,17 +143,19 @@ fstream PG_Stream::GetLocalReadOnlyStream(string filename)
 			testname = UserDirectory + file;
 			driveFile.open(testname, ios::in | ios::binary);
 			if (driveFile.is_open()) {
-#ifndef COUPSTD
+
 				TRACE("Can't Open file %s´\n", pg.status.FileName);
 				//Display error message
 				string str = "The PG-file: ";
 				str += testname; str += " couldn´t be opened.";
 				if (m_ShowError) MFC_Util::MessageBox(str.c_str(), "File open error", MB_OK | MB_ICONEXCLAMATION);
-#endif
+
 				return driveFile;
+
 				// Actions without file name ?
 			}
 			pg.status.FileName = testname;
+#endif
 		}
 		filename = pg.status.FileName;
 
@@ -1753,8 +1750,8 @@ bool PG_Stream::OpenMainPGStreamAsReadOnly(string filename)
 	if (filename == "") return false;
 	m_MainPGStreamReadWrite.open(filename, ios::in | ios::binary);
 	if (!m_MainPGStreamReadWrite.is_open()) {
-		string UserDirectory = "";
-		UserDirectory = FUtil::GetProfileStringStd("UserDirectory", UserDirectory);
+		string UserDirectory = FUtil::GetCurrentPath();
+		/*UserDirectory = FUtil::GetProfileStringStd("UserDirectory", UserDirectory);
 		size_t numo;
 		numo = UserDirectory.size();
 		if (UserDirectory.rfind("\\") != numo - 1) {
@@ -1762,11 +1759,12 @@ bool PG_Stream::OpenMainPGStreamAsReadOnly(string filename)
 			numo++;
 		}
 		size_t n = filename.rfind("\\");
-		filename = filename.substr(n + 1);
+		filename = filename.substr(n + 1);*/
 
 		pg.status.FileName = UserDirectory + filename;
 		m_MainPGStreamReadWrite.open(pg.status.FileName, ios::in | ios::binary);
 		if (!m_MainPGStreamReadWrite.is_open()) {
+#ifndef COUPSTD
 			string UserDirectory = "";
 			UserDirectory = FUtil::GetProfileStringStd("UserSubDirectory", UserDirectory);
 			string testname;
@@ -1774,7 +1772,7 @@ bool PG_Stream::OpenMainPGStreamAsReadOnly(string filename)
 			string file = filename.substr(ust + 1);
 			m_MainPGStreamReadWrite.open(testname, ios::in | ios::binary);
 			if (!m_MainPGStreamReadWrite.is_open()) {
-#ifndef COUPSTD
+
 				TRACE("Can't Open file %s´\n", pg.status.FileName);
 				m_FailedFileName = MFC_Util::GetProfileStringStd("Failed_Name", m_FailedFileName);
 				//Display error message
@@ -1792,10 +1790,11 @@ bool PG_Stream::OpenMainPGStreamAsReadOnly(string filename)
 					//MessageBox(nullptr,str.c_str(),"File open error",MB_OK|MB_ICONEXCLAMATION);
 				}
 				return false;
-#endif
+
 				// Actions without file name ?
 			}
 			pg.status.FileName = testname;
+#endif
 		}
 		filename = pg.status.FileName;
 	}

@@ -73,7 +73,7 @@ size_t Register::ReadRegisterFile() {
 	Num_int=FUtil::AtoInt(s);
 	getline(ss, s, ',');
 	Num_string = FUtil::AtoInt(s);
-	while (m_register.good()) {
+	for(int i=0; i<Num_int+Num_string;i++) {
 		getline(m_register, line);
 		istringstream split (line);
 		if (line.size() > 3) {

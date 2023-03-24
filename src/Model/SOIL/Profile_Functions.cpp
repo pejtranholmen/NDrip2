@@ -73,7 +73,7 @@ bool Profile_Functions::Def()
 
 
 	pP= new		P(&ThicknessLayers,pNL, SIMPROFILE, GENERAL, FYS_SHAPE, NOBPROC, SIMPLE);	
-		Define(pP,pNL,"Thickness Layers",initv,"m","",0.001,100.,0.01,10.,1) ;
+		Define(pP,pNL,"Thickness Layers",initv,"m","TimeResolution>=0",0.001,100.,0.01,10.,1) ;
 		pP->SetReadOnly(false);
 		mTab_Compartment.push_back(pP);
 	

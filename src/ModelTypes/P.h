@@ -21,7 +21,20 @@ class P : public Par
 		void Def(size_t ModuleNo, string name, vector<double> init, string unit, string conditions, 
 			double errormin, double errormax, double warningmin, double warningmax,
 			int recalc=0,  int view=0);
-		size_t SetValue(size_t index, double v) {if(index<_ptarget->size()) {_oldValueVector[index]=_ptarget->at(index);_IsOldValueVector[index]=true;_ptarget->at(index)=v;if(_ptarget->at(index)!=GetOriginalValue(index)) SetNotOriginalIndicator(index, true);}return _recalc_option;};
+		size_t SetValue(size_t index, double v) {
+			if (index < _ptarget->size()) {
+				if (index < _oldValueVector.size()) {
+					_oldValueVector[index] = _ptarget->at(index);
+					_IsOldValueVector[index] = true; 
+				}
+				_ptarget->at(index) = v;
+				if (_ptarget->at(index) != GetOriginalValue(index)) {
+					SetNotOriginalIndicator(index, true);
+					SetNotOriginalValue();
+				}
+			}
+			return _recalc_option;
+		};
 
 		void SetDBValue(size_t index, double v) {if(index<_DB_ValueVector.size()) _DB_ValueVector[index]=v; };
 		double GetDBValue(size_t index) const {if(index<_DB_ValueVector.size()) return _DB_ValueVector[index];return MISSING;};

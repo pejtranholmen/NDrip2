@@ -211,7 +211,10 @@ static bool load_pg_file(int pkey, map<string, CPG*> links_to_pg_pointers) {
     }
     if (recno - 1 == numrec) {
         pPG->SetAllValuesAssigned(true);
-        cout << "All values assigned to : " << filename << endl;
+        if(pPG->CheckStatus())
+            cout << "All values assigned to : " << filename << endl;
+        else
+            cout << "All values are not correctly assigned to : " << filename << endl;
     }
     return true;
 

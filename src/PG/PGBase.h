@@ -129,6 +129,7 @@ public:
 	bool IsFileModified() { return pg.status.FileModified; };
 	void SetNewReadofFile() { pg.status.FileModified = false; };
 	void ResetBuf() {pg.status.b.buf_TotSize= pg.status.b.buf_OrgSize;};
+	bool CheckStatus();
 	ALLPGSTRUCT pg;
     ALLPGSTRUCT& GetRef() { ALLPGSTRUCT& rr = pg; return rr;};
 protected:

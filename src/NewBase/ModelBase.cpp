@@ -243,7 +243,7 @@ bool ModelBase::SetSimPeriodFromClimateFile()
 	auto pF = dynamic_cast<F*>(GetPtr(PGFILE, "Meteorological data"));
 	if (pF != nullptr) {
 		pPG=pF->GetPointer();
-		if (!pF->CheckFileNameAndAssignNameToPGClass()) return false;
+		//if (!pF->CheckFileNameAndAssignNameToPGClass()) return false;
 	}
 
 	if (pPG == nullptr) return false;

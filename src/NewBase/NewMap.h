@@ -38,7 +38,7 @@ public:
 
 
 
-	bool Read_SimB_FromXmlFile(pugi::xml_node node);
+	bool Read_SimB_FromXmlFile(pugi::xml_node node, bool Reset_to_Default = false);
 	bool WriteSimB_ToXmlFile(pugi::xml_node node, simtype, doc_enabled def = doc_enabled::ALL);
 
 	bool WriteDoc_To_Postgres(bool UpdatedRecord=false, bool DB_Source=false);
@@ -50,6 +50,7 @@ public:
 
 	bool CheckStart_EndTime();
 	void UpdateArchiveLists(size_t icat=8);
+	bool ResetDocument_to_DefaultValues();
 	void RemoveOriginalValues(string typ, string GroupSet, bool original=true, size_t ViewCategory=0);
 	void SetOriginalValues(string typ, string GroupSet="") {RemoveOriginalValues(typ, GroupSet,true);};
 	void CleanAllLists();

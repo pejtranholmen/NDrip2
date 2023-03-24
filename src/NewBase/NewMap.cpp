@@ -403,9 +403,12 @@ bool NewMap::WriteSimB_ToXmlFile(pugi::xml_node node, simtype type, doc_enabled 
 	}
 	return false;
 }
-bool NewMap::Read_SimB_FromXmlFile(pugi::xml_node node) {
+bool NewMap::Read_SimB_FromXmlFile(pugi::xml_node node, bool Reset_to_Default) {
 
+	string value_to_assign = "Current";
 
+	if (Reset_to_Default) value_to_assign = "Default";
+	
 	simtype type{ simtype::SWITCH };
 	string typ_name = node.name();
 
@@ -451,10 +454,10 @@ bool NewMap::Read_SimB_FromXmlFile(pugi::xml_node node) {
 							pSw = static_cast<Sw*>(GetPtr(type, item_name));
 						}
 						if (pSw != nullptr) {
-							auto value = item.attribute("Current").as_uint();
+							auto value = item.attribute(value_to_assign.c_str()).as_uint();
 							size_t recalc = pSw->SetIntValue(value);
 							if (recalc > 0) LinkedChangeToSwitches(pSw, recalc);
-							pSw->SetNotOldValue();
+						
 							m_Sw_Array.push_back(pSw);
 						}
 						else {
@@ -468,7 +471,7 @@ bool NewMap::Read_SimB_FromXmlFile(pugi::xml_node node) {
 							pPs = static_cast<Ps*>(GetPtr(type, item_name));
 						}
 						if (pPs != nullptr) {
-							auto value = item.attribute("Current").as_float();
+							auto value = item.attribute(value_to_assign.c_str()).as_float();
 							AssignNewValue_toPs(pPs, value);
 						}
 						else {
@@ -2439,6 +2442,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 
 		if(!m_pCommonModelInfo->ID_MapsForPostgresReady ) m_pCommonModelInfo->ID_MapsForPostgresReady = DefineUniqueIdMaps(m_pCommonModelInfo, this);
 		
+		ResetDocument_to_DefaultValues();
 		pqxx::connection c = initconnection("Select from postgres");
 		pqxx::work txn{ c };
 		{
@@ -2505,7 +2509,12 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 		for (auto row : r) {
 			string name = p_ModelInfo->GetSwitchName(row["id_switch"].as<int>());
 			Sw* pSw = GetSw(name);
-			if (pSw != nullptr) pSw->SetIntValue(row[1].as<int>());
+			if (pSw != nullptr) {
+				size_t recalc=pSw->SetIntValue(row[1].as<int>());
+				if(recalc>0) LinkedChangeToSwitches(pSw, recalc);
+				pSw->SetNotOldValue();
+			}
+
 			names1.push_back(name);
 			ints1.push_back(row["id_switch"].as<int>());
 		}
@@ -2513,7 +2522,12 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 		for (auto row : r) {
 			string name = row[0].as<string>();
 			Sw* pSw = GetSw(name);
-			if (pSw != nullptr) pSw->SetIntValue(row[2].as<int>());
+			if (pSw != nullptr) {
+				size_t recalc=pSw->SetIntValue(row[2].as<int>());
+				if (recalc > 0) {
+					LinkedChangeToSwitches(pSw, recalc);
+				}
+			}
 			names2.push_back(name);
 			ints2.push_back(row["id_switch"].as<int>());
 		}
@@ -2547,6 +2561,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 			int number_elements = row[1].as<int>();
 			if (pP != nullptr) {
 				if (pP->GetSize() != number_elements) {
+					pP->ReSize(number_elements);
 					pP->SetSize(number_elements);
 				}
 				auto pvector = row[2].as_array();
@@ -2554,13 +2569,19 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 				auto next = pvector.get_next();
 				next = pvector.get_next();
 				size_t count{ 0 }; double value;
+				size_t ReCalcTot = 0;
 
 				while (next.second.size() > 0) {
+					size_t ReCalc = 0;
 					value = stod(string(next.second));
-					pP->SetValue(count, value);
+					bool newvalid = AssignNewValue_toP(pP, count, value, ReCalc);
+					if (ReCalc > 0) ReCalcTot = ReCalc;
+
+					//pP->SetValue(count, value);
 					next = pvector.get_next();
 					count++;
 				}
+				if (ReCalcTot > 0) LinkedChangeToParameters(pP, ReCalcTot);
 			}
 
 		}
@@ -2747,7 +2768,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 			else {
 				F* pF = GetF(name);
 				string filename = row["filename"].as<string>();
-				if (name == "Output File")	savefilename_as_modelfilename = false;
+				if (name == "Output File"|| name.find("ValidationOutput") != string::npos)	savefilename_as_modelfilename = false;
 				if (savefilename_as_modelfilename) {
 					pPG = pF->GetPointer();
 					links_to_pg_pointers.insert(pair<string, CPG*>(filename, pPG));
@@ -2828,6 +2849,11 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 			WriteDocFile(localdirectory);
 
 		}
+		{   //Final adjustment of settings after all information is assigned
+			SetSimPeriodFromClimateFile();
+
+
+		}
 		return true;
 	}
 	catch (const std::exception& e) {
@@ -2879,9 +2905,10 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source ) {
 	// Set SimulationRunNo
 
 	pair<int, unique_ptr<Register>> pn = FUtil::GetProfileIntNo("SimulationRunNo", 1, move(reg_pointer));
-	auto maxno = max(int(m_DocFile.m_SimulationRunNo), pn.first);
-	if (maxno == int(m_DocFile.m_SimulationRunNo)) reg_pointer = FUtil::WriteProfileInt("SimulationRunNo", maxno, move(reg_pointer));
+	auto maxno = max(int(m_DocFile.m_SimulationRunNo), pn.first); reg_pointer = move(p.second);
 
+	if (maxno == int(m_DocFile.m_SimulationRunNo)|| pn.first == maxno) reg_pointer = FUtil::WriteProfileInt("SimulationRunNo", maxno+1, move(reg_pointer));
+	
 
 	m_SiteName = t.sitename;
 	
@@ -2951,10 +2978,18 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source ) {
 	{
 		vector<vectorpar_set> s;
 		RemoveOriginalValues("Parameter Tables", "ALL", false);
+		auto kollv = GetPtrVector(PAR_TABLE);
+		m_Pt_Array.clear();
+		for (auto k : kollv) {
+			if (k->IsNotOriginalValue()) m_Pt_Array.push_back(static_cast<P*>(k));
+		}
+
+		
 		for (P* pPt : m_Pt_Array) {
 			vectorpar_set ss;
 			ss.key_simulation = pkey;
 			ss.id_vectorpar = p_ModelInfo->GetVectorParId(pPt->GetName());
+
 			for (size_t i = 0; i < pPt->GetSize(); i++) {
 				ss.values.push_back(pPt->GetValue(i));
 			}
@@ -3146,7 +3181,10 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source ) {
 
 					}
 					if (ss.filename != FUtil::FileNameOnly(ss.filename, true)) {
-						ss.filename = sitename+"_" + FUtil::FileNameOnly(ss.filename, true);
+						if(ss.filename.find(sitename)==string::npos)
+							ss.filename = sitename+"_" + FUtil::FileNameOnly(ss.filename, true);
+						else
+							ss.filename = FUtil::FileNameOnly(ss.filename, true);
 					}
 					transfer_Modified_TimeSeries(ss, vrecs);
 					cout << ss.filename << endl;
@@ -6724,6 +6762,58 @@ void NewMap::Export_MBinToCSV(bool AcceptedOnly)
 
 	
 };
+bool NewMap::ResetDocument_to_DefaultValues() {
+
+	auto SimBv=GetPtrVector(SWITCH);
+	for (auto pSimB : SimBv) {
+		auto pSw = static_cast<Sw*>(pSimB);
+		pSw->SetIntValue(pSw->GetOriginalIntValue());
+	}
+
+	SimBv = GetPtrVector(PAR_SINGLE);
+	for (auto pSimB : SimBv) {
+		auto pP = static_cast<Ps*>(pSimB);
+		pP->SetValue(pP->GetOriginalValue());
+	}
+
+	SimBv = GetPtrVector(PAR_TABLE);
+	for (auto pSimB : SimBv) {
+		auto pP = static_cast<P*>(pSimB);
+		auto n=pP->GetSize();
+		auto pNE = pP->GetNEPointer();
+		for (size_t i = 0; i < n; i++) {
+			pP->SetValue(i, pP->GetOriginalValue(i));
+		}
+		if (pP->GetSize() != pNE->GetOriginalNEValue()) pP->SetSize(pNE->GetOriginalNEValue());
+		pNE->SetNEValue(pNE->GetOriginalNEValue());
+	}
+	for (size_t i = 0; i < 4; i++) {
+		SimBv = GetPtrVector(simtype(STATE+i));
+		for (auto pSimB : SimBv) {
+			auto pOut = static_cast<OutVector*>(pSimB);
+			auto n=pOut->GetNumberOfFlags();
+			auto pNE = pOut->GetNEPointer();
+			for (size_t i = 0; i < n; i++)
+				pOut->SetValidFlagIndex(i, 0);
+			pNE->SetNEValue(pNE->GetOriginalNEValue());
+		}
+	}
+	for (size_t i = 0; i < 4; i++) {
+		SimBv = GetPtrVector(simtype(STATE_SINGLE + i));
+		for (auto pSimB : SimBv) {
+			auto pOut = static_cast<OutSingle*>(pSimB);
+			pOut->SetValidFlagIndex(0);
+		}
+	}
+
+	SimBv = GetPtrVector(simtype(PGFILE));
+	for (auto pSimB : SimBv) {
+		auto pF = static_cast<F*>(pSimB);
+		pF->ResetValNumbers();
+		pF->SetOriginalValue();
+	}
+	return true;
+}
 
 string NewMap::Export_XLSX(bool AcceptedOnly, size_t choice, int IndexOut, string varname)
 {

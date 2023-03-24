@@ -14,16 +14,33 @@ CPGBase::CPGBase(void)
 	pg.status.CompleteRepRead=false;
 	pg.status.FileModified=false;
 	pg.status.RecordsToView = false;
+	pg.status.CompleteFileRead = true;
 	pg.Shape = SetDataShape(0, pg.Shape.NumVar, 1);
 	pg.status.a.OutRecordStart = 0;
 	pg.status.a.OutRecordEnd = 0;
 	pg.status.a.LocalStartIndex = 0;
+	pg.status.MinEnd = pg.status.MinStart=0;
 }
 
 
 CPGBase::~CPGBase(void)
 {
 
+}
+bool CPGBase::CheckStatus() {
+	if (pg.Shape.NumRecords > 1&& pg.status.CompleteFileRead) {
+		if (pg.status.MinEnd == 0) {
+			pg.status.MinStart = *(size_t*)&pg.Var.v[0];
+			pg.status.MinEnd = *(size_t*)&pg.Var.v[(pg.Shape.NumRecords - 1) * pg.Shape.RecordIndexSize];
+			pg.status.NormalTimeInterval = (pg.status.MinEnd - pg.status.MinStart) / (pg.Shape.NumRecords - 1);
+			return true;
+		}
+		else {
+			if (pg.status.MinEnd > pg.status.MinStart) return true;
+		}
+		return true;
+	}
+	return false;
 }
 DATASHAPE CPGBase::SetDataShape(size_t irec, size_t ivar, size_t irep)
 {

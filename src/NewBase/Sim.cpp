@@ -323,11 +323,11 @@ string Sim::GetCurrentSubDirectoryFile()
 	return m_CurrentSubDirectoryFile;
 }
 
-bool Sim::RunModel_Using_Postgres(int pkey) {
+pair<bool, unique_ptr<Register>> Sim::RunModel_Using_Postgres(int pkey, unique_ptr<Register> pReg) {
 
 	if (SelectDoc_From_Postgres(pkey, false)) {
 		m_PG_OutPutFile.SetOnlyMemoryUse(true);
-		return MakeSingleRun(true, pkey);
+		return MakeSingleRun(true, pkey, move(pReg));
 	}
 }
 void Sim::SetCurrentName_SimNo(int NewNo)
@@ -395,7 +395,7 @@ bool Sim::FixSumIndex()
 }
 
 #ifdef COUPSTD
-bool Sim::MakeSingleRun(bool DB_Source, int pkey) 
+pair<bool, unique_ptr<Register>> Sim::MakeSingleRun(bool DB_Source, int pkey, unique_ptr<Register> reg_pointer) 
 {
 	if (DB_Source == true) {
 		m_IsUsingDB_Source = true;
@@ -403,7 +403,7 @@ bool Sim::MakeSingleRun(bool DB_Source, int pkey)
 		m_ValidationData.SetPointersToOutputValidationFiles(true);
 		m_MStorage.Init(this);
 		if (GetDB_Action() != 0) {
-			unique_ptr<Register> reg_pointer = make_unique<Register>();
+			
 			pair<int, unique_ptr<Register>> pn = FUtil::GetProfileIntNo("SimulationRunNo", 1, move(reg_pointer));
 			int testno = pn.first; reg_pointer = move(pn.second);
 
@@ -411,13 +411,14 @@ bool Sim::MakeSingleRun(bool DB_Source, int pkey)
 				m_DocFile.m_SimulationRunNo = testno;
 			}
 			m_DocFile.m_SimulationRunNo++;
+			reg_pointer = FUtil::WriteProfileInt("SimulationRunNo", m_DocFile.m_SimulationRunNo, move(reg_pointer));
 		}
 	}
 
 	m_DocFile.m_TimeModified = time(nullptr);
 	SetSingleSimulation();
 	ApplyOptStartValues();
-	if (!CheckAndUpdateFileName(false, DB_Source)) return false;
+	if (!CheckAndUpdateFileName(false, DB_Source)) return pair<bool, unique_ptr<Register>>(false, move(reg_pointer));
 	m_SingleStartTime = clock();
 	p_ModelInfo->SetRunning(true);
 	p_ModelInfo->SetRunDoc(this);
@@ -441,15 +442,16 @@ bool Sim::MakeSingleRun(bool DB_Source, int pkey)
 		cout << "Simulation Completed" << endl;
 #ifndef NO_FILES
 		if (pkey > 0&& GetDB_Action() == 0) DeleteDoc_From_Postgres(pkey);
-        return WriteDocFile("", DB_Source);
+        bool result=WriteDocFile("", DB_Source);
+		return pair<bool, unique_ptr<Register>>(result, move(reg_pointer));
 #else
         return true;
 #endif
 		}
-	return false;
+	return pair<bool,unique_ptr<Register>>(true, move(reg_pointer));
 }
 
-bool Sim::MakeMultiRun(bool DB_Source) {
+pair<bool, unique_ptr<Register>> Sim::MakeMultiRun(bool DB_Source,  unique_ptr<Register> reg_pointer) {
 
 	if (DB_Source == true) m_IsUsingDB_Source = true;
 
@@ -475,7 +477,7 @@ bool Sim::MakeMultiRun(bool DB_Source) {
 	m_OrgPathName = NewFolder;
 	int ipp = NewFolder.find("_Multi");
 	if (ipp<0) 
-		return false;
+		return pair<bool, unique_ptr<Register>>(false, move(reg_pointer));
 
 	StartRunNo = m_DocFile.m_SimulationRunNo;
 	MR_Storage_Init();
@@ -507,7 +509,7 @@ bool Sim::MakeMultiRun(bool DB_Source) {
 		bool simresult;
 		simresult = true;
 		m_Simulator.m_pModelInfo->ActualNoMulRun = MR_Get_ActualRunNumber();
-		if (!m_Simulator.Start(true, FirstRun)) { simresult = false; return 0; }
+		if (!m_Simulator.Start(true, FirstRun)) { simresult = false; return pair<bool, unique_ptr<Register>>(false, move(reg_pointer)); }
 		if (!m_Simulator.Run(true)) simresult = false;
 		SetCurrentName_SimNo(m_DocFile.m_SimulationRunNo);
 
@@ -542,7 +544,7 @@ bool Sim::MakeMultiRun(bool DB_Source) {
 					cout << "Simulation Completed with Error";
 
 #endif						
-					return false;
+					return pair<bool, unique_ptr<Register>>(false, move(reg_pointer));
 					}
 				SetNewSimulation();
 				}
@@ -578,7 +580,7 @@ bool Sim::MakeMultiRun(bool DB_Source) {
 
 				}
 #endif
-			return 0;
+			return pair<bool, unique_ptr<Register>>(false, move(reg_pointer));
 
 			}
 		}
@@ -600,18 +602,18 @@ bool Sim::MakeMultiRun(bool DB_Source) {
 	MR_Storage_Close();
 
 	m_DocFile.m_SimulationRunNo = StartRunNo;
-	return WriteDocFile();
+	bool result=WriteDocFile();
 	MR_Storage_Reset();
 	MR_Storage_Open();
 #ifdef COUPSTD
-	cout << "Simulaton completed " + m_DocFileName+'\n';
+	cout << "Simulation completed " + m_DocFileName+'\n';
 #endif
 	if (IsBayesianCalibration()) {
 		UpdateCoVar();
 		MR_ReCalculatePostDist();
 
 	}
-	return true;
+	return pair<bool, unique_ptr<Register>>(result, move(reg_pointer));
 }
 
 

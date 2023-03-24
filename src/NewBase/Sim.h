@@ -38,9 +38,9 @@ public:
 #ifndef COUPSTD
 	Link m_Link;
 #else 
-	bool MakeSingleRun(bool DB_Source=false, int pkey=-1);
-	bool MakeMultiRun(bool DB_Source = false);
-	bool RunModel_Using_Postgres(int pkey);
+	pair<bool, unique_ptr<Register>> MakeSingleRun(bool DB_Source=false, int pkey=-1, unique_ptr<Register> pReg=nullptr);
+	pair<bool, unique_ptr<Register>> MakeMultiRun(bool DB_Source = false, unique_ptr<Register> pReg = nullptr);
+	pair<bool, unique_ptr<Register>> RunModel_Using_Postgres(int pkey, unique_ptr<Register> );
 	
 #endif
 	Simulator m_Simulator;

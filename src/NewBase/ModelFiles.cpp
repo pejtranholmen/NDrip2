@@ -176,7 +176,7 @@ F* ModelFiles::ValidationFilePointer(size_t Index)
 		name += "_01";
 	string grp = "Validation";
 	string typ = "Files";
-	pF = dynamic_cast<F*>(GetPtr(simtype::PGFILE, name));
+	pF = static_cast<F*>(GetPtr(simtype::PGFILE, name));
 	return pF;
 }
 CPG* ModelFiles::ValidationResultPG_Pointer(size_t ValFileIndex)

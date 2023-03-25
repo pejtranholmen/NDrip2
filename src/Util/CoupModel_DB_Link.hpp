@@ -16,6 +16,7 @@ using namespace pqxx;
 
 namespace coup_pg {
     static bool LocalHost{ false };
+    static bool MakeMultiRunIfPossible{ false };
     enum class DB_RUN_ACTION { RUN_STORE_ON_CURRENT, RUN_STORE_AS_NEWRECORD };
     static DB_RUN_ACTION db_action=DB_RUN_ACTION::RUN_STORE_ON_CURRENT;
 
@@ -2209,7 +2210,7 @@ int transfer_multirun_setting(int pkey, vector <tuple<int, int, string, int, int
             if (get<9>(first).size() > 0)
                 sql += "'" + get<9>(first) + "',";
             else
-                sql += "Null,";
+                sql += "'-',";
             sql += to_string(get<10>(first)) + ",'{";
 
             vector<float> values; values = get<11>(first);

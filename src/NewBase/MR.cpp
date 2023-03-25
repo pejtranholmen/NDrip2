@@ -741,8 +741,8 @@ size_t MR:: MR_Get_NumberOfParametersWithinDim(size_t index)
 		nTabIndex=m_P_MR_Array[i].TabIndex;
 		if(m_P_MR_Array[i].pBase->Is_DB())
 			nDim=((CDB*)pPar)->MR_Get_Dim();
-		else if(nTabIndex==string::npos) nDim=pPar->MR_Get_Dim();
-		else  nDim=pPar->MR_Get_Dim(nTabIndex);	
+		else if(nTabIndex==string::npos) nDim=static_cast<Ps*>(pPar)->MR_Get_Dim();
+		else  nDim=static_cast<P*>(pPar)->MR_Get_Dim(nTabIndex);	
 		if(nDim==index) counter++;
 	}	
 	return counter;
@@ -2025,7 +2025,7 @@ void MR::MR_Storage_Init()
 			ipos_sim = pzPathName.find(".S");
 		if (ipos_sim < 0)
 			ipos_sim = pzPathName.find(".s");
-		if (ipos_sim < 0)
+		if (ipos_sim ==string::npos)
 	 			ipos_sim = pzPathName.size();
 	}
 	m_DocFile2.m_Multi_MBin_File=pzPathName.substr(0,ipos_sim)+".MBin";

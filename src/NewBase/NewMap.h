@@ -97,6 +97,9 @@ public:
 	bool GetLocalHost();
 	void SetDB_Action(size_t value);
 	size_t GetDB_Action();
+	void SetMakeMultiRunIfPossible(bool status);
+	bool GetMultiRunIfPossible();
+	bool IsMultiRunEnabled() { if (m_MultiRun_Array.size() > 0) return true; else return false; };
 
 #ifndef COUPSTD
 	CPlotStorage m_PlotStorage;

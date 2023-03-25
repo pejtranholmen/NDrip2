@@ -14,7 +14,7 @@
 int main(int argc, char* argv[]) {
     string doc_file_name;
     string ans, path;
-    int CurrentAction, CurrentSimKey, LocalHost;
+    int CurrentAction, CurrentSimKey, LocalHost, MakeMultiRunIfPossible;
     auto pDoc = make_unique<Doc>();
     {
         unique_ptr<Register> p_Register = make_unique<Register>();
@@ -34,6 +34,13 @@ int main(int argc, char* argv[]) {
         else
             pDoc->SetLocalHost(true);
 
+        p = FUtil::GetProfileIntNo("MakeMultiRun_IfPossible", 1, move(p_Register));
+        MakeMultiRunIfPossible = p.first; p_Register = move(p.second);
+        if (MakeMultiRunIfPossible == 0)
+            pDoc->SetMakeMultiRunIfPossible(false);
+        else
+            pDoc->SetMakeMultiRunIfPossible(true);
+
 
         ans = "y";
 
@@ -47,30 +54,51 @@ int main(int argc, char* argv[]) {
                 Action.push_back(" - Download all files linked to Selected Record");
                 Action.push_back(" - Download output time series as CSV files");
                 Action.push_back(" - Upload a simulation document as xml and bin files:");
-                Action.push_back(" - Only Viewing Simulations in database");
+                Action.push_back(" - View of Simulations in database");
                 if (LocalHost == 0)
-                    Action.push_back(" - Change to from remote to local database");
+                    Action.push_back(" - Change from remote to local database");
                 else
-                    Action.push_back(" - Change to from local to remote database");
+                    Action.push_back(" - Change from local to remote database");
+                if (MakeMultiRunIfPossible == 0)
+                    Action.push_back(" - Change from SingleRun to MultiRuns (if possible)");
+                else
+                    Action.push_back(" - from Making MultiRuns (if possible) to SingleRun ");
+
+
+
+
                 Action.push_back(" - Reset Database (removes all items)");
                 Action.push_back(" - Clean Database from unlinked units");
 
-                cout << "List of possible actions:" << endl;
-                size_t id = 1;
-                for (auto line : Action) { cout << to_string(id) << line << endl; id++; }
-                cout << "Specify your choice of action :";
+                cout <<"Current Action is : "<<Action[CurrentAction-1]<<" See List of possible actions : (Y / N) : ";
                 cin >> ans;
-                int newaction = FUtil::AtoInt(ans);
-                if (newaction > 0 && newaction < 8) {
-                    p_Register = FUtil::WriteProfileInt("Action", newaction, move(p_Register));                  
+                if (ans.find('y') != string::npos || ans.find('Y') != string::npos) {
+                    size_t id = 1;
+                    for (auto line : Action) { cout << to_string(id) << line << endl; id++; }
                 }
-                CurrentAction = newaction;
+                //else
+                  //  CurrentAction-;
+                
+                cout <<"Current choice: "<<to_string(CurrentAction)<< " Specify your choice (#) to change action (Y to accept):";
+                cin >> ans;
+                if (ans.find('y') != string::npos || ans.find('Y') != string::npos);
+                else {
+                    int newaction = FUtil::AtoInt(ans);
+                    if (newaction > 0 && newaction < 8) {
+                        p_Register = FUtil::WriteProfileInt("Action", newaction, move(p_Register));
+                    }
+                    CurrentAction = newaction;
+                }
             }
             vector<pair<int, string>> simulations = pDoc->GetDataBaseSimulations();
             auto numsim = simulations.size();
             p = FUtil::GetProfileIntNo("SimKey", 0, move(p_Register));
             CurrentSimKey = p.first; p_Register = move(p.second);
-            if (CurrentAction != 8) {
+
+            bool setoptionsforsimulations = true;
+            if (CurrentAction >= 8 && CurrentAction <= 12) setoptionsforsimulations = false;
+
+            if (setoptionsforsimulations) {
                 if (MS_CODE) {
                     bool keyexist = false; size_t MaxKeyValue{ 0 };
                     if (CurrentAction == 6) {
@@ -80,9 +108,12 @@ int main(int argc, char* argv[]) {
                         auto kolla = FUtil::GetFileList(".xml");
 
 
-                        cout << kolla.size() << " xml files ready for upload" << endl;
-                        for (size_t i = 0; i < kolla.size(); i++) {
-                            cout << FUtil::STD_ItoAscii(i + 1) << " : " << kolla[i] << endl;
+                        cout << kolla.size() << " xml files ready for upload - See List (Y/N):";
+                        cin >> ans;
+                        if (ans.find('y') != string::npos || ans.find('Y') != string::npos) {
+                            for (size_t i = 0; i < kolla.size(); i++) {
+                                cout << FUtil::STD_ItoAscii(i + 1) << " : " << kolla[i] << endl;
+                            }
                         }
 
 
@@ -105,14 +136,14 @@ int main(int argc, char* argv[]) {
                         cout << "Comment Id :" << current_comment << endl;
                         
 
-                        cout << "Do want to change settings for your upload to database (Y/N);";
+                        cout << "Do want to change settings for your upload to database (Y/N):";
                         cin >> ans;
                         if (ans.find('y') != string::npos || ans.find('Y') != string::npos) {
-                            cout << "Current Creator Id :" << currentcreator << " Enter string to change: ";
+                            cout << "Current Creator Id :" << currentcreator << " Enter string (min of 2 char) to change: ";
                             cin >> ans; if (ans.size() > 2)  p_Register = FUtil::WriteProfileString("Creator", ans, move(p_Register));
-                            cout << "Current SiteName Id :" << current_site << " Enter string to change: ";
+                            cout << "Current SiteName Id :" << current_site << " Enter string (min of 2 char) to change: ";
                             cin >> ans;  if (ans.size() > 2 && ans.size() < 25)   p_Register = FUtil::WriteProfileString("SiteNameId", ans, move(p_Register));
-                            cout << "Current Comment Id :" << current_comment << " Enter string to change: ";
+                            cout << "Current Comment Id :" << current_comment << " Enter string (min of 2 char) to change: ";
                             cin >> ans;  if (ans.size() > 2 && ans.size() < 25)  p_Register = FUtil::WriteProfileString("Comment", ans, move(p_Register));
                         };
 
@@ -126,17 +157,23 @@ int main(int argc, char* argv[]) {
                     else {
                        
                         string db = "local"; if (LocalHost == 0) db = "remote";
-                        cout << to_string(numsim) << " simulations in " << db << " database" << endl;;
-                        for (size_t i = 0; i < numsim; i++) {
-                            cout << to_string(simulations[i].first) << " - " << simulations[i].second << endl;
-                            if (MaxKeyValue < simulations[i].first) MaxKeyValue = simulations[i].first;
-                            if (simulations[i].first == CurrentSimKey) keyexist = true;
+                        bool makelist = true;
+                        if (CurrentAction != 7) {
+                            cout << to_string(numsim) << " simulations in " << db << " database - View list  (Y/N) :";
+                            cin >> ans; if (ans.find('y') != string::npos || ans.find('Y') != string::npos) makelist = true;
                         }
+                        if (makelist) {
+                            for (size_t i = 0; i < numsim; i++) {
+                                cout << to_string(simulations[i].first) << " - " << simulations[i].second << endl;
+                                if (MaxKeyValue < simulations[i].first) MaxKeyValue = simulations[i].first;
+                                if (simulations[i].first == CurrentSimKey) keyexist = true;
+                            }
+                        }
+
                     }
-                    ans = "Y";
                     if (CurrentAction < 6) {
                         if (keyexist) {
-                            cout << " A simulation is identified key id : " << to_string(CurrentSimKey) << " Continue with action (Y) or Give new Key(#) :";
+                            cout << " A simulation is identified with key id : " << to_string(CurrentSimKey) << " Continue with action (Y) or Give new Key(#) :";
                             cin >> ans;
                             if (ans.find('y') != string::npos || ans.find('Y') != string::npos) {
 
@@ -166,6 +203,7 @@ int main(int argc, char* argv[]) {
 
 
             bool action_done = false, result;
+
             pair<bool, unique_ptr<Register>> result_pair;
             switch (CurrentAction) {
             case 1:
@@ -190,6 +228,7 @@ int main(int argc, char* argv[]) {
                 action_done = true;
                 break;// Download specific outputs
             case 7:
+                action_done = true;
                 break;
             
             case 8:
@@ -205,11 +244,24 @@ int main(int argc, char* argv[]) {
 
                 action_done = true;
                 break;
-            case 9: 
+            case 9:
+                if (MakeMultiRunIfPossible == 1) {
+                    pDoc->SetMakeMultiRunIfPossible(false);
+                    MakeMultiRunIfPossible = 0;
+                }
+                else {
+                    pDoc->SetMakeMultiRunIfPossible(true);
+                    MakeMultiRunIfPossible = 1;
+                }
+                action_done = true;
+                p_Register = FUtil::WriteProfileInt("MakeMultiRun_IfPossible", MakeMultiRunIfPossible, move(p_Register));
+                break;
+
+            case 10: 
                 pDoc->ReDefinePostgresDataBase();
                 action_done = true;
                 break;
-            case 10:
+            case 11:
 
                 break;
             }
@@ -217,10 +269,11 @@ int main(int argc, char* argv[]) {
             if (action_done)
                 cout << " Action - " << Action[CurrentAction-1] << "  made" << endl;
             else 
-                if(CurrentAction!=7) cout << " No Successful Action" << endl;
+                if(CurrentAction!=7) cout << " No Successful Action no: " <<to_string(CurrentAction)<< endl;
 
             cout << "Do you want to continue (Y/N) ?:";
             cin >> ans;
+
 
         }
         return 0;

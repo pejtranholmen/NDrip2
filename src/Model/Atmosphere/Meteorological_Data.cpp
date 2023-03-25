@@ -106,7 +106,7 @@ bool Meteorological_Data::Ini()	{
 			if(RadInLongInput_Sw(RadInLongInput) == RadInLongInput_Sw::PG_FILE_FIXED) RadInLongIpos.ivar=int(RadInLong_Index);
 		}
 		else {
-			m_PG_Meteor.ReadContentOfPGFileAndOpenMainPGStreamForReading(m_PG_Meteor.GetFileName());
+			if(!m_PG_Meteor.AreAllValuesAssigned()) m_PG_Meteor.ReadContentOfPGFileAndOpenMainPGStreamForReading(m_PG_Meteor.GetFileName());
 			m_pModelInfo->Run_Res_Id = CheckEcoDriv1();
 			m_PG_Meteor.ResetPos();
 

@@ -327,7 +327,19 @@ pair<bool, unique_ptr<Register>> Sim::RunModel_Using_Postgres(int pkey, unique_p
 
 	if (SelectDoc_From_Postgres(pkey, false)) {
 		m_PG_OutPutFile.SetOnlyMemoryUse(true);
-		return MakeSingleRun(true, pkey, move(pReg));
+		for(size_t i=0;i<MAXSIMVAL;++i)
+			ValidationResultPG_Pointer(i)->SetOnlyMemoryUse(true);
+
+		if (GetMultiRunIfPossible() && IsMultiRunEnabled()) {
+							
+			m_PG_MultiOutputFile.SetOnlyMemoryUse(true);
+			CheckAndUpdateFileName(true, true);
+
+			
+			return MakeMultiRun(true, pkey, move(pReg));
+		}
+		else
+			return MakeSingleRun(true, pkey, move(pReg));
 	}
 }
 void Sim::SetCurrentName_SimNo(int NewNo)
@@ -451,9 +463,27 @@ pair<bool, unique_ptr<Register>> Sim::MakeSingleRun(bool DB_Source, int pkey, un
 	return pair<bool,unique_ptr<Register>>(true, move(reg_pointer));
 }
 
-pair<bool, unique_ptr<Register>> Sim::MakeMultiRun(bool DB_Source,  unique_ptr<Register> reg_pointer) {
+pair<bool, unique_ptr<Register>> Sim::MakeMultiRun(bool DB_Source, int pkey, unique_ptr<Register> reg_pointer) {
 
-	if (DB_Source == true) m_IsUsingDB_Source = true;
+	if (DB_Source == true) {
+		m_IsUsingDB_Source = true;
+		m_ValidationData.Init(this);
+		m_ValidationData.SetPointersToOutputValidationFiles(true);
+		m_MStorage.Init(this);
+		MR_RESET_Bayesian();
+		MR_ResetDimCounter();
+		if (GetDB_Action() != 0) {
+
+			pair<int, unique_ptr<Register>> pn = FUtil::GetProfileIntNo("SimulationRunNo", 1, move(reg_pointer));
+			int testno = pn.first; reg_pointer = move(pn.second);
+
+			if (m_DocFile.m_SimulationRunNo <= testno) {
+				m_DocFile.m_SimulationRunNo = testno;
+			}
+			m_DocFile.m_SimulationRunNo++;
+			reg_pointer = FUtil::WriteProfileInt("SimulationRunNo", m_DocFile.m_SimulationRunNo, move(reg_pointer));
+		}
+	}
 
 	p_ModelInfo->SetMultiRunning(true);
 	p_ModelInfo->SetRunning(true);
@@ -462,9 +492,6 @@ pair<bool, unique_ptr<Register>> Sim::MakeMultiRun(bool DB_Source,  unique_ptr<R
 
 	bool test=bool(pSw->GetIntValue());
 	p_ModelInfo->SetNoSingleRun(bool(pSw->GetIntValue()));
-
-
-
 
 	bool CompleteLoop = false;
 	bool FirstRun = true;
@@ -534,7 +561,12 @@ pair<bool, unique_ptr<Register>> Sim::MakeMultiRun(bool DB_Source,  unique_ptr<R
 			if (p_ModelInfo->GetNoSingleRun() == 0){
 				SetFinishedSimulation();
 				SetPathName(GetCurrentSimFile());
-				if (!WriteDocFile()) {
+
+				bool result = WriteDocFile("", DB_Source);
+				return pair<bool, unique_ptr<Register>>(result, move(reg_pointer));
+
+
+				if (!result) {
 #ifndef COUPSTD
 					pCommonModel->SetMultiRunning(false);
 					pCommonModel->SetRunning(false);
@@ -554,18 +586,13 @@ pair<bool, unique_ptr<Register>> Sim::MakeMultiRun(bool DB_Source,  unique_ptr<R
 				MR_SetResetMonitoring();
 				if (MR_UpdateDimCounter())
 					MR_UpdateValues();
-
-				//BAYESIANCALIB_mp_ACCEPTEDRUN=true;
-
 					ApplyOptStartValues();
 				//! New Actions for WaterShed Simulations
 				if (m_WShed_Active) {
 					WSHED_UpdateCounter();
 					WSHED_UpdateValues();
 				}
-				//	m_ValidationData.SendValIndextof90();
-				//PARAMETERS_mp_RUN_NO=(m_DocFile.m_SimulationRunNo-1)%99999+1;
-				}
+			}
 
 		}
 		else {
@@ -602,11 +629,16 @@ pair<bool, unique_ptr<Register>> Sim::MakeMultiRun(bool DB_Source,  unique_ptr<R
 	MR_Storage_Close();
 
 	m_DocFile.m_SimulationRunNo = StartRunNo;
-	bool result=WriteDocFile();
+
+	if (pkey > 0 && GetDB_Action() == 0) DeleteDoc_From_Postgres(pkey);
+	bool result = WriteDocFile("", DB_Source);
+	return pair<bool, unique_ptr<Register>>(result, move(reg_pointer));
+
+
 	MR_Storage_Reset();
 	MR_Storage_Open();
 #ifdef COUPSTD
-	cout << "Simulation completed " + m_DocFileName+'\n';
+	cout << "MultiRun Simulation completed " + m_DocFileName+'\n';
 #endif
 	if (IsBayesianCalibration()) {
 		UpdateCoVar();

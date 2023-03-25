@@ -148,6 +148,12 @@ void NewMap::SetDB_Action(size_t value) {
 size_t NewMap::GetDB_Action() {
 	return size_t(coup_pg::db_action);
 };
+void NewMap::SetMakeMultiRunIfPossible(bool status) {
+	coup_pg::MakeMultiRunIfPossible = status;
+}
+bool NewMap::GetMultiRunIfPossible() {
+	return coup_pg::MakeMultiRunIfPossible;
+}
 
 
 string NewMap::WriteEntireModelToXmlFile(doc_enabled enable_level, string localdirectory)
@@ -2844,6 +2850,127 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 			m_Val_Array.push_back(vst);
 		}
 
+		// MultiRun 
+		size_t DimNumber = 1;
+		size_t count_par = 0;
+		MRv valMR;
+		m_MultiRun_Array.clear();
+		m_P_MR_Array.clear();
+
+		r = txn.exec("SELECT * FROM multirun_settings WHERE id_simulations = " + to_string(pkey));
+		
+
+		for (const auto row : r) {
+			auto idim=row["dimension"].as<int>();
+			auto id_group = row["id_group"].as<int>();
+			string parname = row["name"].as<string>();
+			int vector_index = row["vectorindex"].as<int>();
+			auto id_method = row["id_method"].as<int>();
+			auto monitoring = row["monitoring"].as<int>();
+			auto minvalue = row["min"].as<float>();
+			auto maxvalue = row["max"].as<float>();
+			auto startvalue = row["start"].as<float>();
+		
+			string dependence_parname = row["dependence_name"].as<string>();
+			int dependence_index = row["dependence_index"].as<int>();
+			auto  fixedvaluevector = row["fixedvalues"].as_array(); 
+			auto fixedkey  = row["fixedkey"].as_array();
+			auto fixedkeyvalue = row["fixedkeyvalue"].as_array();
+			int numrep = row["numberrepetition"].as<int>();
+
+			SIMB valpar;
+			if (vector_index == -1) {
+				auto pSim = GetPsPointer(parname);
+				if (pSim == nullptr) FUtil::trim_xmlstring(parname);
+				pSim = GetPsPointer(parname);
+				if (pSim != nullptr) {
+					valpar.pBase = pSim;
+					valpar.TabIndex = string::npos;
+					static_cast<Ps*>(valpar.pBase)->MR_Set_Monitoring(size_t(monitoring));
+					static_cast<Ps*>(valpar.pBase)->MR_Set_Method(MR_METHOD(id_method));
+					valpar.TabIndex = string::npos;
+					if (MR_METHOD(id_method) == MR_METHOD::TABLE_VAL) {
+						auto next = fixedvaluevector.get_next();
+						next = fixedvaluevector.get_next();
+						float value;
+						while (next.second.size() > 0) {
+							value = stof(string(next.second));
+							static_cast<Ps*>(valpar.pBase)->MR_Append_TableValue(value);
+							next = fixedvaluevector.get_next();
+						}
+					}
+					if (MR_METHOD(id_method) >= MR_METHOD::SAME_AS && MR_METHOD(id_method) <= MR_METHOD::OP_REL_SAME_AS) {
+						Ps* pParDep = GetPsPointer(dependence_parname);
+						if (pParDep != nullptr) {
+							if (pParDep->Is_P()) pParDep->Set_MR_ParDependence(pParDep);
+							else {
+								auto pParDep2 = GetPPointer(dependence_parname);
+								if (pParDep2 != nullptr && pParDep2->Is_Vector()) pParDep->Set_MR_ParDependence(static_cast<SimB*>(pParDep2), dependence_index);
+							}
+						}
+					}
+					if (MR_METHOD(id_method) > MR_METHOD::LOG_CHANGE) {
+						pSim->MR_Set_Min(minvalue);
+						pSim->MR_Set_Max(maxvalue);
+					}
+
+
+					
+
+				}
+			}
+			else {
+					auto pSim = GetPPointer(parname);
+					if (pSim == nullptr) FUtil::trim_xmlstring(parname);
+					pSim = GetPPointer(parname);
+					if (pSim != nullptr) {
+						valpar.pBase = pSim;
+						valpar.TabIndex = vector_index;
+						if (MR_METHOD(id_method) == MR_METHOD::TABLE_VAL) {
+							auto next = fixedvaluevector.get_next();
+							next = fixedvaluevector.get_next();
+							float value;
+							while (next.second.size() > 0) {
+								value = stof(string(next.second));
+								static_cast<P*>(valpar.pBase)->MR_Append_TableValue(valpar.TabIndex, value);
+								next = fixedvaluevector.get_next();
+							}
+						}
+						if (MR_METHOD(id_method) >= MR_METHOD::SAME_AS && MR_METHOD(id_method) <= MR_METHOD::OP_REL_SAME_AS) {
+							P* pParDep = GetPPointer(dependence_parname);
+							if (pParDep != nullptr) {
+								if (pParDep->Is_Vector()) static_cast<P*>(valpar.pBase)->Set_MR_ParDependence(valpar.TabIndex, pParDep, dependence_index);
+								else {
+									auto pParDep2 = GetPsPointer(dependence_parname);
+									if (pParDep2 != nullptr && pParDep2->Is_P()) static_cast<P*>(valpar.pBase)->Set_MR_ParDependence(valpar.TabIndex, static_cast<SimB*>(pParDep2));
+								}
+							}
+						}
+						if (MR_METHOD(id_method) > MR_METHOD::LOG_CHANGE) {
+								pSim->MR_Set_Min(valpar.TabIndex, minvalue);
+								pSim->MR_Set_Max(valpar.TabIndex, maxvalue);
+						}
+						
+					}
+
+			}
+			if (valpar.pBase->Is_P())
+				static_cast<Ps*>(valpar.pBase)->MR_Set_Dim(DimNumber);
+			else
+				static_cast<P*>(valpar.pBase)->MR_Set_Dim(valpar.TabIndex, DimNumber);
+			
+			m_P_MR_Array.push_back(valpar);
+			if (idim == DimNumber && count_par == 0||idim>DimNumber) {
+				DimNumber = idim;
+				valMR.nCount = DimNumber;
+				valMR.NumberOfRepeatitionsWithinDimension = numrep;
+				m_MultiRun_Array.push_back(valMR);
+				count_par++;
+			}
+			else
+				count_par++;
+
+		}
 		if (download&&!TimeSerieAsCSV) {
 			m_IsUsingDB_Source = true;
 			WriteDocFile(localdirectory);
@@ -3312,9 +3439,8 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source ) {
 					get<12>(mr) = key;
 					get<13>(mr) = strvalues;
 				}
-
-			}
-			allmr.push_back(mr);
+				allmr.push_back(mr);
+			}		
 			transfer_multirun_setting(pkey, allmr);
 		}
 	}

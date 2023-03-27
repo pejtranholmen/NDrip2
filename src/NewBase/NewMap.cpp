@@ -2820,6 +2820,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 		// Validation
 		r = txn.exec("SELECT * FROM Validation  WHERE id_simulations = " + to_string(pkey));
 		m_Val_Array.clear();
+		m_ValSum_Array.clear();
 		current_str = "Validations";
 
 		VALv vst;

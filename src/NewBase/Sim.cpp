@@ -327,6 +327,7 @@ pair<bool, unique_ptr<Register>> Sim::RunModel_Using_Postgres(int pkey, unique_p
 
 	if (SelectDoc_From_Postgres(pkey, false)) {
 		m_PG_OutPutFile.SetOnlyMemoryUse(true);
+		m_pCommonModelInfo->SetForRunningWithoutFiles(true);
 		for(size_t i=0;i<MAXSIMVAL;++i)
 			ValidationResultPG_Pointer(i)->SetOnlyMemoryUse(true);
 
@@ -341,6 +342,7 @@ pair<bool, unique_ptr<Register>> Sim::RunModel_Using_Postgres(int pkey, unique_p
 		else
 			return MakeSingleRun(true, pkey, move(pReg));
 	}
+	m_pCommonModelInfo->SetForRunningWithoutFiles(false);
 }
 void Sim::SetCurrentName_SimNo(int NewNo)
 {
@@ -507,7 +509,13 @@ pair<bool, unique_ptr<Register>> Sim::MakeMultiRun(bool DB_Source, int pkey, uni
 		return pair<bool, unique_ptr<Register>>(false, move(reg_pointer));
 
 	StartRunNo = m_DocFile.m_SimulationRunNo;
-	MR_Storage_Init();
+	size_t numout;
+	{
+		auto v = GetAllSelectedOutputs();
+		numout = v.size();
+	}
+
+	MR_Storage_Init(DB_Source, numout);
 
 	string UserDirectory = "";
 	{
@@ -647,6 +655,7 @@ pair<bool, unique_ptr<Register>> Sim::MakeMultiRun(bool DB_Source, int pkey, uni
 	}
 	return pair<bool, unique_ptr<Register>>(result, move(reg_pointer));
 }
+
 
 
 

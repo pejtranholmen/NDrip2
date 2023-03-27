@@ -299,6 +299,7 @@ return true;
 double Technical_Functions::SumLikelihood(size_t index, double sim, double obs) {
 	double E_Meas, Meas_Corr, Sigma_Error;
 	double out;
+	while (ObservedScalingIndex.size() <= index && index > 1) { ObservedScalingIndex.push_back(ObservedScalingIndex[index - 1]); }
 
 	if(BayesianLikelihoodFunction==0) {
 		if(Rel_Error[index]*abs(obs)<Abs_Error[index])	E_Meas=Abs_Error[index];

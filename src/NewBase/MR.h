@@ -176,7 +176,7 @@ public:
 	void	MR_Set_BayesCoCor(size_t indexp,size_t indexp2, float v);
 	void	MR_Init_BayesCovar(size_t ncount);
 	void	MR_Init_BayesCocor(size_t ncount);
-	void	MR_Storage_Init();
+	void	MR_Storage_Init(bool UsingPostGres=false, size_t numsum=0);
 	void	MR_Storage_Add();
 	void	MR_Storage_Close();
 	bool	MR_Storage_Open();

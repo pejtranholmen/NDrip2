@@ -952,16 +952,16 @@ float SelectedEnsembles::GetCV_Valid(unsigned long ip, unsigned long ind_split)
 					sum += pow((1 - GetValid(irun, ind_rmse)*GetValid(irun, ind_rmse) / rmse_o) - GetMeanValid(ip), 2);
 				//}
 			}
-			if (count > 2 && abs(GetMeanValid(ip))>0) {
+			if (count > 2 && abs(GetMeanValid(ip)) > 0) {
 				//m_VarValidCV[ip] = float(sqrt(sum / (count - 1))) / abs(GetMeanValid(ip));
 				m_Valid_TSV[m_ActualEnsemble].v[E_POST_CV][ip] = float(sqrt(sum / (count - 1))) / abs(GetMeanValid(ip));
 
 			}
-			else {
+			else if (abs(GetMeanValid(ip)) > 0) {
 				m_Valid_TSV[m_ActualEnsemble].v[E_POST_CV][ip] = float(sqrt(sum / (count - 1))) / abs(GetMeanValid(ip));
-
-				//m_VarValidCV[ip] = float(MISSING);
 			}
+			else
+				m_Valid_TSV[m_ActualEnsemble].v[E_POST_CV][ip] = float(MISSING);
 
 			return m_Valid_TSV[m_ActualEnsemble].v[E_POST_CV][ip];
 		}
@@ -978,10 +978,6 @@ float SelectedEnsembles::GetCV_Valid(unsigned long ip, unsigned long ind_split)
 				m_Valid_TSV[m_ActualEnsemble].v[E_POST_CV][ip + ind_split*(m_NumValid + m_NumExtraValid)]= float(sqrt(sum / (count - 1)) / abs(GetMeanValid(ip, ind_split)));
 			else
 				m_Valid_TSV[m_ActualEnsemble].v[E_POST_CV][ip + ind_split*(m_NumValid + m_NumExtraValid)] = float(MISSING);
-
-
-
-
 		}
 	}
 	else

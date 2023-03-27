@@ -457,4 +457,10 @@ vector<SimB*> CommonModelInfo::SortSimB_ByCategory(vector<SimB*> v_in) {
 	}
 	return v_out;
 }
+void CommonModelInfo::SetForRunningWithoutFiles(bool status) {
+	m_UsePostgresWithOutFiles = status;
+}
+bool CommonModelInfo::IsRunningWithoutFiles() {
+	return m_UsePostgresWithOutFiles;
+}
 

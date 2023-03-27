@@ -2007,7 +2007,7 @@ void MR::SetMBinFileName(string value)
 
 	m_DocFile2.m_Multi_MBin_File=value;
 }
-void MR::MR_Storage_Init()
+void MR::MR_Storage_Init(bool UsingPostGres, size_t num)
 {
 	m_PreviousMultiMBinFile=m_DocFile2.m_Multi_MBin_File;
 	string	pzPathName=GetCurrentSimFile();
@@ -2019,21 +2019,30 @@ void MR::MR_Storage_Init()
 	}
 	else {
 		ipos_sim = pzPathName.find(".Sim");
-		if (ipos_sim < 0)
-			ipos_sim = pzPathName.find(".SI");
-		if (ipos_sim < 0)
-			ipos_sim = pzPathName.find(".S");
-		if (ipos_sim < 0)
-			ipos_sim = pzPathName.find(".s");
 		if (ipos_sim ==string::npos)
-	 			ipos_sim = pzPathName.size();
+			ipos_sim = pzPathName.find(".SI");
+		if (ipos_sim == string::npos)
+			ipos_sim = pzPathName.find(".S");
+		if (ipos_sim == string::npos)
+			ipos_sim = pzPathName.find(".s");
+		if (ipos_sim == string::npos)
+			ipos_sim = pzPathName.find(".xml");
+		if (ipos_sim ==string::npos)
+	 		ipos_sim = pzPathName.size();
 	}
 	m_DocFile2.m_Multi_MBin_File=pzPathName.substr(0,ipos_sim)+".MBin";
 	auto ncountval=m_ValidationData.GetNumberSelectedTSV_Val();
 	m_ValidationData.SetNumberSelectedTSV_Val();
 	m_MStorage.Init(this);
+
+	unsigned long numsum = 0;
+	if (UsingPostGres)
+		numsum = num;
+	else
+		numsum = GetNumOutPuts();
+
 	m_MStorage.InitData(m_DocFile2.m_Multi_MBin_File.c_str(), MR_Get_TotalNumberofRuns(),MR_Get_NumTotalPar(),
-		ncountval, m_ValidationData.GetNumSumVarVariables(), GetNumOutPuts(), this) ;
+		ncountval, m_ValidationData.GetNumSumVarVariables(), numsum, this) ;
 	m_MStorage.SaveBase();
 	m_MStorage.Close();
 }

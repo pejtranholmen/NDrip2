@@ -183,6 +183,8 @@ public:
 	bool DefineTimeSeriesMap(std::vector<std::pair<std::string, int>> vector_pair);
 	int GetTimeSeriesId(std::string name);
 	std::string GetTimeSeriesName(int id);
+	void SetForRunningWithoutFiles(bool status = false);
+	bool IsRunningWithoutFiles();
 
 
 	Sim *GetRunDoc() {return m_pRunDoc;};
@@ -221,7 +223,7 @@ private:
 	std::map<UNIT_TYPES, std::string> m_TypeBasedUnits;
 	std::map<std::string, UNIT_TYPES> m_StringBasedUnits;
 
-
+	bool m_UsePostgresWithOutFiles{ false };
 
 	bool m_CommandInfo;
 	Sim *m_pRunDoc;

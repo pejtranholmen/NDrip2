@@ -819,8 +819,14 @@ vector<string> create_Main_Tables(CommonModelInfo* pinfo) {
         sql += "RunNo Integer,";
         sql += "Accepted Bool,";
         sql += "Parameters Real[],";
-        sql += "Performance Real[],";
-        sql += "SumPerformance Real[],";
+        sql += "R2 Real[],";
+        sql += "Intercept Real[],";
+        sql += "Slope Real[],";
+        sql += "ME Real[],";
+        sql += "RMSE Real[],";
+        sql += "LOG_Likelihood Real[],";
+        sql += "NSE Real[],";
+        sql += "MeanPerformance Real[],";
         sql += "OutputSum Real[]);";
         W.exec(sql.c_str());
         nametables.push_back(nametable);
@@ -2251,43 +2257,67 @@ int transfer_MultiStorage(int pkey, NewMap* pDoc) {
         pqxx::work W{ c };
         string sql;
         bool accepted = true;
+        const int max_indicators{ 7 };
+        
         for (size_t RunNo = 0; RunNo < pDoc->m_MStorage.GetNumberOfRuns(); RunNo++) {
-            sql = "INSERT INTO multirun_Results VALUES (";
-            sql += to_string(pkey) + ",";
-            sql += to_string(RunNo + 1) + ",";
-            sql += to_string(accepted) + ",'{";
-            size_t count = 0;
-            size_t npar = pDoc->MR_Get_NumTotalPar();
-            for (size_t i = 0; i < npar; ++i) {
-                sql += to_string(pDoc->m_MStorage.GetMultiP(RunNo, i));
-                count++;
-                if (count < npar) sql += ",";
-            }
-            sql += "}','{"; count = 0;
-            size_t nvalid = pDoc->GetNumAll_TSV_ValVariables();
-            for (size_t i = 0; i < nvalid; ++i) {
-                sql += to_string(pDoc->m_MStorage.GetValid(RunNo, i));
-                count++;
-                if (count < nvalid) sql += ",";
-            }
-            sql += "}','{"; count = 0;
-            size_t nsumvalid = pDoc->m_ValidationData.GetNumSumVarVariables() * 7;
-            for (size_t i = 0; i < nsumvalid; ++i) {
-                sql += to_string(pDoc->m_MStorage.GetValidSum(RunNo, i));
-                count++;
-                if (count < nsumvalid) sql += ",";
-            }
-            sql += "}','{"; count = 0;
+                sql = "INSERT INTO multirun_Results VALUES (";
+                sql += to_string(pkey) + ",";
+                sql += to_string(RunNo + 1) + ",";
+                sql += to_string(accepted) + ",'{";
+                size_t count = 0;
+                size_t npar = pDoc->MR_Get_NumTotalPar();
+                for (size_t i = 0; i < npar; ++i) {
+                    sql += to_string(pDoc->m_MStorage.GetMultiP(RunNo, i));
+                    count++;
+                    if (count < npar) sql += ",";
+                }
+                sql += "}','{"; count = 0;
+
+                size_t nvalid = pDoc->GetNumAll_TSV_ValVariables();
+                for (size_t indicator = 0; indicator < max_indicators; indicator++) {
+            
+                   if (indicator == max_indicators - 1) {
+                       float rmse_obs, rmse_val, nse;
+                       size_t ind, ind_rmse;
+                        for (size_t i = 0; i < nvalid; ++i) {
+                            ind_rmse = 4 * nvalid + i;
+                            rmse_obs = pDoc->m_ValidationData.GetValRMSE_O(i) / pDoc->m_ValidationData.GetValn(i);
+                            rmse_val = pDoc->m_MStorage.GetValid(RunNo, ind_rmse);
+                            nse = 1. - rmse_val * rmse_val / rmse_obs;
+                            sql += to_string(nse);
+                            count++;
+                            if (count < nvalid) sql += ",";
+                        }                     
+                    }
+                    else {
+                        for (size_t i = 0; i < nvalid; ++i) {
+                            sql += to_string(pDoc->m_MStorage.GetValid(RunNo, i + nvalid * indicator));
+                            count++;
+                            if (count < nvalid) sql += ",";
+                        }
+                    }
+                    sql += "}','{"; count = 0;
+
+                }
+
+                size_t nsumvalid = pDoc->m_ValidationData.GetNumSumVarVariables() * 7;
+                for (size_t i = 0; i < nsumvalid; ++i) {
+                    sql += to_string(pDoc->m_MStorage.GetValidSum(RunNo, i));
+                    count++;
+                    if (count < nsumvalid) sql += ",";
+                }
+                sql += "}','{"; count = 0;
 
 
-            for (size_t i = 0; i < pDoc->m_MStorage.GetsizeOfSumVar(); ++i) {
-                sql += to_string(pDoc->m_MStorage.GetSumV(RunNo, i));
-                count++;
-                if (count < pDoc->m_MStorage.GetsizeOfSumVar()) sql += ",";
+                for (size_t i = 0; i < pDoc->m_MStorage.GetsizeOfSumVar(); ++i) {
+                    sql += to_string(pDoc->m_MStorage.GetSumV(RunNo, i));
+                    count++;
+                    if (count < pDoc->m_MStorage.GetsizeOfSumVar()) sql += ",";
+                }
+                sql += "}');";
+                W.exec(sql.c_str());
             }
-            sql += "}');";
-            W.exec(sql.c_str());
-        }
+        
         W.commit();
         return 0;
     }
@@ -2475,10 +2505,10 @@ int transfer_ensemble_statistics(int pkey, NewMap* pDoc) {
 
             if (pRes != nullptr) {
                 vector<unsigned int> pgminvector;
-                for (size_t rec = 0; rec < ntimepoints; rec++) {
-                    sql += to_string(pPG->GetLongTime(i));
-                    if (rec < ntimepoints - 1) sql += ",";
-                }
+                //for (size_t rec = 0; rec < ntimepoints; rec++) {
+                //    sql += to_string(pPG->GetLongTime(i));
+                //    if (rec < ntimepoints - 1) sql += ",";
+                //}
                 //for (size_t rec = 0; rec < ntimepoints; rec++) {
                 //    sql += to_string(pRes->GetMeanAllResiduals(ind,rec));
                 //    if (rec < ntimepoints - 1) sql += ",";

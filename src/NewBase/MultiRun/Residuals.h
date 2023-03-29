@@ -56,6 +56,7 @@ public:
 	float GetP90AllResiduals(size_t, size_t);
 
 	size_t  GetNumAccepted();
+	size_t  GetTotalNumberOfRuns() { return m_TotNoRuns; };
 	void SetAccepted(size_t, bool);
 	bool GetAccepted(size_t);
 	void CloseFile();

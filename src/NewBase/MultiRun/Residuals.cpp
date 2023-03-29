@@ -935,6 +935,7 @@ bool CResiduals::SmartUpdateStatistics(bool AcceptedOnly, void *pScanner)
 							AcceptedResiduals[i] = pRes->GetResidualVector(run_to_read, var_to_read);
 							//value = pRes->GetResiduals(irun_int, ii, index);
 						}
+					
 					}
 
 

@@ -332,8 +332,24 @@ pair<bool, unique_ptr<Register>> Sim::RunModel_Using_Postgres(int pkey, unique_p
 			ValidationResultPG_Pointer(i)->SetOnlyMemoryUse(true);
 
 		if (GetMultiRunIfPossible() && IsMultiRunEnabled()) {
+
+
 							
 			m_PG_MultiOutputFile.SetOnlyMemoryUse(true);
+			if (GetDB_Action() != 0) {
+
+				pair<int, unique_ptr<Register>> pn = FUtil::GetProfileIntNo("SimulationRunNo", 1, move(pReg));
+				int testno = pn.first; pReg = move(pReg);
+
+				if (m_DocFile.m_SimulationRunNo <= testno) {
+					m_DocFile.m_SimulationRunNo = testno;
+				}
+				m_DocFile.m_SimulationRunNo++;
+				pReg = FUtil::WriteProfileInt("SimulationRunNo", m_DocFile.m_SimulationRunNo, move(pReg));
+			}
+			
+			
+			
 			CheckAndUpdateFileName(true, true);
 
 			
@@ -393,7 +409,7 @@ void Sim::SetCurrentSubDirectory(string str)
 
 	
 	string file;
-	size_t ipos=m_CurrentFile.rfind("\\");
+size_t ipos=m_CurrentFile.rfind("\\");
 	if(ipos<m_CurrentFile.size()&&ipos!=string::npos) {
 		file=m_CurrentFile.substr(ipos+1);
 		m_CurrentSubDirectoryFile=m_CurrentSubDirectory+file;
@@ -531,6 +547,7 @@ pair<bool, unique_ptr<Register>> Sim::MakeMultiRun(bool DB_Source, int pkey, uni
 
 // Remove dir creation
 //    _mkdir(UserDirectory.data());
+	FUtil::CreateSubDirectory(UserDirectory);
 	m_UserSubDirectory = UserDirectory+"\\";
 	SetCurrentSubDirectory(m_UserSubDirectory);
 

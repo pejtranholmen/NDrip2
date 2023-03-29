@@ -895,6 +895,18 @@ vector<string> create_Main_Tables(CommonModelInfo* pinfo) {
         W.exec(sql.c_str());
         nametables.push_back(nametable);
 
+        nametable = "multirun_Ensemble_DefinedCriteria";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (id_simulations Integer REFERENCES simulations(id_simulations), ";
+        sql += "RunNo Integer,";
+        sql += "Ensemble Integer,";
+        sql += "Variable Varchar(64),";
+        sql += "Low_limit Real,";
+        sql += "High_limit Real);";
+        W.exec(sql.c_str());
+        nametables.push_back(nametable);
+   
 
         nametable = "multirun_Ensembles";
         drop(W, nametable);
@@ -904,8 +916,8 @@ vector<string> create_Main_Tables(CommonModelInfo* pinfo) {
         sql += "Valfilenumber Integer,";
         sql += "ValFile_ResultIndex Integer,";
         sql += "Ensemble Integer,";
+        sql += "AllCandidates bool,";
         sql += "NumberofCandidates Integer,";
-        sql += "SelectionFraction Real,";
         sql += "PGmin Integer[],";
         sql += "MeanValues Real[],";
         sql += "Min Real[],";
@@ -2386,6 +2398,22 @@ int transfer_ensemble_statistics(int pkey, NewMap* pDoc) {
         int ensemble_no = 1;
         size_t nvalid = pDoc->GetNumAll_TSV_ValVariables();
 
+        pDoc->m_MStorage.UpdateAcceptedRuns(true, false);
+        pDoc->MR_ReCalculatePostDist(false);
+
+        for (int i = 0; i < pDoc->m_ResidualFileVector.size(); i++) {
+            CResiduals* pRes;
+            pRes = pDoc->GetValidResidualPointer(i + 1);
+            if (pRes != nullptr) {
+                pRes->ToBeUpdated();
+                pRes->m_MeanDefined = false;
+            }
+        }
+        pDoc->m_MStorage.EvaluateFile(false);
+
+
+        pDoc->m_MStorage.SetAllToAcceptedRuns();
+
         for (int perf_ind = 1; perf_ind < 8; perf_ind++) {
             int index_start = (perf_ind - 1) * nvalid;
             int split_ind = 0;
@@ -2485,37 +2513,91 @@ int transfer_ensemble_statistics(int pkey, NewMap* pDoc) {
             }
         }
 
-        // defined ensembles
-        for (int i = 0; i < nvalid; i++) {
 
+        // defined ensembles
+        auto insertvector_i = [&sql](vector<int> s) {
+            int count = 0;
+            for (int flt : s) {
+                count++;
+                if (flt >= 0) sql += to_string(flt);
+                else sql += "null";
+                if (count < s.size()) sql += ",";
+            }
+        };
+        auto insertvector_r = [&sql](vector<float> s) {
+            int count = 0;
+            for (float flt : s) {
+                count++;
+                if (flt > -1.E37) sql += to_string(flt);
+                else sql += "null";
+                if (count < s.size()) sql += ",";
+            }
+        };
+
+
+        bool AllCandidates{ true };
+        for (size_t iall = 0; iall < 2; iall++) {
+            if (iall == 1) AllCandidates = false;
+            for (int i = 0; i < nvalid; i++) {
+            sql = "INSERT INTO multirun_Ensembles VALUES (";
+            sql += to_string(pkey) + ",";
+            sql += to_string(runno) + ",";
             auto FileNo = pDoc->m_ValidationData.GetValFileNumber(i);
+            sql += to_string(FileNo) + ",";
             auto pValFile = pDoc->ValidationFilePointer(FileNo);
             auto ind = pDoc->m_ValidationData.GetValFileIndex(i);
+            sql += to_string(ind) + ",";
+            sql += to_string(pDoc->m_MStorage.m_ActualEnsemble) + ",";
             auto pRes = (CResiduals*)pDoc->GetResidualPointer(FileNo);
+            string filename = pDoc->GetXBinFileName(ind + 1);
+
+                
+                CPG* pPG = (CPG*)pValFile->GetPointer();
+                if (pPG == nullptr) {
+                    pPG = new CPG;
+                    bool valid = pPG->ReadContentOfPGFileAndOpenMainPGStreamForReading(pValFile->GetStrValue().c_str());
+                    if (valid) pValFile->SetPointer(pPG);
+                    pPG->CloseFile();
+                }
+                auto ntimepoints = pPG->GetNumRecords();
+
+                if (pRes != nullptr && pRes->ReOpenFile(true)) {
+                    bool updated = pRes->ToBeUpdated();
+                    pRes->SmartUpdateStatistics(true);
+                    sql += to_string(AllCandidates)+",";
+                    size_t num;
+                    if (AllCandidates)
+                       num= pDoc->MR_Get_TotalNumberofRuns();
+                    else
+                        num = pRes->GetNumAccepted();
+                    sql += to_string(num) + ",";
+                    vector<int> int_vector; int_vector.resize(ntimepoints);
+                    vector<float> f_vector; f_vector.resize(ntimepoints);
+                    for (size_t rec = 0; rec < ntimepoints; rec++) int_vector[rec] = pPG->GetLongTime(rec+1); sql += "'{"; insertvector_i(int_vector); sql += "}',";
+                    if (AllCandidates) {
+                        for (size_t rec = 0; rec < ntimepoints; rec++) f_vector[rec] = pRes->GetMeanAllResiduals(ind, rec); sql += "'{"; insertvector_r(f_vector); sql += "}',";
+                        for (size_t rec = 0; rec < ntimepoints; rec++) f_vector[rec] = pRes->GetMinAllResiduals(ind, rec); sql += "'{"; insertvector_r(f_vector); sql += "}',";
+                        for (size_t rec = 0; rec < ntimepoints; rec++) f_vector[rec] = pRes->GetMaxAllResiduals(ind, rec); sql += "'{"; insertvector_r(f_vector); sql += "}',";
+                        for (size_t rec = 0; rec < ntimepoints; rec++) f_vector[rec] = pRes->GetStdAllResiduals(ind, rec); sql += "'{"; insertvector_r(f_vector); sql += "}',";
+                        for (size_t rec = 0; rec < ntimepoints; rec++) f_vector[rec] = pRes->GetP10AllResiduals(ind, rec); sql += "'{"; insertvector_r(f_vector); sql += "}',";
+                        for (size_t rec = 0; rec < ntimepoints; rec++) f_vector[rec] = pRes->GetP50AllResiduals(ind, rec); sql += "'{"; insertvector_r(f_vector); sql += "}',";
+                        for (size_t rec = 0; rec < ntimepoints; rec++) f_vector[rec] = pRes->GetP90AllResiduals(ind, rec); sql += "'{"; insertvector_r(f_vector); sql += "}'";
+                    }
+                    else {
+                        for (size_t rec = 0; rec < ntimepoints; rec++) f_vector[rec] = pRes->GetMeanResiduals(ind, rec); sql += "'{"; insertvector_r(f_vector); sql += "}',";
+                        for (size_t rec = 0; rec < ntimepoints; rec++) f_vector[rec] = pRes->GetMinResiduals(ind, rec); sql += "'{"; insertvector_r(f_vector); sql += "}',";
+                        for (size_t rec = 0; rec < ntimepoints; rec++) f_vector[rec] = pRes->GetMaxResiduals(ind, rec); sql += "'{"; insertvector_r(f_vector); sql += "}',";
+                        for (size_t rec = 0; rec < ntimepoints; rec++) f_vector[rec] = pRes->GetStdResiduals(ind, rec); sql += "'{"; insertvector_r(f_vector); sql += "}',";
+                        for (size_t rec = 0; rec < ntimepoints; rec++) f_vector[rec] = pRes->GetP10Residuals(ind, rec); sql += "'{"; insertvector_r(f_vector); sql += "}',";
+                        for (size_t rec = 0; rec < ntimepoints; rec++) f_vector[rec] = pRes->GetP50Residuals(ind, rec); sql += "'{"; insertvector_r(f_vector); sql += "}',";
+                        for (size_t rec = 0; rec < ntimepoints; rec++) f_vector[rec] = pRes->GetP90Residuals(ind, rec); sql += "'{"; insertvector_r(f_vector); sql += "}'";
+                    }
+                    sql += ");";
 
 
-            CPG* pPG = (CPG*)pValFile->GetPointer();
-            if (pPG == nullptr) {
-                pPG = new CPG;
-                bool valid = pPG->ReadContentOfPGFileAndOpenMainPGStreamForReading(pValFile->GetStrValue().c_str());
-                if (valid) pValFile->SetPointer(pPG);
-                pPG->CloseFile();
-            }
-            auto ntimepoints = pPG->GetNumRecords();
 
-            if (pRes != nullptr) {
-                vector<unsigned int> pgminvector;
-                //for (size_t rec = 0; rec < ntimepoints; rec++) {
-                //    sql += to_string(pPG->GetLongTime(i));
-                //    if (rec < ntimepoints - 1) sql += ",";
-                //}
-                //for (size_t rec = 0; rec < ntimepoints; rec++) {
-                //    sql += to_string(pRes->GetMeanAllResiduals(ind,rec));
-                //    if (rec < ntimepoints - 1) sql += ",";
-                //}
-
-
-
+                    W.exec(sql.c_str());
+                }
             }
         }
 

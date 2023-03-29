@@ -3450,8 +3450,8 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source ) {
 
 	//Results from Completed MultiRuns
 	{
-		if (MR_Storage_Open()) {
-
+		//if (MR_Storage_Open()) {
+		if(m_DocFile.m_MultiRunning){
 			transfer_MultiStorage(pkey, this);
 			transfer_Residuals(pkey, this);
 			transfer_ensemble_statistics(pkey, this);

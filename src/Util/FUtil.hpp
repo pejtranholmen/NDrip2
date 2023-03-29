@@ -219,6 +219,15 @@ namespace FUtil
 		return "";
 }
 
+	static void CreateSubDirectory(string dir) {
+#ifdef MS_CODE
+		namespace fs = std::filesystem;
+		string str = ".\\" + dir;
+		fs::create_directory(str);
+#endif
+
+	}
+
 
 
 

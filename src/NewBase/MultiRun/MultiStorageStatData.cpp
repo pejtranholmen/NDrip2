@@ -175,8 +175,6 @@ bool MultiStorageStatData::ReadWrite_Accepted(bool reading) {
 			m_EvaluationFile.wInt(&num);		
 			if(num>0) good=m_EvaluationFile.wsize_tArray(&m_AcceptedRuns[i], num);
 		}
-
-
 		return m_EvaluationFile.IsFileOutGood();
 	}
 	return true;

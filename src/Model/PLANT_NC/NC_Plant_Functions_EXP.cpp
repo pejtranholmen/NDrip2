@@ -1725,6 +1725,7 @@ bool NC_Plant_Functions::Def_Allocation() {
 	functorprop.FunctorInitOption = string::npos;
 	functorprop.pModelInfo = m_pModelInfo;
 
+	functorprop.Arg = MyArgType::T_D1;
 	functorprop.FuncName = MyFunc::ALLO_LEAF_MASS_FIXED;
 	funcname = "Allocation to Leaf fixed Function";
 	// Allocation parameters;

@@ -171,7 +171,7 @@ bool Radiation_Functions::Def()
 
 
 	functorprop.FuncName = MyFunc::BEER_LAW_SINGLE_LEAF; functorprop.Arg = MyArgType::D1;
-	funcname = "Beer's Law"; functorprop.FunctorInitOption = string::npos;
+	funcname = "Beer law single Canopy"; functorprop.FunctorInitOption = string::npos;
 	plotpar.Num_Of_Curves = 1;
 	plotpar.Num_Of_Points = 100;
 	plotpar.Num_Of_X = 1;
@@ -204,7 +204,7 @@ bool Radiation_Functions::Def()
 
 	pFunc = new Func(ATMBOUNDARY, RADIATION, NOFPROC, NOBPROC, NORMAL);  
 	functorprop.FuncName = MyFunc::BEER_LAW_PERLEAF; functorprop.Arg = MyArgType::D1;
-	funcname = "Beer's Law multi canopy"; functorprop.FunctorInitOption = string::npos;
+	funcname = "Beer Law multi canopy"; functorprop.FunctorInitOption = string::npos;
 	
 
 	Define(pFunc, functorprop, funcname,  p_vec, plotpar);  ps_vec.clear();

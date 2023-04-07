@@ -12,6 +12,7 @@ struct sim_doc_simulation {
 struct run_info_document {
     int key_simulation;
     int fileversionnumber;
+    bool childdocument;
     string originalfilename;
     string exefiledata;
     bool multisimulation;

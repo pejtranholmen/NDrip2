@@ -5,8 +5,8 @@ class OutVector :
 	public OutBase
 {
 	public:
-		std::vector<ANN_INFO> m_AnnimateVector;
-		std::vector<bool> tmpflag;
+		vector<ANN_INFO> m_AnnimateVector;
+		vector<bool> tmpflag;
 		~OutVector(void);
 		OutVector(enum datatype data, enum elements elem, enum fysprocess fproc, enum bioprocess bproc, enum userlevel ulev);
 		
@@ -18,10 +18,10 @@ class OutVector :
 		void SetMultiStoreFlag(bool value) { for(auto i=_multi_storeflag.begin(); i!=_multi_storeflag.end(); *i=value, i++);};
 		int GetStoreFlag(size_t i) const;// {if(i<SumList.size.size()) return SumList[i].StoreFlag;else return 0; };
 		OUTPUT GetSumList(size_t index) const {if(index<SumList.size()) return SumList[index]; return miss;};
-		bool SetFlags(std::string flagString, int value);
+		bool SetFlags(string flagString, int value);
 
 		void SetValue(double value) { for(auto i=_ptarget->begin(); i!=_ptarget->end();*i=value, i++);};
-		void SetValue(std::vector<double> value) { *_ptarget=value;};
+		void SetValue(vector<double> value) { *_ptarget=value;};
 		void SetStoreFlag(size_t i, int value) { if(SumList.size()>i) SumList[i].StoreFlag=value;};
 		void SetAllStoreFlags(int value) {for(size_t i=0; i<SumList.size();i++) SumList[i].StoreFlag=value;}; 
 		void SetMultiStoreFlag(size_t i, bool value) { if(_multi_storeflag.size()>i) _multi_storeflag[i]=value;};
@@ -53,15 +53,14 @@ class OutVector :
    		void    CleanSumVarList();
 		size_t		GetLocalIndex(size_t) const;
 		size_t    GetSelectedLocalIndex(size_t, bool multi=false) const;
-		std::vector<size_t>    GetAllSelectedLocalIndex();
 		size_t     GetValidFlagIndex(size_t) const;
 		bool    SetValidFlagIndex(size_t, size_t);
 
 
 		float   GetInitial(size_t) const;
 		float   GetFinal(size_t) const;
-		void    SetInitial(size_t, double);
-		void    SetFinal(size_t, double);
+		void    SetInitial(size_t, double );
+		void    SetFinal(size_t, double );
 		float   GetMin(size_t) const;
 		float   GetMax(size_t) const;
 		float   GetMean(size_t) const;
@@ -81,12 +80,12 @@ class OutVector :
 
 
 	protected:
-		std::vector<double> *_ptarget;
-		std::vector<OUTPUT> SumList;
+		vector<double> *_ptarget;
+		vector<OUTPUT> SumList;
 		OUTPUT miss;
-		std::vector<int> _storeflag;
-		std::vector<bool> _multi_storeflag;
-		std::vector<bool> _AcceptMeanFlag;
+		vector<int> _storeflag;
+		vector<bool> _multi_storeflag;
+		vector<bool> _AcceptMeanFlag;
 		NE *pNE;
 		
 	private:

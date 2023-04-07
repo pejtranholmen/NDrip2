@@ -630,7 +630,8 @@ bool NewMap::WriteHeaderToXmlFile(pugi::xml_node node) {
 
 	general.append_attribute("FileVersionNumber") = int(m_DocFile.m_FileVersionNumber);
 	const char* test = m_DocFile2.m_OriginFileName.c_str();
-	general.append_attribute("OriginalFileName") = "kk";
+	general.append_attribute("OriginalFileName") = test;
+	general.append_attribute("ChildDocument") = m_ChildDocument;
 
 	string ExeDate;
 	ExeDate = "Version 6.2.2, ";
@@ -655,7 +656,7 @@ bool NewMap::WriteHeaderToXmlFile(pugi::xml_node node) {
 
 	general.append_attribute("ExeFileDate") = exdate.c_str();
 
-	if(m_DocFile2.m_DateRun.size()>0 ) node.append_attribute("SimulationDate")= m_DocFile2.m_DateRun.c_str();
+	if (m_DocFile2.m_DateRun.size() > 0) node.append_attribute("SimulationDate") = m_DocFile2.m_DateRun.c_str();
 	general.append_attribute("MultiSimulation") = m_DocFile.m_MultiRunning;
 	general.append_attribute("Finished") = m_DocFile.m_FinishedSimulation;
 	general.append_attribute("MBinFile") = m_DocFile2.m_Multi_MBin_File.c_str();
@@ -664,15 +665,15 @@ bool NewMap::WriteHeaderToXmlFile(pugi::xml_node node) {
 	general.append_attribute("SimNumber") = m_DocFile.m_SimulationRunNo;
 
 
-	
-	
+
+
 	sim_period.append_attribute("SimStartMin") = RunOpt.longMinStart;
 	string datestart = PGUtil::StringDatum(RunOpt.longMinStart);
 	sim_period.append_attribute("SimStartDate") = datestart.c_str();
 	sim_period.append_attribute("SimEndMin") = int(RunOpt.longMinEnd);
 	datestart = PGUtil::StringDatum(RunOpt.longMinEnd);
 	sim_period.append_attribute("SimEndDate") = datestart.c_str();
-	
+
 	numerical.append_attribute("NumberIterations") = RunOpt.noofiter;
 
 	sim_period.append_attribute("SimStartScaling") = int(m_DocFile.m_TimePeriodScaleFactor);
@@ -692,9 +693,9 @@ bool NewMap::WriteHeaderToXmlFile(pugi::xml_node node) {
 	time_resolution.append_attribute("TimeResoluton") = int(iv);
 	time_resolution.append_attribute("OutputInterval_Minutes") = RunOpt.oiminutes;
 	time_resolution.append_attribute("OutputInterval_Days") = RunOpt.oidays;
-	
-	
-	
+
+
+
 
 	general.append_attribute("Date_Created") = int(m_DocFile.m_TimeCreated);
 	general.append_attribute("Date_Modification") = int(m_DocFile.m_TimeModified);
@@ -704,43 +705,47 @@ bool NewMap::WriteHeaderToXmlFile(pugi::xml_node node) {
 };
 bool NewMap::Read_Header_FromXmlFile(pugi::xml_node node) {
 	auto item = node.first_child();
-	
-		auto group = item.name();
-		m_FileVersionNumberRead=item.attribute("FileVersionNumber").as_int();
-		m_DocFile2.m_OriginFileName = item.attribute("OrignalFileName").as_string();
-		m_DocFile2.m_ExeFileDate = item.attribute("ExeFileDate").as_string();
-		m_DocFile2.m_DateRun = item.attribute("SimulationDate").as_string();
-		m_DocFile.m_MultiRunning = item.attribute("MultiSimulation").as_bool();
-		m_DocFile.m_FinishedSimulation = item.attribute("Finished").as_bool();
-		m_DocFile2.m_Multi_MBin_File = item.attribute("MBinFile").as_string();
-		m_DocFile2.m_Comments = item.attribute("Comments").as_string();
-		m_DocFile2.m_RunId = item.attribute("RunId").as_string(); 
-		m_DocFile.m_SimulationRunNo = item.attribute("SimNumber").as_uint();
-		m_DocFile.m_TimeCreated = item.attribute("Date_Created").as_uint();
-		m_DocFile.m_TimeModified = item.attribute("Date_Modification").as_uint();
 
-		auto sim_period = item.next_sibling();
-		RunOpt.longMinStart=sim_period.attribute("SimStartMin").as_uint();
-		auto datestart = sim_period.attribute("SimStartDate").as_string();
-		RunOpt.longMinEnd = sim_period.attribute("SimEndMin").as_uint();
-		auto date_end = sim_period.attribute("SimEndDate").as_string();
-		m_DocFile.m_TimePeriodScaleFactor = sim_period.attribute("SimStartScaling").as_int();
-		m_DocFile.ipredays = sim_period.attribute("PriorSimTime").as_int();
-		RunOpt.longMinPreStart = RunOpt.longMinStart - max(size_t(0), m_DocFile.ipredays * 1440);
-		m_DocFile.ipostdays = sim_period.attribute("LengthPostPeriod").as_int();
-		RunOpt.longMinPostEnd = RunOpt.longMinEnd + max(size_t(0), m_DocFile.ipostdays * 365);
-		
-		auto time_resolution = sim_period.next_sibling();
-		RunOpt.oiminutes = time_resolution.attribute("OutputInterval_Minutes").as_int();
-		RunOpt.oidays = time_resolution.attribute("OutputInterval_Days").as_int();
-
-		auto numerical = time_resolution.next_sibling();
-		RunOpt.noofiter = numerical.attribute("NumberIterations").as_int();
+	auto group = item.name();
+	m_FileVersionNumberRead = item.attribute("FileVersionNumber").as_int();
+	m_DocFile2.m_OriginFileName = item.attribute("OriginalFileName").as_string();
+	m_ChildDocument = item.attribute("ChildDocument").as_bool();
+	m_DocFile2.m_ExeFileDate = item.attribute("ExeFileDate").as_string();
+	m_DocFile2.m_DateRun = item.attribute("SimulationDate").as_string();
+	m_DocFile.m_MultiRunning = item.attribute("MultiSimulation").as_bool();
+	m_DocFile.m_FinishedSimulation = item.attribute("Finished").as_bool();
+	m_DocFile2.m_Multi_MBin_File = item.attribute("MBinFile").as_string();
+	m_DocFile2.m_Comments = item.attribute("Comments").as_string();
+	m_DocFile2.m_RunId = item.attribute("RunId").as_string();
+	m_DocFile.m_SimulationRunNo = item.attribute("SimNumber").as_uint();
+	m_DocFile.m_TimeCreated = item.attribute("Date_Created").as_uint();
+	m_DocFile.m_TimeModified = item.attribute("Date_Modification").as_uint();
 
 
-		auto additional = numerical.next_sibling();
-		m_DocFile.m_MultiStoragelocked = additional.attribute("LockedMultiStore").as_bool();
-	
+
+	auto sim_period = item.next_sibling();
+	RunOpt.longMinStart = sim_period.attribute("SimStartMin").as_uint();
+	auto datestart = sim_period.attribute("SimStartDate").as_string();
+	RunOpt.longMinEnd = sim_period.attribute("SimEndMin").as_uint();
+	auto date_end = sim_period.attribute("SimEndDate").as_string();
+	m_DocFile.m_TimePeriodScaleFactor = sim_period.attribute("SimStartScaling").as_int();
+	m_DocFile.ipredays = sim_period.attribute("PriorSimTime").as_int();
+	RunOpt.longMinPreStart = RunOpt.longMinStart - max(size_t(0), m_DocFile.ipredays * 1440);
+	m_DocFile.ipostdays = sim_period.attribute("LengthPostPeriod").as_int();
+	RunOpt.longMinPostEnd = RunOpt.longMinEnd + max(size_t(0), m_DocFile.ipostdays * 365);
+
+	auto time_resolution = sim_period.next_sibling();
+	RunOpt.oiminutes = time_resolution.attribute("OutputInterval_Minutes").as_int();
+	RunOpt.oidays = time_resolution.attribute("OutputInterval_Days").as_int();
+
+
+	auto numerical = time_resolution.next_sibling();
+	RunOpt.noofiter = numerical.attribute("NumberIterations").as_int();
+
+
+	auto additional = numerical.next_sibling();
+	m_DocFile.m_MultiStoragelocked = additional.attribute("LockedMultiStore").as_bool();
+
 	return true;
 };
 
@@ -750,17 +755,17 @@ bool NewMap::WriteValidationToXmlFile(pugi::xml_node node) {
 "Monitoring", "NSE", "P_NewError", "A_NewError", "BoxCox_Power", "BoxCox_Offset" };
 
 
-	
-	
+
+
 	size_t iv = m_Val_Array.size();
 	if (iv > 0)
 		if (MR_GetValidIndex_IndexInValFile_InDim1() != string::npos) {
-		//	auto NumberofDim1 = m_MultiRun_Array[0].NumberOfRepeatitionsWithinDimension;
-		//	if (NumberofDim1 > 0 && (iv / NumberofDim1 > 1)) 	iv = iv / NumberofDim1;
+			//	auto NumberofDim1 = m_MultiRun_Array[0].NumberOfRepeatitionsWithinDimension;
+			//	if (NumberofDim1 > 0 && (iv / NumberofDim1 > 1)) 	iv = iv / NumberofDim1;
 		};
 	for (size_t i = 0; i < iv; i++) {
 		auto vst = m_Val_Array[i];
-		string numstring = "Variables_"+FUtil::STD_ItoAscii(i + 1);
+		string numstring = "Variables_" + FUtil::STD_ItoAscii(i + 1);
 
 		auto variables = node.append_child(numstring.c_str());
 		variables.append_attribute(valTableAtt[0]) = vst.ValidationFileIndex;
@@ -799,6 +804,7 @@ bool NewMap::WriteValidationToXmlFile(pugi::xml_node node) {
 
 	return true;
 };
+
 bool NewMap::Read_Validation_FromXmlFile(pugi::xml_node node) {
 	const std::vector<const char*> valTableAtt = { "ValFileIndex", "OutType", "Group", "Name","LocalIndex", "n", "R2","A0", "A1", "ME", "RMSE", "MeanSim",
 "MeanVal","P_Error","A_Error","LogLi","AccTest","ValFileNumber", "LogTrans","ValidationFileResultIndex","Duration",
@@ -1433,7 +1439,30 @@ bool NewMap::Read_DynamicPar_FromXmlFile(pugi::xml_node node)
 bool NewMap::WriteHistoryToXmlFile(pugi::xml_node node)
 {
 	string group, name, str, type;
-	for (size_t i = 0; i < m_History_Array.size(); i++) {
+
+	size_t startindex;
+
+	if (m_ChildDocument) {
+		startindex = m_History_Array.size() - 1;
+		for (size_t i = 0; i < m_History_Array.size(); i++) {
+			auto h_node = m_History_Array[i];
+			SimB* pBase;
+			pBase = h_node.pBase;
+			if (HIST_INFO(h_node.RunInfoType) == HIST_INFO::RUN_INFO) {
+				name = ((CRunInfo*)pBase)->GetName();
+				if (name == "NewRunNo") {
+					str = h_node.strvalue;
+					size_t runno = FUtil::AtoInt(str);
+					if (m_DocFile.m_SimulationRunNo - 1 <= runno) startindex = i;
+				}
+			}
+		}
+	}
+	else
+		startindex = 0;
+
+
+	for (size_t i = startindex; i < m_History_Array.size(); i++) {
 		auto h_node = m_History_Array[i];
 		string chstring = "Row_";
 		chstring += FUtil::STD_ItoAscii(i + 1);
@@ -1501,8 +1530,8 @@ bool NewMap::WriteHistoryToXmlFile(pugi::xml_node node)
 		row.append_attribute("StringType") = type.c_str();
 		row.append_attribute("GroupName") = group.c_str();
 		row.append_attribute("ItemName") = name.c_str();
-		row.append_attribute("StringValue") = str.c_str();		
-		row.append_attribute("LocalIndex") = h_node.LocalIndex;	
+		row.append_attribute("StringValue") = str.c_str();
+		row.append_attribute("LocalIndex") = h_node.LocalIndex;
 		row.append_attribute("TimeStamp") = h_node.tvalue;
 		row.append_attribute("User") = h_node.User.c_str();
 		row.append_attribute("Computer") = h_node.Computer.c_str();
@@ -1519,32 +1548,43 @@ bool NewMap::WriteAllFinalStateToXmlFile(pugi::xml_node node)
 	for (size_t i = 0; i < vpp.size(); i++) {
 		auto pPtr = (SimB*)vpp[i];
 		auto name = pPtr->GetName();
-		if ((name == "WaterStorage" || name == "SoilHeat" || name.find("Humus") != string::npos || name.find("Litter") != string::npos) && pPtr->Is_Vector()) {
-			iv++;
-			vp_final.push_back(pPtr);
-		}
+		//if ((name == "WaterStorage" || name == "SoilHeat" || name.find("Humus") != string::npos || name.find("Litter") != string::npos) ) {
+		iv++;
+		vp_final.push_back(pPtr);
+		//}
 	}
 
-
+	bool IsVector = false;
 	for (size_t i = 0; i < vp_final.size(); i++) {
-		auto pXT = (X*)vp_final[i];
+		auto pXT = static_cast<X*>(vp_final[i]);
+		auto pX = static_cast<Xs*>(vp_final[i]);
+		IsVector = vp_final[i]->Is_Vector();
+
 		string row = "row_" + FUtil::STD_ItoAscii(i + 1);
-		auto xnode=node.append_child(row.c_str());
+		auto xnode = node.append_child(row.c_str());
 		auto group = pXT->GetGroup();
 		auto name = pXT->GetName();
-		auto nn = pXT->GetNumberOfFlags();
 		xnode.append_attribute("Group") = group.c_str();
 		xnode.append_attribute("Name") = name.c_str();
-		xnode.append_attribute("NumberofValue") = nn;
-		for (size_t ii = 0; ii < nn; ii++) {
-			string subrow = "row_" + FUtil::STD_ItoAscii(ii + 1);
-			auto rownode=xnode.append_child(subrow.c_str());
-			rownode.append_attribute("FinalValue") = pXT->GetFinal(ii);
-			rownode.append_attribute("InitalValue") = pXT->GetInitial(ii);
+		size_t nn;
+		if (IsVector) {
+			nn = pXT->GetNumberOfFlags();
+			xnode.append_attribute("NumberofValue") = nn;
+			for (size_t ii = 0; ii < nn; ii++) {
+				string subrow = "row_" + FUtil::STD_ItoAscii(ii + 1);
+				auto rownode = xnode.append_child(subrow.c_str());
+				rownode.append_attribute("FinalValue") = pXT->GetFinal(ii);
+				rownode.append_attribute("InitialValue") = pXT->GetInitial(ii);
+			}
+		}
+		else {
+			xnode.append_attribute("FinalValue") = pX->GetFinal();
+			xnode.append_attribute("InitialValue") = pX->GetInitial();
 		}
 	}
 
 	return false;
+
 }
 
 bool NewMap::Read_AllFinalState_FromXmlFile(pugi::xml_node node)
@@ -1590,7 +1630,7 @@ bool NewMap::Read_RunReport_FromXmlFile(pugi::xml_node node)
 {
 	m_Report_Array.clear();
 	for (pugi::xml_node level1 = node.first_child(); level1; level1 = level1.next_sibling()) {
-		auto str = level1.append_attribute("str").as_string();
+		auto str = level1.attribute("str").as_string();
 		m_Report_Array.push_back(str);
 	}
 	return true;
@@ -1598,19 +1638,20 @@ bool NewMap::Read_RunReport_FromXmlFile(pugi::xml_node node)
 
 bool NewMap::WriteRunReportToXmlFile(pugi::xml_node node)
 {
-
 	string str;
 	for (size_t i = 0; i < m_Report_Array.size(); i++) {
-		string chstring = "Row_";
-		chstring += FUtil::STD_ItoAscii(i + 1);
-		auto row = node.append_child(chstring.c_str());
-		
 		auto checkstring = m_Report_Array[i];
-		FUtil::trim_xmlstring(checkstring);
-		row.append_attribute("str") = checkstring.c_str();
+		if (checkstring.size() > 0) {
+			string chstring = "Row_";
+			chstring += FUtil::STD_ItoAscii(i + 1);
+			auto row = node.append_child(chstring.c_str());
+			FUtil::trim_xmlstring(checkstring);
+			row.append_attribute("str") = checkstring.c_str();
+		}
 	}
 
 	return false;
+
 }
 
 bool NewMap::WriteOutputSummaryToXmlFile(pugi::xml_node node)
@@ -1789,6 +1830,7 @@ bool NewMap::WriteDataBaseLinksToXmlFile(pugi::xml_node node)
 {
 	string str;
 	time_t timestamp;
+	if (m_ChildDocument) return false;
 	for (size_t i = 0; i < 10; i++) {
 		str = DB_GetNames(i);
 		FUtil::trim_space(str);
@@ -1950,6 +1992,19 @@ bool NewMap::Read_DataBaseLinks_FromXmlFile(pugi::xml_node node)
 	return false;
 }
 
+string NewMap::GetParentDocFile(string xmlfile) {
+	pugi::xml_document doc;
+	auto result = doc.load_file(xmlfile.c_str());
+	auto root = doc.root();
+	auto child = root.first_child().first_child();
+	auto item = child.first_child();
+	string str = item.attribute("OriginalFileName").as_string();
+	auto validchild = item.attribute("ChildDocument").as_bool();
+	if (validchild)
+		return str;
+	else
+		return "";
+}
 
 bool NewMap::ReadDocFile(string file)
 {
@@ -2300,6 +2355,7 @@ bool NewMap::WriteDocFile(string localdirectory, bool DB_Source)
 			  WriteDoc_To_Postgres(true,DB_Source);
 		 }
 		 else {
+
 			 auto string = WriteEntireModelToXmlFile(doc_enabled::NOT_DEFAULT, localdirectory);
 		 }
 		 return true;
@@ -2391,6 +2447,11 @@ bool NewMap::DeleteDoc_From_Postgres(int pkey) {
 			r= txn.exec("DELETE FROM multirun_Residuals WHERE id_simulations = " + to_string(pkey)) ;
 			r= txn.exec("DELETE FROM multirun_Ensemble_Statistics WHERE id_simulations = " + to_string(pkey)) ;
 			r = txn.exec("DELETE FROM validation WHERE id_simulations = " + to_string(pkey));
+			r = txn.exec("DELETE FROM multirun_ensembles WHERE id_simulations = " + to_string(pkey));
+			r = txn.exec("DELETE FROM multirun_ensemble_definedcriteria WHERE id_simulations = " + to_string(pkey));
+
+
+
 
 			sql = "SELECT * FROM filenamearchive_uses WHERE id_simulations = " + to_string(pkey);
 			r = txn.exec(sql);
@@ -2447,8 +2508,9 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
     try {
 
 		if(!m_pCommonModelInfo->ID_MapsForPostgresReady ) m_pCommonModelInfo->ID_MapsForPostgresReady = DefineUniqueIdMaps(m_pCommonModelInfo, this);
-		
+	
 		ResetDocument_to_DefaultValues();
+		if (pkey == 1) Init_BlankDocument();
 		pqxx::connection c = initconnection("Select from postgres");
 		pqxx::work txn{ c };
 		{
@@ -2473,14 +2535,17 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 					m_SiteName = row["sitename"].as<string>();
 				};
 			};
+
 			if (!keyfind) return false;
 		}
 		cout << m_DocFileName << endl;
 		pqxx::result r = txn.exec("SELECT * FROM runinfo  WHERE id_simulations = " + to_string(pkey));
 		auto row = r.begin();
+		if(r.size()==0 && pkey == 1) return true;
 		current_str = "RunInfo";
 		if (pkey == row["id_simulations"].as<int>()) {
 			m_DocFile.m_MultiRunning = row["multisimulation"].as<bool>();
+			m_ChildDocument = row["childdocument"].as<bool>();
 			m_DocFile.m_FinishedSimulation = row["finished"].as<bool>();
 			RunOpt.longMinStart = row["simstartmin"].as<int>();
 			RunOpt.longMinEnd = row["simendmin"].as<int>();
@@ -2496,13 +2561,7 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool download, string localdirect
 			m_DocFile.m_TimeCreated = row["date_created"].as<int>();
 			m_DocFile.m_TimeModified = row["date_modified"].as<int>();
 			m_FileVersionNumberRead = row["fileversionnumber"].as<int>();
-			auto kk = row["originalfilename"].c_str();
-			auto str = string(kk);
-			if (str.size()>0) {
-				m_DocFile2.m_OriginFileName = row["originalfilename"].as<string>();
-			}
-			else
-				m_DocFile2.m_OriginFileName = "";
+			m_DocFile2.m_OriginFileName = m_DocFileName;
 
 			m_ExeFileDate = row["exefiledate"].as<string>();
 		}
@@ -3052,6 +3111,7 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source ) {
 		r.key_simulation = pkey;
 		r.fileversionnumber = m_FileVersionNumberRead;
 		r.originalfilename = m_DocFile2.m_OriginFileName;
+		r.childdocument = m_ChildDocument;
 		if (m_DocFile2.m_ExeFileDate.size() == 0) {
 			m_DocFile2.m_ExeFileDate = "Version 6.2.2 ";
 		}
@@ -3077,8 +3137,11 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source ) {
 	// Switches
 	{
 		vector<switch_set> s;
-		RemoveOriginalValues("Switches", "ALL", false);
-		for (Sw* pSw : m_Sw_Array) {
+	//	RemoveOriginalValues("Switches", "ALL", false);
+
+		auto pSimVector = GetPtrVector(SWITCH, false);
+		for (auto pSim : pSimVector) {
+			Sw* pSw = static_cast<Sw*>(pSim);
 			switch_set ss;
 			ss.key_simulation = pkey;
 			ss.id_switch = p_ModelInfo->GetSwitchId(pSw->GetName());
@@ -3086,26 +3149,28 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source ) {
 			s.push_back(ss);
 		}
 
-		transfer_Modified_Switches(s);
+		if(s.size()>0) transfer_Modified_Switches(s);
 	}
 
 	// Single Par
 	{
 		vector<singlepar_set> s;
-		RemoveOriginalValues("Parameters", "ALL", false);
-		for (Ps* pP : m_P_Array) {
+	//	RemoveOriginalValues("Parameters", "ALL", false);
+
+		auto pSimVector = GetPtrVector(PAR_SINGLE, false);
+		for (auto pSim : pSimVector) {
+			Ps* pP = static_cast<Ps*>(pSim);
 			singlepar_set ss;
 			ss.key_simulation = pkey;
 			ss.id_singlepar = p_ModelInfo->GetSingleParId(pP->GetName());
 			ss.value = pP->GetValue();
 			s.push_back(ss);
 		}
-		int koll = transfer_Modified_SinglePar(s);
+		if(s.size()>0) int koll = transfer_Modified_SinglePar(s);
 	}
 	// vector Par
 	{
 		vector<vectorpar_set> s;
-		RemoveOriginalValues("Parameter Tables", "ALL", false);
 		auto kollv = GetPtrVector(PAR_TABLE);
 		m_Pt_Array.clear();
 		for (auto k : kollv) {
@@ -3123,7 +3188,7 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source ) {
 			}
 			s.push_back(ss);
 		}
-		int koll = transfer_Modified_VectorPar(s);
+		if(s.size()>0)  transfer_Modified_VectorPar(s);
 	}
 	// Vector outputs
 	{
@@ -3162,7 +3227,7 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source ) {
 			for (size_t i : selected_index) ss.multirun_out_index.push_back(pP->GetPgMultiFileIndex(i - 1));
 			s.push_back(ss);
 		}
-		transfer_Modified_VectorOutput(s);
+		if(s.size()>0) transfer_Modified_VectorOutput(s);
 	}
 	// Single outputs
 	{
@@ -3204,7 +3269,7 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source ) {
 			ss.multirun_out_index = pP->GetPgMultiFileIndex();
 			s.push_back(ss);
 		}
-		transfer_Modified_SingleOutput(s);
+		if(s.size()>0) transfer_Modified_SingleOutput(s);
 	}
 	// Model Files
 	tuple<int, int, vector<float>> record;
@@ -3445,6 +3510,9 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source ) {
 			transfer_multirun_setting(pkey, allmr);
 		}
 	}
+
+	transfer_initial_final(pkey, this);
+	transfer_history(pkey, this);
 
 	cout << "Document archived in database :" << m_DocFileName << endl;
 

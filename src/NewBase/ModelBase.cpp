@@ -155,7 +155,7 @@ ModelBase::ModelBase() {
 
 	}
 #endif
- 
+	m_ChildDocument = false;
 
 };
 ModelBase::~ModelBase(){
@@ -699,10 +699,17 @@ vector<SimB*> ModelBase::GetPtrVector(simtype typ,  bool All)
 	SimB *pSimB;
 	vector<SimB*> vptr;
 
-	for (auto it=GlobalMap.begin(); it!=GlobalMap.end(); ++it) {
-				pSimB=(*it).second;
-				if(typ==pSimB->GetType()&&(pSimB->IsEnabled()||All))
+	for (auto it = GlobalMap.begin(); it != GlobalMap.end(); ++it) {
+		pSimB = (*it).second;
+		if (typ == pSimB->GetType() && (pSimB->IsEnabled() || All)) {
+			if (pSimB->IsNotOriginalValue()) {
+				if (m_ChildDocument && pSimB->IsChildChanged())
 					vptr.push_back(pSimB);
+				else if (!m_ChildDocument)
+					vptr.push_back(pSimB);
+			}
+
+		}
 	}
 
 	return vptr;
@@ -718,8 +725,13 @@ vector<SimB*> ModelBase::GetPtrVector(simtype typ,size_t GroupNo,  bool All)
 				 if(typ==pSimB->GetType()&&(pSimB->IsEnabled()||All))
 				 vptr.push_back(pSimB);
 			 }
-			 else if((typ==pSimB->GetType()&&pSimB->GetGroupNo()==GroupNo)&&(pSimB->IsEnabled()||All))
-				 vptr.push_back(pSimB);
+			 else if ((typ == pSimB->GetType() && pSimB->GetGroupNo() == GroupNo) && (pSimB->IsEnabled() || All)) {
+
+				 if (m_ChildDocument && pSimB->IsChildChanged())
+					 vptr.push_back(pSimB);
+				 else if (!m_ChildDocument)
+					 vptr.push_back(pSimB);
+			 }
 	}
 	return vptr;
 }
@@ -746,7 +758,8 @@ vector<SimB*> ModelBase::GetAllPtr(simtype typ1, simtype typ2, simtype typ3, sim
 
 vector<SimB*> ModelBase::GetPtrVector(string type, string group, bool All)
 {
-	vector<SimB*> vptr;
+	vector <SimB*> koll, vptr;
+
 		if(type=="Switches") {
 				for(auto it=GlobalMap.begin(); it!=GlobalMap.end();it++) {
 					if((All||(*it).second->IsEnabled())&&(*it).second->GetType()==SWITCH&&((*it).second->GetGroup()==group||group.size()==0))
@@ -774,8 +787,8 @@ vector<SimB*> ModelBase::GetPtrVector(string type, string group, bool All)
 		}
 		else if(type=="State Variables"){
 				for(auto it=GlobalMap.begin(); it!=GlobalMap.end();it++) {
-					if((*it).second->IsEnabled()&&((*it).second->GetType()==STATE||(*it).second->GetType()==STATE_SINGLE))
-						vptr.push_back((*it).second);
+					if ((*it).second->IsEnabled() && ((*it).second->GetType() == STATE || (*it).second->GetType() == STATE_SINGLE))
+					vptr.push_back((*it).second);
 				}
 		}
 		else if(type=="Flow Variables"){

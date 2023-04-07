@@ -43,6 +43,9 @@ class OutSingle :
 		float   GetFinal() const {return _out.Final;};
 		float   GetMin() const{return _out.Min;};
 		float   GetMax() const{return _out.Max;};
+		void   SetInitial(double value) { _out.Initial = value; };
+		void   SetFinal(double value) { _out.Final = value; };
+
 		float   GetMean() const{return _out.Mean;};
 		float   GetAccumulated() const{return _out.Accumulated;};
 		size_t	GetValidFlagIndex() const{ return _out.ValidFlagIndex;};

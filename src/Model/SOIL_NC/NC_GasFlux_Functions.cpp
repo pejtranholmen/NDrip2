@@ -287,7 +287,7 @@ plotpar.Y_Label = "Relative Rate (-)";
 	
 	functorprop.FuncName = MyFunc::METHANE_PLANTOXIDATION_BY_ROOTRESPIRATION; functorprop.Arg = MyArgType::D1;
 		functorprop.FunctorInitOption = string::npos;
-		funcname = "Plant Oxidation Regulation by root respiration";
+		funcname = "Plant Oxidation by root respiration";
 		plotpar.X_Label = "Root Respiration Rate (gC/m3/day)";
 		plotpar.X_Min = 0;
 		plotpar.X_Max = 1.;

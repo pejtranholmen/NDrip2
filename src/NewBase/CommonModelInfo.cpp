@@ -4,6 +4,7 @@ using namespace std;
 #include "./CommonModelInfo.h"
 #include "./ModelCompNames.hpp"
 #include "../ModelTypes/SimB.h"
+#include "../ModelTypes/Func.h"
 
 CommonModelInfo::CommonModelInfo() {
 
@@ -260,6 +261,8 @@ bool CommonModelInfo::DefineParameterFunctionMap(vector<SimB*> allVectorPar) {
 	if (m_ParameterFunctionMap.size() > 0)  m_ParameterFunctionMap.clear();
 	for (int i = 0; i < allVectorPar.size(); ++i) {
 		string name = allVectorPar[i]->GetName();
+		string argstr = to_string(static_cast<Func*>(allVectorPar[i])->GetFuncType());
+		name += "_" + argstr;
 		m_ParameterFunctionMap[name] = i + 1;
 	}
 	if (m_ParameterFunctionMap.size() == allVectorPar.size()) return true;
@@ -434,9 +437,9 @@ fysprocess CommonModelInfo::GetPhysProcFromString(string str) {
 vector<SimB*> CommonModelInfo::SortSimB_ByGroup(vector<SimB*> v_in) {
 	vector<SimB*> v_out;
 	multimap<string, SimB*> SortMap;
-/*/	for (size_t i = 0; i<v_in.size(); i++) {
+	for (size_t i = 0; i<v_in.size(); i++) {
 		SortMap.insert(pair<string, SimB*>(v_in[i]->GetGroup(),v_in[i]));
-	}*/
+	}
 
 	for(auto it=SortMap.begin(); it!=SortMap.end(); ++it) {
 		v_out.push_back((*it).second);

@@ -787,7 +787,6 @@ bool NC_Organic_Functions::FunctionDef() {
 
 	functorprop.FuncName = MyFunc::POT_GROWTHCONSUMPTION_MICROBE; functorprop.Arg = MyArgType::D1;
 	funcname = "Potential Growth Consumption";
-	ps_vec.clear();
 	pPs = new Ps(&RateCoefMic_Cons, TOTPROFILE, CARBON, NOFPROC, DECOMPOSITION, NORMAL); ps_vec.push_back(pPs);
 	Define(pPs, "RateCoefMic Cons", .01, UNIT_TYPES::RATECOEF_UNIT, "Nitrogen and Carbon >0|Microbes >0", 0.1E-6, 1.);
 	pFunc = new Func(PLANT, CARBON, NOFPROC, DECOMPOSITION, NORMAL);
@@ -795,10 +794,12 @@ bool NC_Organic_Functions::FunctionDef() {
 
 
 
+
 	pPs = new Ps(&RateCoefMic_Mort, TOTPROFILE, CARBON, NOFPROC, DECOMPOSITION, NORMAL);
 	Define(pPs, "RateCoefMic Mort", .01, UNIT_TYPES::RATECOEF_UNIT, "Nitrogen and Carbon >0|Microbes >0", 0.1E-6, 1.); ps_vec.push_back(pPs);
-	pFunc = new Func(PLANT, CARBON, NOFPROC, DECOMPOSITION, NORMAL);
-	Define(pFunc, functorprop, funcname, ps_vec, plotpar); ps_vec.clear();
+
+
+	
 
 	ps_vec.clear();
 	functorprop.FuncName = MyFunc::RESPIRATION_MICROBE; functorprop.Arg = MyArgType::D1;
@@ -868,6 +869,8 @@ bool NC_Organic_Functions::FunctionDef() {
 	Define(pPs, "Mic Mort Frac Fec", .1, "-", "Nitrogen and Carbon >0|Microbes >0|FaecesPool >0", 0., 1.);
 	pFunc = new Func(PLANT, CARBON, NOFPROC, DECOMPOSITION, NORMAL);
 	Define(pFunc, functorprop, funcname, ps_vec);
+	
+	
 	
 	functorprop.FuncName = MyFunc::MICROBE_CN_RATIO_RESPONSE; functorprop.Arg = MyArgType::D1;
 	funcname = "CN ratio impact on Decomposition";

@@ -189,6 +189,8 @@ class SimB
 		//void SetDefValue(double value) { _orgFValue=value;};
 		virtual bool IsEnabled() {if(_enabled) return false; return true;};
 		bool IsDBEnabled() {return _DBenabled;};
+		void SetChildChange(bool value) { m_ChildChange = value; };
+		bool IsChildChanged() { return m_ChildChange; };
 		bool Is_PTable() {if(_stype==PAR_TABLE) return true; return false;};
 		bool Is_DB() {if(_stype==DB) return true; return false;};
 		bool Is_P() {if(_stype==PAR_SINGLE) return true; return false;};
@@ -295,6 +297,7 @@ class SimB
 		std::string	_unit;
 		size_t _DBIntValue;
 		int _orgIntValue;
+		bool m_ChildChange;
 		CommonModelInfo* m_pCommonModelInfo;
 		std::vector<double> _orgFVector;
 	private:

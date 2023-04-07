@@ -1,4 +1,4 @@
-//#include "../stdafx.h"
+
 #include "../Util/FUtil.hpp"
 #include "OutVector.h"
 #include "NE.h"
@@ -79,10 +79,8 @@ bool OutVector::SetPgFileIndex(size_t index, size_t value)
 float OutVector::GetInitial(size_t index) const
 { 
 
-	if (SumList.size() > index)
-			return SumList[index].Initial;
-		else
-			return float(MISSING);
+	if(SumList.size()>index)
+		return SumList[index].Initial;
 
 	return float(MISSING);
 }
@@ -93,14 +91,14 @@ float OutVector::GetFinal(size_t index) const
 	return float(MISSING);
    
 }
-void OutVector::SetInitial(size_t index, double value)
+void OutVector::SetInitial(size_t index, double value) 
 {
 	if (SumList.size() > index)
-		SumList[index].Initial = value;
+		SumList[index].Initial=value;
 
-
+	
 }
-void OutVector::SetFinal(size_t index, double value)
+void OutVector::SetFinal(size_t index, double value) 
 {
 	if (SumList.size() > index)
 		SumList[index].Final = value;
@@ -162,15 +160,6 @@ size_t OutVector::GetLocalIndex(size_t index) const
 	}
 	return string::npos;
 }
-vector<size_t> OutVector::GetAllSelectedLocalIndex() {
-	vector<size_t> outselected;
-	for (size_t ii = 0; ii < GetNumberOfFlags(); ii++) {
-		if (GetStoreFlag(ii) > 0) {		
-			outselected.push_back(ii+1);
-		}
-	}
-	return outselected;
-}
 size_t OutVector::GetSelectedLocalIndex(size_t index, bool multi) const
 { 
 	int icount=0;
@@ -224,26 +213,19 @@ bool OutVector::AddSumVar(size_t index, float initial, float final,float  min,fl
 bool OutVector::AddSumVar(size_t index, double initial, double final,double  min,double  max, double mean,double accumulated, int pgindex, int pgMultiIndex, int StoreFlag)
 {
 	if(SumList.size()>index) {
-		if (min > max) {
-
-			cerr << "OutVector Error";
-		}
-		else {
-			SumList[index].LocalIndex = index;
-			SumList[index].Initial = float(initial);
-			SumList[index].Final = float(final);
-			SumList[index].Min = float(min);
-			SumList[index].Max = float(max);
-			SumList[index].Mean = float(mean);
-			SumList[index].Accumulated = float(accumulated);
-			SumList[index].PgFileIndex = pgindex;
-			SumList[index].PgMultiFileIndex = pgMultiIndex;
-			SumList[index].ValidFlagIndex = 0;
-			if (StoreFlag > 0)
-				SumList[index].StoreFlag = StoreFlag;
-		}
-			return true;
-
+		SumList[index].LocalIndex=index;
+		SumList[index].Initial=float(initial);
+		SumList[index].Final=float(final);
+		SumList[index].Min=float(min);
+		SumList[index].Max=float(max);
+		SumList[index].Mean=float(mean);
+		SumList[index].Accumulated=float(accumulated);
+		SumList[index].PgFileIndex=pgindex;
+		SumList[index].PgMultiFileIndex=pgMultiIndex;
+		SumList[index].ValidFlagIndex=0;
+		if(StoreFlag>0)
+			SumList[index].StoreFlag=StoreFlag;
+		return true;
 	}
 	return false;
 }

@@ -38,9 +38,9 @@ bool Soil_WaterF::Ini()	{
 		Psi[i]=PsiX;	
        }
        WaterStorage[i]=Theta[i]*ThicknessLayers[i]*10.;
-	   
-
 	}
+
+
 	ThetaTotal = Theta;
 	PlantModel *pPlant=(PlantModel*)m_pModelInfo->GetModelPtr("Plant Model");
 	WaterUptake *p_Plant;

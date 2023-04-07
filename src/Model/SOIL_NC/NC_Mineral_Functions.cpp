@@ -110,7 +110,7 @@ bool NC_Mineral_Functions::Def()
 
 
 	functorprop.FuncName = MyFunc::DENIT_TEMP_Q10_RESPONSE; functorprop.Arg = MyArgType::D1;
-	funcname = "Q10 Temperature Response";
+	funcname = "Q10 Temperature Response - Denitrification";
 	plotpar.X_Min = -10;
 	plotpar.X_Max = 30;
 	plotpar.X_Label = "Temperature "; plotpar.X_Label += p_ModelInfo->GetUnitString(UNIT_TYPES::TEMP_UNIT, true);
@@ -127,7 +127,7 @@ bool NC_Mineral_Functions::Def()
 	Define(pFunc, functorprop, funcname, ps_vec, plotpar);
 
 	functorprop.FuncName = MyFunc::DENIT_TEMP_Q10THRESHOLD_RESPONSE; functorprop.Arg = MyArgType::D1;
-	funcname = "Q10  with Threshold Temperature Response";
+	funcname = "Q10  with Threshold Temperature Response - Denitrification";
 	pPs = new Ps(&DenitTemQ10Threshold, TOTPROFILE, NITRATE, NOFPROC, DENITRIFICATION, NORMAL); ps_vec.push_back(pPs);
 		Define(pPs,   "DenitTemQ10Threshold", 5.,UNIT_TYPES::TEMP_UNIT,"Denitrification > 0|Nitrogen and Carbon > 0|Denit Temp Response = 2",0.0001, 20., 2., 10.);
 
@@ -137,7 +137,7 @@ bool NC_Mineral_Functions::Def()
 
 
 	functorprop.FuncName = MyFunc::DENIT_TEMP_RATKOWSKY_RESPONSE; functorprop.Arg = MyArgType::D1;
-	funcname = "Ratkowsky Temperature Response";
+	funcname = "Ratkowsky Temperature Response - Denitrification";
 	ps_vec.clear();
 
 	pPs = new Ps(&DenitTempMin, TOTPROFILE, NITRATE, NOFPROC, DENITRIFICATION, NORMAL); ps_vec.push_back(pPs);
@@ -223,7 +223,7 @@ bool NC_Mineral_Functions::Def()
 		Define(pFunc, functorprop, funcname, ps_vec, plotpar);
 
 	functorprop.FuncName = MyFunc::NITRI_TEMP_Q10_RESPONSE; functorprop.Arg = MyArgType::D1;
-	funcname = "Q10 Temperature Response";
+	funcname = "Q10 Temperature Response - Nitrification";
 	plotpar.X_Min = -10.;
 	plotpar.X_Max = 30.;
 	plotpar.X_Label = "Temperature "; plotpar.X_Label += p_ModelInfo->GetUnitString(UNIT_TYPES::TEMP_UNIT, true);
@@ -244,7 +244,7 @@ pPs = new Ps(&NitriTemQ10, TOTPROFILE, MINERAL_N, NOFPROC, NITRIFICATION, NORMAL
 		Define(pFunc, functorprop, funcname, ps_vec, plotpar);
 
 		functorprop.FuncName = MyFunc::NITRI_TEMP_Q10THRESHOLD_RESPONSE; functorprop.Arg = MyArgType::D1;
-		funcname = "Q10  with Threshold Temperature Response";
+		funcname = "Q10  with Threshold Temperature Response - Nitrification";
 
 
 	pPs= new Ps(&NitriTemQ10Threshold, TOTPROFILE,MINERAL_N, NOFPROC,NITRIFICATION, NORMAL); ps_vec.push_back(pPs);
@@ -253,7 +253,7 @@ pPs = new Ps(&NitriTemQ10, TOTPROFILE, MINERAL_N, NOFPROC, NITRIFICATION, NORMAL
 		Define(pFunc, functorprop, funcname, ps_vec, plotpar);
 		
 		functorprop.FuncName = MyFunc::NITRI_TEMP_RATKOWSKY_RESPONSE; functorprop.Arg = MyArgType::D1;
-		funcname = "Ratkowsky Temperature Response";
+		funcname = "Ratkowsky Temperature Response - Nitrification";
 		ps_vec.clear();
 		pPs = new Ps(&NitriTempMin, TOTPROFILE, MINERAL_N, NOFPROC, NITRIFICATION, NORMAL); ps_vec.push_back(pPs);
 		Define(pPs, "NitriTempMin", -8.,UNIT_TYPES::TEMP_UNIT, "Nitrogen and Carbon > 0|Nitrific Temp Response = 3", -20., 10., -10., 5.);

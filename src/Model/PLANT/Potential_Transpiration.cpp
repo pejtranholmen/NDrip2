@@ -293,7 +293,7 @@ bool Potential_Transpiration::Def()
 
 	functorprop.FuncName = MyFunc::ROUGHNESSLENGTH_DAYOFYEAR; functorprop.Arg = MyArgType::D1;
 	functorprop.FunctorInitOption = string::npos;
-	funcname = "Canopy Resistance - Day of year function";
+	funcname = "Roughness length - Day of year function";
 	pFunc = new Func(SINGLEPLANT, PLANT_SHAPE, NOFPROC, NOBPROC, NORMAL);
 	Define(pFunc, functorprop, funcname, p_vec);
 

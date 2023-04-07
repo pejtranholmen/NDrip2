@@ -12,19 +12,29 @@ class P : public Par
 		P(std::vector<double> *target, NE* num, enum datatype data, enum elements elem, enum fysprocess fproc, enum bioprocess bproc, enum userlevel ulev);	
 		
 		~P(void);
-		P(void) {P();};
+		P(void) {};
 		void SetValue(vector<double> vec) {*_ptarget=vec;};
 		double GetValue(size_t index) { if (_ptarget->size() > index) return _ptarget->at(index); else return MISSING; };
-		vector<double> GetVector() { return *_ptarget;}
+		std::vector<double> GetVector() { return *_ptarget;}
 		void SetSize(size_t NRow) {if(pNE!=nullptr) ((NE*)pNE)->ReSizeValue(NRow);};
 		size_t  GetSize() noexcept {return _ptarget->size();};
 		void Def(size_t ModuleNo, string name, vector<double> init, string unit, string conditions, 
 			double errormin, double errormax, double warningmin, double warningmax,
 			int recalc=0,  int view=0);
-		size_t SetValue(size_t index, double v) {if(index<_ptarget->size())
-		{_oldValueVector[index]=_ptarget->at(index);_IsOldValueVector[index]=true;
-			_ptarget->at(index)=v;
-		if(_ptarget->at(index)!=GetOriginalValue(index)) SetNotOriginalIndicator(index, true);}return _recalc_option;};
+		size_t SetValue(size_t index, double v) {
+			if (index < _ptarget->size()) {
+				if (index < _oldValueVector.size()) {
+					_oldValueVector[index] = _ptarget->at(index);
+					_IsOldValueVector[index] = true; 
+				}
+				_ptarget->at(index) = v;
+				if (_ptarget->at(index) != GetOriginalValue(index)) {
+					SetNotOriginalIndicator(index, true);
+					SetNotOriginalValue();
+				}
+			}
+			return _recalc_option;
+		};
 
 		void SetDBValue(size_t index, double v) {if(index<_DB_ValueVector.size()) _DB_ValueVector[index]=v; };
 		double GetDBValue(size_t index) const {if(index<_DB_ValueVector.size()) return _DB_ValueVector[index];return MISSING;};
@@ -172,11 +182,8 @@ class P : public Par
 		};
 		bool EditChaDateAndValue(size_t indp, long min, double value, size_t index) { if(indp<ChaDateLong.size()) {ChaDateLong[indp][index]=min; ChaParValue[indp][index]=value;return true;};return false;};
 
-		bool DeleteChaDate(size_t indp, size_t index) {
-			if (indp < ChaDateLong.size()) { ChaDateLong[indp].erase(ChaDateLong[indp].begin() + index); ChaParValue[indp].erase(ChaParValue[indp].begin() + index); ChaParIndex[indp].erase(ChaParIndex[indp].begin() + index); return true; }
-			else return false;	}
-		
-		bool ResetChaDates(size_t indp) { if (indp < ChaDateLong.size()) { ChaDateLong[indp].clear(); ChaParValue[indp].clear(); ChaParIndex[indp].clear(); return true; } else return false; };
+		bool DeleteChaDate(size_t indp, size_t index) {ChaDateLong[indp].erase(ChaDateLong[indp].begin()+index);ChaParValue[indp].erase(ChaParValue[indp].begin()+index);ChaParIndex[indp].erase(ChaParIndex[indp].begin()+index);return true;};
+		bool ResetChaDates(size_t indp) { ChaDateLong[indp].clear(); ChaParValue[indp].clear();ChaParIndex[indp].clear();return true;};
 		void MR_Set_Monitoring(size_t indp, size_t value) { 
 			if(indp>=_mrMonitoring.size()) _mrMonitoring.resize(indp+1); _mrMonitoring[indp]=value;};
 		size_t MR_Get_Monitoring(size_t indp) {if(indp<_mrMonitoring.size()) return _mrMonitoring[indp]; return -1;};

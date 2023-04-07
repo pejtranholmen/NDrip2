@@ -159,7 +159,9 @@ public:
 	string GetNameAddedFiles(unsigned long);
 	string GetNameBaseFile();
 	unsigned long GetAdd_MultiPGFileIndex(unsigned long simRunNo);
-	unsigned long GetNumberOfRuns() { return m_TotalNumberRuns; };
+	unsigned long GetNumberOfRuns() { 
+		return m_TotalNumberRuns;
+	};
 	unsigned long GetCriteria(unsigned long, unsigned long split=0);
 	bool SetCriteria(unsigned long,unsigned long value, unsigned long split=0);
 	void ResetCriteria();

@@ -62,6 +62,7 @@ class Simulator
 
 	private:
 		void Stat_Ini();
+		void Set_StateVariables(bool InitialValues);
 		void Stat_Calc();
 		void Stat_Reset();
 

@@ -65,5 +65,8 @@ size_t Sw::SetDBStrValue(string str)
 	return 0;
 
 }
+size_t Sw::GetNumOptions() {
+	return _options.size();
+}
 
 

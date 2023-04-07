@@ -7,6 +7,13 @@
 #include "../Structure/Functors/Structure_Functors.h"
 #include "../../Simulator/Simulator.h"
 
+#ifndef COUPSTD
+#include "../../Util\MFC_Util.h"
+
+#endif
+
+
+
 
 
 class ZadokOutCreateFile{
@@ -625,24 +632,68 @@ bool NC_Plant::Ini()	{
 				if (m_pModelInfo->m_ActMin < IEmergenceDates[i]) IEmergenceCount = i;
 			m_PG_Emergence.CloseFile();
 		}
-
 		if (Harvest_Day_Sw(Harvest_Day) == Harvest_Day_Sw::PG_File_specified) {
 			m_PG_HarvestDate.Open(m_PG_HarvestDate.GetFileName());
 			NumValidHarvest = m_PG_HarvestDate.GetNumRecords();
+			size_t NumParToChange = m_PG_HarvestDate.GetNumVariables();
 
+			ChangeParAtHarvestDate.resize(NumParToChange);
+			
+			for (size_t i = 0; i < ChangeParAtHarvestDate.size(); i++) {
+				string name = m_PG_HarvestDate.GetVarName(i + 1);
+				auto pos1 = name.find("("); auto pos2 = name.rfind(")");
+				if (pos2 > pos1 + 1) {
+					auto indexstr = name.substr(pos1 + 1, pos2 - pos1 - 1);
+					auto index = FUtil::AtoInt(indexstr);
+					auto str = name.substr(0, pos1);
+					auto pointer = m_pModelMap->GetPPointer(str);
+					if (pointer != nullptr) {
+						ChangeParAtHarvestDate[i].pBase = pointer;
+						ChangeParAtHarvestDate[i].TabIndex = index;
+					}
+					else 
+						NumParToChange--;					
+				}
+				else if (pos1 == string::npos && pos2 == string::npos) {
+					auto pointer = m_pModelMap->GetPsPointer(name);
+					if (pointer != nullptr) {
+						ChangeParAtHarvestDate[i].pBase = pointer;
+						ChangeParAtHarvestDate[i].TabIndex = string::npos;
+					}
+					else 
+						NumParToChange--;
+				}
+			}
+			ChangeParAtHarvestDate.resize(NumParToChange);
+			if (NumParToChange > 0) {
+				ChangeParAtHarvestValues.resize(NumValidHarvest);
+				for (size_t i = 0; i < NumValidHarvest; i++)
+					ChangeParAtHarvestValues[i].resize(NumParToChange);
+			}
+			else {
+#ifndef COUPSTD
+				MFC_Util::MessageBox(" Note that No parameters are defined to change Harvest characteristics! ");
+#else				
+				cout << "No parameters defined to change harvest characteristics " << endl;
+#endif
+
+			}
 			if (NumValidHarvest > 0. && NumValidHarvest < 1000) {
 				IHarvestDates.resize(NumValidHarvest);
-				for (size_t i = 0; i < NumValidHarvest; i++)
+				for (size_t i = 0; i < NumValidHarvest; i++) {
 					IHarvestDates[i] = m_PG_HarvestDate.GetLongTime(i + 1);
-
+					for (size_t ii = 0; ii < NumParToChange; ii++)
+						ChangeParAtHarvestValues[i][ii] = m_PG_HarvestDate.GetVarValue(ii + 1, i+1);
+				}
 				ICountHarvest = NumValidHarvest + 1;
 
 				for (int i = NumValidHarvest - 1; i >= 0; i--)
 					if (m_pModelInfo->m_ActMin < IHarvestDates[i]) ICountHarvest = i;
+			}
+			else {
+				NumValidHarvest = 0;
 
 			}
-			else
-				NumValidHarvest = 0;
 
 			m_PG_HarvestDate.CloseFile();
 
@@ -2466,6 +2517,15 @@ void NC_Plant::Cleaning_Harvest_Events() {
    		    DoHarvest=false;
    		    if(m_pModelInfo->m_ActMin>=IHarvestDates[ICountHarvest]) {
    		        HarvestDayNo[i_plant]=m_pModelInfo->JDayNum;
+					if (ChangeParAtHarvestDate.size() > 0) {
+						size_t count_plant = 0;
+						
+						for (SIMB p : ChangeParAtHarvestDate) {
+							if (p.TabIndex == string::npos) static_cast<Ps*>(p.pBase)->SetValue(ChangeParAtHarvestValues[ICountHarvest][count_plant]);
+							else if(i_plant+1==p.TabIndex) static_cast<P*>(p.pBase)->SetValue(i_plant, ChangeParAtHarvestValues[ICountHarvest][count_plant]);
+							count_plant++;
+						}
+					}
    		        ICountHarvest++;
    		        DoHarvest=true;
 			}

@@ -367,6 +367,7 @@ class ModelBase : public ModelMap{
 
 
 	bool m_Protect;
+	bool m_ChildDocument;
 	bool m_SavedSum;
 	bool m_SavedTimeSerie;
 	size_t m_LinkedDocNumber;

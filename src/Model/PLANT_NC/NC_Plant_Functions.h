@@ -433,6 +433,9 @@ size_t         NumValidHarvest, IHarvestInput,ICountHarvest;
 ;
 // New option How to Harvest 28 March 2006;
 vector<size_t> IHarvestDates ;// Variables in PG-file PhotoInput;
+vector<SIMB> ChangeParAtHarvestDate;
+vector< vector<double>> ChangeParAtHarvestValues;
+
 
 // New for Sowing and Emergence from PG file reading
 vector<size_t> ISowingDates, IEmergenceDates;

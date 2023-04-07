@@ -36,7 +36,7 @@ public:
 	bool WriteDataBaseLinksToXmlFile(pugi::xml_node node);
 	bool Read_DataBaseLinks_FromXmlFile(pugi::xml_node node);
 
-
+	string GetParentDocFile(string filename);
 
 	bool Read_SimB_FromXmlFile(pugi::xml_node node, bool Reset_to_Default = false);
 	bool WriteSimB_ToXmlFile(pugi::xml_node node, simtype, doc_enabled def = doc_enabled::ALL);

@@ -70,7 +70,7 @@ void Func::Def(FunctorProp myf, SimModule *mClass, string name, FunctionProperti
 	m_PlotParam = pFunctions->GetParam(m_Index);
 	SetModuleNo(0);
 	SetName(name);
-	m_FuncType = 0;
+	m_FuncType = size_t(myf.Arg);
 	m_Opt = 0;
 	m_FunctorProp = myf;
 	SetName(name);
@@ -123,6 +123,8 @@ void Func::Def(FunctorProp myf, string name, vector<Ps*> Ps_Vector, FunctionProp
 	SetModuleNo(0);
 	SetName(name);
 	m_FuncType = 0;
+	m_FuncType = size_t(myf.Arg);
+
 	m_Opt = 0;
 	m_Class = nullptr;
 
@@ -164,7 +166,7 @@ void Func::Def(FunctorProp myf, string name, vector<Ps*> Ps_Vector, vector<P*> P
 	m_P_vector = P_Vector;
 	SetModuleNo(0);
 	SetName(name);
-	m_FuncType = 0;
+	m_FuncType = size_t(myf.Arg);
 	m_Opt = 0;
 	m_Class = nullptr;
 
@@ -211,7 +213,7 @@ void Func::Def(FunctorProp myf, string name,  vector<P*> P_Vector, FunctionPrope
 
 	SetModuleNo(0);
 	SetName(name);
-	m_FuncType = 0;
+	m_FuncType = size_t(myf.Arg) ;
 	m_Opt = 0;
 	auto SetPar = [&]() {
 		m_FunctorP_Par.clear();
@@ -251,7 +253,7 @@ void Func::Def(FunctorProp myf, string name, HYDRAULIC_COEF *pProp, vector<P*> P
 
 	SetModuleNo(0);
 	SetName(name);
-	m_FuncType = 0;
+	m_FuncType = size_t(myf.Arg);
 	m_Opt = 0;
 //	Functp(myf, Par);
 	m_FunctorProp = myf;

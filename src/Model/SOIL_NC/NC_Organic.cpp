@@ -101,6 +101,8 @@ bool NC_Organic::Ini()	{
 		f_Decomp_Conc_Response = Get_D1_Functor(MyFunc::MICROBE_CONC_RESPONSE);
 
 		f_PotentialGrowthMicrobe = Get_D1_Functor(MyFunc::POT_GROWTHCONSUMPTION_MICROBE);
+
+
 		f_GrowthConsumption = Get_D1_TableFunctor(MyFunc::GROWTH_CONSUMPTION_MICROBE);
 		f_MicrobeRespiration = Get_D1_Functor(MyFunc::RESPIRATION_MICROBE);
 		f_Humification = Get_D1_TableFunctor(MyFunc::HUMIFICATION_MICROBE);
@@ -384,32 +386,35 @@ auto OutflowFromPlantLitterFalltoSoilLayers = [&]() {
 			LitterInputToSoilLayers[j][jj].assign(pSoil->NL,0.);
 
 // Add contributions of all Plants with all plant components and all plant elements to to vector for two soil litters for all plant elements and soil layers
-	for (size_t i = 0; i < p_Plant->NumPlants; i++) {
+	for (size_t i_plant = 0; i_plant < p_Plant->NumPlants; i_plant++) {
 		vector<double> LitterFallToLayers;
 		for (size_t jj = 0; jj < m_pModelStructure->m_NumActPlantElements; jj++) {
-			for (size_t j = _ROOT; j <= _OLD_COARSE_ROOT; j++) {
-				LitterFallToLayers = GetDepthDistributionofLitterFall(i, j, jj);
-				if (j <= _OLD_COARSE_ROOT||LitterPools_Sw(LitterPools)== LitterPools_Sw::one) {
+			for (size_t j_plantcomp = _ROOT; j_plantcomp <= _OLD_COARSE_ROOT; j_plantcomp++) {
+				LitterFallToLayers = GetDepthDistributionofLitterFall(i_plant, j_plantcomp, jj);
+				if (LitterPools_Sw(LitterPools) == LitterPools_Sw::one) {
 					for (size_t layer = 0; layer < pSoil->NL; layer++) {
 						LitterInputToSoilLayers[_L1][jj][layer] += LitterFallToLayers[layer];
 					}
 				}
 				else {
+					double L2_frac;
+					if (j_plantcomp == _ROOT || j_plantcomp == _OLD_ROOT) L2_frac = p_NC_Plant->Root_FracLitter2[i_plant];
+					else L2_frac = p_NC_Plant->CoarseRoot_FracLitter2[i_plant];
+
 					for (size_t layer = 0; layer < pSoil->NL; layer++) {
-						LitterInputToSoilLayers[_L1][jj][layer] += LitterFallToLayers[layer] * (1 - p_NC_Plant->Root_FracLitter2[i]);
-						LitterInputToSoilLayers[_L2][jj][layer] += LitterFallToLayers[layer] * p_NC_Plant->Root_FracLitter2[i];
+						LitterInputToSoilLayers[_L1][jj][layer] += LitterFallToLayers[layer] * (1 - L2_frac);
+						LitterInputToSoilLayers[_L2][jj][layer] += LitterFallToLayers[layer] * L2_frac;
 					}
 				}
 			}	//Fungi Component below
 			if (FungalGrowth_Sw(p_NC_Plant->FungalGrowth) > FungalGrowth_Sw::off) {
-				LitterFallToLayers = GetDepthDistributionofLitterFall(i, _FUNGI, jj);
+				LitterFallToLayers = GetDepthDistributionofLitterFall(i_plant, _FUNGI, jj);
 				for (size_t layer = 0; layer < pSoil->NL; layer++) {
 					LitterInputToSoilLayers[_L1][jj][layer] += LitterFallToLayers[layer];
 				}
 			}
 		}
 	}
-
 };
 auto Carbon_RatioSoilOrganics = [&]() {
 

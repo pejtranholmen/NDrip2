@@ -36,6 +36,8 @@ bool History::History_Add(SimB *pBase,int Lindex, time_t t, float v, string User
 	else
 		itype = int(HIST_INFO::PARSINGLE_INFO);
 
+	if (m_ChildDocument) pBase->SetChildChange(true);
+
 	return History_Add(pBase,itype, Lindex, t, v, User);
 	
 
@@ -52,6 +54,9 @@ bool History::History_Add(SimB *pBase,int Lindex, time_t t, string str, string U
 		itype = int(HIST_INFO::DATA_BASE_INFO);
 	else if (pBase->GetType() == PGFILE)
 		itype = int(HIST_INFO::MODELFILE_INFO);
+
+
+	if (m_ChildDocument) pBase->SetChildChange(true);
 
 
 	return History_Add(pBase,itype, Lindex, t, str, User);

@@ -452,7 +452,7 @@ vector<string> create_Init_Tables(CommonModelInfo* pinfo) {
         sql += "comment Varchar(128) Default '-');";
         W.exec(sql.c_str());
         sql = "INSERT INTO Simulations VALUES( ";
-        sql += "Default, 'first_test','PEJ',NOW(),Default,1,'When using Default of everything');";
+        sql += "Default, 'first_test_000001','PEJ',NOW(),Default,1,'When using Default of everything');";
         W.exec(sql.c_str());
 
         tablenames.push_back(tablename);
@@ -747,6 +747,7 @@ vector<string> create_Main_Tables(CommonModelInfo* pinfo) {
         sql = create(nametable);
         sql += " (id_simulations Integer REFERENCES simulations(id_simulations), ";
         sql += "FileVersionNumber Integer ,";
+        sql += "ChildDocument boolean,";
         sql += "OriginalFileName varchar(64) Default '-',";
         sql += "ExeFileDate varchar(64) Default '-',";
         sql += "MultiSimulation bool,";
@@ -928,8 +929,39 @@ vector<string> create_Main_Tables(CommonModelInfo* pinfo) {
         sql += "P90 Real[]);";
         W.exec(sql.c_str());
         nametables.push_back(nametable);
+
+        nametable = "initial_final_states";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (id_simulations Integer REFERENCES simulations(id_simulations), ";
+        sql += "outputname VarChar(34), ";
+        sql += "number_of_index Integer,";
+        sql += "Initial Real[],";
+        sql += "Final Real[])";
+        W.exec(sql.c_str());
+        nametables.push_back(nametable);
+
+
+
+        nametable = "history_of_changes";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (id_simulations Integer REFERENCES simulations(id_simulations), ";
+        sql += "runinfotype Integer, ";
+        sql += "stringtype VarChar(40), ";
+        sql += "groupname VarChar(40), ";
+        sql += "itemname VarChar(40), ";
+        sql += "stringvalue VarChar(40), ";
+        sql += "localindex Integer, ";
+        sql += "timestamp Integer, ";
+        sql += "username VarChar(40), ";
+        sql += "computer VarChar(40)) ";
+        W.exec(sql.c_str());
+        nametables.push_back(nametable);
         W.commit();
         return nametables;
+       
+
 
     }
     catch (const std::exception& e) {
@@ -1047,8 +1079,13 @@ static int query_createtable(enum simtype type, const string str)
             sql = "CREATE TABLE " + str + " (";
             sql += "ID_ParameterFunctions SERIAL PRIMARY KEY, VectorName VARCHAR(96) UNIQUE NOT NULL, ";
             sql += firstsection;
+            sql += "Function_type INTEGER,";
+            sql += "Independent_with_index BOOLEAN, ";
+            sql += "Single_Parameter_Names VARCHAR(32) ARRAY,";
+            sql += "Vector_Parameter_Names VARCHAR(32) ARRAY,";
 
             break;
+
         case PGFILE:
             sql = "CREATE TABLE " + str + " (";
             sql += "ID_TimeSerie SERIAL PRIMARY KEY, TimeSerieName VARCHAR(96) UNIQUE NOT NULL, ";
@@ -1235,7 +1272,7 @@ static int query_inserttable(enum simtype type, const string str, vector<SimB*> 
     for (size_t i = 0; i < v_simb.size(); i++) {
         try {
 
-            string sqlfk;
+            string sqlfk; string argstr;
             if (type != NUM_ELEMENTS_VECTOR) {
                 sqlfk = FUtil::STD_ItoAscii(v_simb[i]->GetGroupNo()) + ',';
                 sqlfk += FUtil::STD_ItoAscii(v_simb[i]->GetFysProcess()) + ',';
@@ -1246,7 +1283,10 @@ static int query_inserttable(enum simtype type, const string str, vector<SimB*> 
             int id_par = 0;
             SimB* pSimB;
             vector<Condition> v;
+            vector<string> names;
             bool jump;
+            int ityp;
+            bool btype;
             switch (type) {
             case SWITCH:
                 sql += FUtil::STD_ItoAscii(v_simb[i]->GetIntValue()) + ',';
@@ -1404,10 +1444,23 @@ static int query_inserttable(enum simtype type, const string str, vector<SimB*> 
                 break;
             case FUNCTION:
                 sql = "INSERT INTO " + str + " VALUES (";
-                id_par = pCommonModel->GetParameterFunctionId(v_simb[i]->GetName());
+                argstr= to_string(static_cast<Func*>(v_simb[i])->GetFuncType());
+                id_par = pCommonModel->GetParameterFunctionId(v_simb[i]->GetName() + "_" + argstr);
                 sql += FUtil::STD_ItoAscii(id_par) + ",";
-                sql += "'" + v_simb[i]->GetName() + "', ";
+                sql += "'" + v_simb[i]->GetName() + "_"+argstr+"', "; // name
                 sql += sqlfk;
+                ityp = static_cast<Func*>(v_simb[i])->GetFuncType();
+                sql += to_string(ityp) + ",";
+                btype = static_cast<Func*>(v_simb[i])->IsTableType();
+                sql += to_string(btype) + ",";
+                sql += "'{";
+                names = static_cast<Func*>(v_simb[i])->GetParDep_Ps_Names();
+                for (size_t i = 0; i < names.size(); ++i) { sql += names[i]; if (i < names.size() - 1) sql += ","; };
+                sql += "}','{";
+                names = static_cast<Func*>(v_simb[i])->GetParDep_P_Names();
+                for (size_t i = 0; i < names.size(); ++i) { sql += names[i]; if (i < names.size() - 1) sql += ","; };
+                sql += "}',";
+               
 
                 break;
             case PGFILE:
@@ -1438,6 +1491,7 @@ static int query_inserttable(enum simtype type, const string str, vector<SimB*> 
 
         }
         catch (const std::exception& e) {
+            cerr << sql << std::endl;
             cerr << e.what() << std::endl;
             return 1;
         }
@@ -1562,6 +1616,7 @@ vector<string> create_Additional_Tables(CommonModelInfo* pinfo, NewMap* pDoc) {
 
         v_Allsimb.clear();    sumsimb(PAR_TABLE);
         pinfo->DefineVectorParMap(v_Allsimb);
+
         v_Allsimb.clear();    sumsimb(FUNCTION);
         pinfo->DefineParameterFunctionMap(v_Allsimb);
 
@@ -1681,6 +1736,13 @@ vector<string> create_Additional_Tables(CommonModelInfo* pinfo, NewMap* pDoc) {
     pinfo->DefineVectorParMap(v_Allsimb);
     ikoll = query_inserttable(PAR_TABLE, "vectorparameters", v_Allsimb, pDoc->m_pCommonModelInfo);
 
+    ikoll = query_createtable(FUNCTION    , "functions");
+    v_Allsimb = pDoc->GetAllPtr(FUNCTION);
+    pinfo->DefineParameterFunctionMap(v_Allsimb);
+    ikoll = query_inserttable(FUNCTION, "functions", v_Allsimb, pDoc->m_pCommonModelInfo);
+
+
+
     ikoll = query_createtable(STATE, "VectorOutputs");
     v_Allsimb = pDoc->GetAllPtr(STATE, FLOW, AUX, DRIVE);
     pinfo->DefineVectorOutputMap(v_Allsimb);
@@ -1709,7 +1771,7 @@ int transfer_Document(struct sim_doc_simulation str) {
 
         string sql = "INSERT INTO Simulations VALUES ( ";
         sql += "Default,'";
-        if (str.sitename.size() > 0 && str.name.find(str.sitename)==string::npos) 
+        if (str.sitename.size() > 0 && str.name.find(str.sitename)==string::npos&&str.sitename!="-")
             sql += str.sitename + "_"+str.name+"',";
         else 
             sql += str.name + "',";
@@ -1741,6 +1803,7 @@ int transfer_RunInfo_Document(struct run_info_document s) {
         string sql = "INSERT INTO runinfo VALUES ( ";
         sql += to_string(s.key_simulation) + ",";
         sql += to_string(s.fileversionnumber) + ",";
+        sql += to_string(s.childdocument) + ",";
         if (s.originalfilename.size() == 0) sql += "null,";
         else sql += "'" + s.originalfilename + "',";
         if (s.exefiledata.size() == 0) sql += "null,";
@@ -2090,11 +2153,13 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
                     }
 
                     for (const tuple<int, int, vector<float>>rec : pg) {
+
                         sql = "INSERT INTO FileNameArchive_Data VALUES (";
                         sql += to_string(id_fileName) + ",";
                         sql += to_string(get<1>(rec)) + ",'{";
                         vector<float> var = get<2>(rec);
                         for (int i = 0; i < r.NumVar; i++) {
+                            cout << "Uploading (" << to_string(i+1) << ") of " << to_string(r.NumVar) << " Variables";
                             sql += to_string(get<2>(rec)[i]);
                             if (i < r.NumVar - 1) sql += ",";
                         }
@@ -2271,7 +2336,16 @@ int transfer_MultiStorage(int pkey, NewMap* pDoc) {
         bool accepted = true;
         const int max_indicators{ 7 };
         
+        if (!pDoc->MR_Storage_Open()) {
+                cout << " MBin file could not be open" << endl;
+                return -1;
+        }
+        
+        
         for (size_t RunNo = 0; RunNo < pDoc->m_MStorage.GetNumberOfRuns(); RunNo++) {
+
+            if((RunNo%100)==0)
+                cout << "Uploading to data base (" << to_string(RunNo) << ") of " << to_string(pDoc->m_MStorage.GetNumberOfRuns()) << " runs";
                 sql = "INSERT INTO multirun_Results VALUES (";
                 sql += to_string(pkey) + ",";
                 sql += to_string(RunNo + 1) + ",";
@@ -2610,7 +2684,182 @@ int transfer_ensemble_statistics(int pkey, NewMap* pDoc) {
         cerr << e.what() << std::endl;
         return -1;
     }
+};
+int transfer_initial_final(int pkey, NewMap* pDoc) {
+    string sql;
+    try {
+        connection c = initconnection("Initial_Final_State");
+        pqxx::work W{ c };
+        vector<SimB*> vpp, vp_final;
+        size_t iv = 0;
+     
+
+
+        vpp = pDoc->GetPtrVector("State Variables", "");
+        for (size_t i = 0; i < vpp.size(); i++) {
+            sql = "INSERT INTO initial_final_states VALUES (";
+            sql += to_string(pkey) + ",";
+            auto pPtr = (SimB*)vpp[i];
+            sql +="'"+ pPtr->GetName() + "',";
+      
+            iv++;
+            vp_final.push_back(pPtr);
+        }
+        bool IsVector = false;
+        for (size_t i = 0; i < vp_final.size(); i++) {
+            auto pXT = static_cast<X*>(vp_final[i]);
+            auto pX = static_cast<Xs*>(vp_final[i]);
+            IsVector = vp_final[i]->Is_Vector();
+
+
+            auto group = pXT->GetGroup();
+            auto name = pXT->GetName();
+            size_t nn = 0;
+            string fi, in;
+            fi = in = "'{";
+            if (IsVector) {
+                nn = pXT->GetNumberOfFlags();
+                for (size_t ii = 0; ii < nn; ii++) {
+                                
+                    fi += to_string(pXT->GetFinal(ii));
+                    in +=to_string(pXT->GetInitial(ii));
+                    if (ii < nn - 1) {
+                        fi += ","; in += ",";
+                    }
+                }
+            }
+            else {
+                in +=to_string( pX->GetInitial());
+                fi +=to_string(pX->GetFinal());
+            }
+            fi += "}'"; in += "}'";
+            sql += to_string(nn) + ",";
+            sql += in + "," + fi + ");";
+            W.exec(sql.c_str());
+        }
+        W.commit();
+
+    }
+    catch (const std::exception& e) {
+        cerr << e.what() << std::endl;
+        cerr << sql << endl;
+        return -1;
+    }
+};
+int transfer_history(int pkey, NewMap* pDoc) {
+    string sql;
+    try {
+        connection c = initconnection("history");
+        pqxx::work W{ c };
+        vector<SimB*> vpp, vp_final;
+        size_t iv = 0;
+        string group, name, str, type;
+
+        size_t startindex;
+
+        if (pDoc->m_ChildDocument) {
+            startindex = pDoc->m_History_Array.size() - 1;
+            for (size_t i = 0; i < pDoc->m_History_Array.size(); i++) {
+                auto h_node = pDoc->m_History_Array[i];
+                SimB* pBase;
+                pBase = h_node.pBase;
+                if (HIST_INFO(h_node.RunInfoType) == HIST_INFO::RUN_INFO) {
+                    name = ((CRunInfo*)pBase)->GetName();
+                    if (name == "NewRunNo") {
+                        str = h_node.strvalue;
+                        size_t runno = FUtil::AtoInt(str);
+                        if (pDoc->m_DocFile.m_SimulationRunNo - 1 <= runno) startindex = i;
+                    }
+                }
+            }
+        }
+        else
+            startindex = 0;
+        for (size_t i = startindex; i < pDoc->m_History_Array.size(); i++) {
+            auto h_node = pDoc->m_History_Array[i];
+            SimB* pBase;
+            pBase = h_node.pBase;
+            if (h_node.RunInfoType < 0 || pBase == nullptr) {
+                group = "";
+                name = "";
+                str = "";
+
+            }
+            else if (HIST_INFO(h_node.RunInfoType) == HIST_INFO::DATA_BASE_INFO) {
+                // DAtaBase
+                group = "";
+                name = ((CDB*)pBase)->GetName();
+                str = pDoc->History_GetString(i);
+                type = "DataBase";
+
+            }
+            else if (HIST_INFO(h_node.RunInfoType) == HIST_INFO::SWITCH_INFO) {
+                group = pBase->GetGroup();
+                name = pBase->GetName();
+                str = h_node.strvalue;
+                type = "Switches";
+
+            }
+            else if (HIST_INFO(h_node.RunInfoType) == HIST_INFO::RUN_INFO) {
+                group = ((CRunInfo*)pBase)->GetGroup();
+                name = ((CRunInfo*)pBase)->GetName();
+                str = h_node.strvalue;
+                type = "Run Info";
+
+            }
+            else if (h_node.RunInfoType == 1) {
+                if (pBase->GetName() == "Soil Properties" || pBase->Is_DB()) {
+                    group = "";
+                    name = ((Sw*)pBase)->GetName();
+                }
+                else {
+                    group = "";
+                    name = pBase->GetName();
+                    str = FUtil::STD_FtoAscii(pDoc->History_GetFloat(i));
+                }
+            }
+            else if (HIST_INFO(h_node.RunInfoType) == HIST_INFO::PARSINGLE_INFO) {
+                group = pBase->GetGroup();
+                name = pBase->GetName();
+                str = FUtil::STD_FtoAscii(pDoc->History_GetFloat(i));
+                type = "Parameters";
+            }
+            else if (HIST_INFO(h_node.RunInfoType) == HIST_INFO::PARTABLE_INFO) {
+                group = pBase->GetGroup();
+                name = pBase->GetName();
+                str = FUtil::STD_FtoAscii(pDoc->History_GetFloat(i));
+                type = "Table Parameters";
+            }
+            else if (HIST_INFO(h_node.RunInfoType) == HIST_INFO::MODELFILE_INFO) {
+                group = pBase->GetGroup();
+                name = pBase->GetName();
+                type = "ModelFiles";
+            }
+            sql = "INSERT INTO history_of_changes VALUES (";
+            sql += to_string(pkey) + ",";
+            sql += to_string(h_node.RunInfoType) + ",";
+            sql += "'" + to_string(type.c_str()) + "',";
+            sql += "'" + to_string(group.c_str()) + "',";
+            sql += "'" + to_string(name.c_str()) + "',";
+            sql += "'" + to_string(str.c_str()) + "',";
+            sql += to_string(h_node.LocalIndex) + ",";
+            sql += to_string(h_node.tvalue) + ",";
+            sql += "'" + to_string(h_node.User.c_str()) + "',";
+            sql += "'" + to_string(h_node.Computer.c_str()) + "')";
+            W.exec(sql.c_str());
+        }
+        W.commit();
+    }
+    catch (const std::exception& e) {
+        cerr << e.what() << std::endl;
+        cerr << sql << endl;
+        return -1;
+    }
+
+
+
 }
+
 int CleanFileAchivesFromUnUsedFiles() {
     try {
         connection c = initconnection("Clean FileArchive");

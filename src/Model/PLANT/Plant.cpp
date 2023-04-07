@@ -244,6 +244,7 @@ bool Plant::Def()
 	funcname = "Albedo Day of year function";
 	pFunc = new Func(SINGLEPLANT, PLANT_SHAPE, NOFPROC, NOBPROC, NORMAL);
 	Define(pFunc, functorprop, funcname, p_vec);
+
 	p_vec.erase(p_vec.end() - 1);  p_vec.push_back(mTab_Above_t[3]);
 
 	functorprop.FuncName = MyFunc::CANOPYHEIGHT_DAYOFYEAR; functorprop.Arg = MyArgType::D1;

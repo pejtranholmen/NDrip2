@@ -1749,7 +1749,7 @@ bool NC_Plant_Functions::Def_Allocation() {
 	plotpar.LogXScale = false;
 	plotpar.LogYScale = false;
 	plotpar.Num_Of_Opt = 1;
-
+	functorprop.Arg = MyArgType::T_D1;
 
 	functorprop.FunctorInitOption = string::npos;
 	functorprop.pModelInfo = m_pModelInfo;

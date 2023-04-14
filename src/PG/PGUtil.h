@@ -96,6 +96,7 @@ public:
 	virtual ~PGUtil(void);
 	UNIT_TYPES GetUnitType(std::string key);
 	static float AtoFloat(std::string str);
+	static double AtoDouble(std::string str);
 	static std::string DateConv(enum dateformats, std::string instr);
 	static std::string ItoNumAscii(int);
 	static std::string	STD_FtoAscii(float v) ;

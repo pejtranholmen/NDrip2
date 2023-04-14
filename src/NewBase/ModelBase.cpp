@@ -3,6 +3,7 @@
 #include "./ModelBase.h"
 #include "./DB/DB_Plant.h"
 #include "../ModelTypes/NewModelType.h"
+#include "../SoilData/PlotPF/PFCurve.h"
 
 
 
@@ -139,8 +140,10 @@ ModelBase::ModelBase() {
 	m_MultiStorageBinFileExist=true;
 	m_AnnimChartX=2;
 	m_AnnimChartY=2;
-#ifndef NO_MS_GUI
-	p_PFCurve = &PlotpF::GetPointer();
+//#ifndef NO_MS_GUI
+	if(p_PFCurve==nullptr) {
+		p_PFCurve = make_unique<PFCurve>();
+	}
 	if(p_PFCurve->IsOpen()) {
 	  string directory;
 #ifndef STD
@@ -150,11 +153,10 @@ ModelBase::ModelBase() {
 #endif
 	}
 	else {
-		m_DataBaseDirectory = FUtil::GetProfileStringStd("DataBaseDirectory", "");
-		p_PFCurve->SetDataBaseDirectory(m_DataBaseDirectory);
-
+		//m_DataBaseDirectory = FUtil::GetProfileStringStd("DataBaseDirectory", "");
+		//p_PFCurve->SetDataBaseDirectory(m_DataBaseDirectory);
 	}
-#endif
+//#endif
 	m_ChildDocument = false;
 
 };
@@ -694,7 +696,7 @@ SimB* ModelBase::GetPtrByName(string name, string group) {
 		
 		return nullptr;
 }
-vector<SimB*> ModelBase::GetPtrVector(simtype typ,  bool All)
+vector<SimB*> ModelBase::GetPtrVector(simtype typ,  bool All, bool Original)
 {
 	SimB *pSimB;
 	vector<SimB*> vptr;
@@ -707,6 +709,13 @@ vector<SimB*> ModelBase::GetPtrVector(simtype typ,  bool All)
 					vptr.push_back(pSimB);
 				else if (!m_ChildDocument)
 					vptr.push_back(pSimB);
+				else if(m_ChildDocument&&Original)
+					vptr.push_back(pSimB);
+
+			}
+			else if(Original) {
+				vptr.push_back(pSimB);
+
 			}
 
 		}
@@ -744,6 +753,19 @@ vector<SimB*> ModelBase::GetAllPtr(simtype typ) {
 			vptr.push_back(pSimB);
 	}
 	return vptr;
+}
+vector<SimB*> ModelBase::GetAllEnabledPtr(simtype typ) {
+	vector<SimB*> vptr,kool;
+	SimB* pSimB;
+	for (auto it = GlobalMap.begin(); it != GlobalMap.end(); ++it) {
+		pSimB = (*it).second;
+		if (size_t(typ) == pSimB->GetType()&& !pSimB->IsEnabled()) {
+			vptr.push_back(pSimB);
+			kool.push_back(pSimB);
+
+		}
+	}
+	return kool;
 }
 vector<SimB*> ModelBase::GetAllPtr(simtype typ1, simtype typ2, simtype typ3, simtype typ4) {
 	vector<SimB*> vptr;

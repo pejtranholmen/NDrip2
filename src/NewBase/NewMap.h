@@ -43,7 +43,9 @@ public:
 
 	bool WriteDoc_To_Postgres(bool UpdatedRecord=false, bool DB_Source=false);
 	bool ReDefinePostgresDataBase();
-	bool SelectDoc_From_Postgres(int pkey, bool download=false, string localdirectory="", bool OnlyTimeSerieAsCSV=false);
+	bool SelectDoc_From_Postgres(int pkey, bool init_call=true, bool download=false, string localdirectory="", bool OnlyTimeSerieAsCSV=false);
+	vector<int> PreSelectDoc_From_Postgres(int pkey);
+	bool Export_OLDSOILDB_toPostgres();
 	bool DeleteDoc_From_Postgres(int pkey=-1);
 
 	vector<pair<int, string>> GetDataBaseSimulations();

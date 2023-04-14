@@ -21,6 +21,7 @@ OutSingle::OutSingle(enum datatype data, enum elements elem, enum fysprocess fpr
 		_out.StoreFlag=0;
 		m_Annimate.ichart=0;
 		m_Annimate.sequence=0;
+		m_ChildChange = false;
 }
 OutSingle::~OutSingle(void)
 {
@@ -41,6 +42,7 @@ bool OutSingle::AddSumVar( float initial, float final,float  min,float  max, flo
 		_out.PgFileIndex = pgindex;
 		_out.PgMultiFileIndex = pgMultiIndex;
 		_out.StoreFlag = StoreFlag;
+		m_ChildChange = false;
 	}
 	return true;
 

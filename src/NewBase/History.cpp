@@ -16,6 +16,8 @@ History::History() {
 	m_ToView[4] = true;
 	m_ToView[5] = true;
 	m_ToView[6] = true;
+	m_ToView[7] = true;
+	m_ToView[8] = true;
 	m_ViewAll = true;
 #ifndef COUPSTD
 	if(MFC_Util::GetProfileIntNo("Hist0", 0)==0) m_ToView[0] = false;
@@ -33,8 +35,11 @@ bool History::History_Add(SimB *pBase,int Lindex, time_t t, float v, string User
 	int itype;
 	if (pBase->GetType() == PAR_TABLE)
 		itype = int(HIST_INFO::PARTABLE_INFO);
-	else
+	else {
 		itype = int(HIST_INFO::PARSINGLE_INFO);
+		Lindex = 0;
+
+	}
 
 	if (m_ChildDocument) pBase->SetChildChange(true);
 
@@ -54,6 +59,12 @@ bool History::History_Add(SimB *pBase,int Lindex, time_t t, string str, string U
 		itype = int(HIST_INFO::DATA_BASE_INFO);
 	else if (pBase->GetType() == PGFILE)
 		itype = int(HIST_INFO::MODELFILE_INFO);
+	else if (pBase->GetType() >= STATE_SINGLE && pBase->GetType() <= DRIVE_SINGLE) {
+		itype = int(HIST_INFO::OUTPUT_SINGLE);
+	}
+	else if (pBase->GetType() >= STATE && pBase->GetType() <= DRIVE) {
+		itype = int(HIST_INFO::OUTPUT_VECTOR);
+	}
 
 
 	if (m_ChildDocument) pBase->SetChildChange(true);
@@ -74,12 +85,12 @@ bool History::History_Add(SimB *pBase,int iType, int Lindex, time_t t, float v, 
 	HISTv Node;
 
 	Node.pBase=pBase;
-	Node.LocalIndex=Lindex;
+	Node.LocalIndex=size_t(Lindex);
 	Node.RunInfoType=iType;
 
 	size_t i=m_History_Array.size();
 	if(Lindex<0) Lindex=0;
-	pBase->AddHistoryIndex(Lindex,i);
+
 
 
 	Node.tvalue=t;
@@ -216,6 +227,8 @@ size_t History::UpdateListToView()
 		else if (m_ToView[4] && HIST_INFO(a.RunInfoType) == HIST_INFO::NUMBER_ELEMENTS) m_IndexToView.push_back(i);
 		else if (m_ToView[5] && HIST_INFO(a.RunInfoType) == HIST_INFO::PARTABLE_INFO) m_IndexToView.push_back(i);
 		else if (m_ToView[6] && HIST_INFO(a.RunInfoType) == HIST_INFO::MODELFILE_INFO) m_IndexToView.push_back(i);
+		else if (m_ToView[7] && HIST_INFO(a.RunInfoType) == HIST_INFO::OUTPUT_SINGLE) m_IndexToView.push_back(i);
+		else if (m_ToView[8] && HIST_INFO(a.RunInfoType) == HIST_INFO::OUTPUT_VECTOR) m_IndexToView.push_back(i);
 	}
 	return size_t(m_IndexToView.size());
 }
@@ -261,14 +274,14 @@ bool History::History_Add(size_t index, string strvalue)
 	if(i>0)
 		Node= m_History_Array[i-1];
 
-	/*
+	
  	string User,Computer;
 
-	User=FUtil::GetProfileStringStd("Signature", User);
-	Computer=FUtil::GetProfileStringStd("ComputerName", Computer);
+	User = "NN"; //FUtil::GetProfileStringStd("Signature", User);
+	Computer = "NN";// FUtil::GetProfileStringStd("ComputerName", Computer);
 	Node.User=User;
 	Node.Computer=Computer;
-	*/
+	
 	Node.tvalue=time(nullptr);
 	Node.LocalIndex=index;
 

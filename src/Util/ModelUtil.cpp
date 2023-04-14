@@ -16,6 +16,54 @@ ModelUtil::ModelUtil(void)
 ModelUtil::~ModelUtil(void)
 {
 }
+unique_ptr<Doc> ModelUtil::SetParTableValue(unique_ptr<Doc> pDoc, P* pP, size_t index, double newvalue)
+{
+
+	double orgvalue;
+	orgvalue = pP->GetOriginalValue(index);
+	if (orgvalue < -1.E37) {
+		double value_org = pP->GetOriginalValue(0);
+		double value_min = pP->GetMinValue(0);
+		double value_max = pP->GetMaxValue(0);
+		vector<double> newv;
+		newv.resize(pP->GetSize());
+		for (size_t i = 0; i < pP->GetSize(); i++) {
+			newv[i] = value_org;
+		}
+		pP->SetOriginalValue(newv);
+		pP->SetMinValue(value_min);
+		pP->SetMaxValue(value_max);
+		orgvalue = pP->GetOriginalValue(index);
+	}
+	double relorg = orgvalue / (pP->GetMaxValue(index) - pP->GetMinValue(index));
+	double newrel = newvalue / (pP->GetMaxValue(index) - pP->GetMinValue(index));
+	double oldrel = pP->GetValue(index) / (pP->GetMaxValue(index) - pP->GetMinValue(index));
+	size_t recalc = 0;
+	bool change = true;
+	if (abs(newrel - relorg) > 1.E-8) {
+		recalc = pP->SetValue(index, newvalue);
+		pP->SetNotOriginalIndicator(index, true);
+	}
+	else if (abs(oldrel - newrel) > 1.E-8) {
+		recalc = pP->SetValue(index, newvalue);
+		pP->SetNotOldValue(index);
+	}
+	else {
+		change = false;
+	}
+	if (change) {
+		if (recalc > 0) {
+			pDoc->LinkedChangeToParameters(pP, recalc, index);
+
+		}
+		pDoc->TimeModified();
+		pDoc->History_Add(pP, index, time(nullptr), newvalue);
+	}
+
+	return move(pDoc);
+}
+
+
 
 bool ModelUtil::SetParTableValue(Doc* pDoc,P * pP, size_t index, double newvalue)
 {
@@ -85,6 +133,17 @@ bool ModelUtil::SetParValue(Doc *pDoc, Ps * pPs, double newvalue)
 #endif
 
 	return true;
+}
+unique_ptr<Doc>  ModelUtil::SetParValue(unique_ptr<Doc> pDoc, Ps* pPs, double newvalue)
+{
+	size_t recalc = pPs->SetValue(newvalue);
+	if (recalc > 10000) {
+		pDoc->LinkedChangeToDB_Parameters(pPs, recalc);
+
+	}
+	pDoc->TimeModified();
+	pDoc->History_Add(pPs, string::npos, time(nullptr), newvalue);
+	return move(pDoc);
 }
 
 bool ModelUtil::SetMRSoilPropConnections(Doc *pDoc)

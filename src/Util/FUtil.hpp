@@ -365,13 +365,7 @@ namespace FUtil
 	{
 
 		string newstr;
-		for (size_t i = 0; i < str.size(); i++) {
-			char ss = str[i];
-			if (ss < 32) {
-				str.replace(i, 1, " ");
 
-			}
-		}
 		auto pos = str.find(0x2f);
 		while (pos != string::npos) {
 			str.erase(pos, 1);
@@ -384,6 +378,49 @@ namespace FUtil
 			str.insert(pos, "");
 			pos = str.find(0xf8);
 		}
+
+
+		for (size_t i = 0; i < str.size(); i++) {
+			char ss = str[i];
+			if (ss == -42) {
+				str.erase(str.begin() + i);
+				str.insert(i, "Ö");
+				i++;
+			}
+			else if (ss == -10) {
+				str.erase(str.begin() + i);
+				str.insert(i, "ö");
+				i++;
+			}
+			else if (ss == -28) {
+				str.erase(str.begin() + i);
+				str.insert(i, "ä");
+				i++;
+			}
+			else if (ss == -27) {
+				str.erase(str.begin() + i);
+				str.insert(i, "å");
+				i++;
+			}
+			else if (ss == -59) {
+				str.erase(str.begin() + i);
+				str.insert(i, "Å");
+				i++;
+			}
+			else if (ss == -60) {
+				str.erase(str.begin() + i);
+				str.insert(i, "Ä");
+				i++;
+			}
+			else if (ss < 32) {
+
+				str.erase(str.begin() + i);
+				//str.replace(i, 1, " ");
+
+			}
+		}
+
+
 
 	}
 	static bool CopyFile_Std(string srcFileName, string destFileName)
@@ -444,6 +481,10 @@ namespace FUtil
 		string str;
 		str.assign(buf, n);
 		return str;
+	}
+	static double AtoDouble(string str) {
+		if (str[0] == char(0)) return -1.1E38f;
+		return stod(str);
 	}
 	static float AtoFloat(string str) {
 		if (str[0] == char(0)) return -1.1E38f;

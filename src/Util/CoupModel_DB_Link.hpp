@@ -958,10 +958,100 @@ vector<string> create_Main_Tables(CommonModelInfo* pinfo) {
         sql += "computer VarChar(40)) ";
         W.exec(sql.c_str());
         nametables.push_back(nametable);
+
+       
+        nametable = "soil_profiles";
+        drop(W, nametable);
+        sql = create(nametable);
+
+        sql += " (id_profile SERIAL PRIMARY KEY, ";
+        sql += "id_oldkey Integer Unique,";
+        
+        sql += "Name Varchar(64),";
+        sql += "Country Varchar(34),";
+        sql += "County Varchar(34),";
+        sql += "Longitude float,";
+        sql += "Latitude float,";
+        sql += "Numlayers Integer,";
+        sql += "LowerDepth Integer,";
+        sql += "Upper_Clay float,";
+        sql += "Upper_Sand float,";
+        sql += "Upper_Org float,";
+        sql += "Lower_Clay float,";
+        sql += "Lower_Sand float,";
+        sql += "lower_Org float,";
+        sql += "Year Integer,";
+        sql += "SoilType Varchar(34))";
+
+        W.exec(sql.c_str());
+        nametables.push_back(nametable);
+
+
+        nametable = "soil_profile_details";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (id_profile Integer REFERENCES soil_profiles(id_profile), ";
+        sql += "Descriptions VarChar(1000),";
+        sql += "CreatedBy Varchar(34),";
+        sql += "DateCreated integer,";
+        sql += "ModifiedBy Varchar(34),";
+        sql += "DateModified Integer)";
+        W.exec(sql.c_str());
+        nametables.push_back(nametable);
+
+
+
+        nametable = "soil_layers";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += " (id_layers SERIAL PRIMARY KEY, ";
+        sql += "UpperDepth float, ";
+        sql += "LowerDepth float, ";
+        sql += "Id_SoilType_Name integer,";
+        sql += "DryBulkDensity float,";
+        sql += "ParticleDensity float,";
+        sql += "OrganicMatter float,";
+        sql += "CarbonContent float,";
+        sql += "NitrogenContent float,";
+        sql += "PhosphorousContent float,";
+        sql += "AtterbergFractions float[],";
+        sql += "Clay float,";
+        sql += "Silt float,";
+        sql += "Sand float,";
+        sql += "Gravels float,";
+        sql += "Number_of_Heads integer,"; 
+        sql += "Heads float[],";
+        sql += "ThetaMeasured float[],";
+        sql += "Saturation float,";
+        sql += "WiltingPoint float,";
+        sql += "Residual float,";
+        sql += "AirEntry float,";
+        sql += "Lambda float,";
+        sql += "UpperBoundaryHead float,";
+        sql += "MacroPore float,";
+        sql += "GenAlpha float,";
+        sql += "GenM float,";
+        sql += "GenN float,";
+        sql += "TotConductivity float,";
+        sql += "MatricConductivity float,";
+        sql += "Mualem_n float,";
+        sql += "N_SrCoef float,";
+        sql += "N_SECoef float)";
+        W.exec(sql.c_str());
+        nametables.push_back(nametable);
+
+        nametable = "soil_profile_layer_linking";
+        drop(W, nametable);
+        sql = create(nametable);
+        sql += "(Id_profile Integer References soil_profiles(Id_profile),";
+        sql += "Id_layers Integer References soil_layers(Id_Layers),";
+        sql += "UpperDepthFromProfile  float Default 0.,";
+        sql += "LowerDepthFromProfile  float default 0.)";
+        W.exec(sql.c_str());
+
+        nametables.push_back(nametable);
         W.commit();
         return nametables;
-       
-
 
     }
     catch (const std::exception& e) {
@@ -2159,7 +2249,6 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
                         sql += to_string(get<1>(rec)) + ",'{";
                         vector<float> var = get<2>(rec);
                         for (int i = 0; i < r.NumVar; i++) {
-                            cout << "Uploading (" << to_string(i+1) << ") of " << to_string(r.NumVar) << " Variables";
                             sql += to_string(get<2>(rec)[i]);
                             if (i < r.NumVar - 1) sql += ",";
                         }
@@ -2668,8 +2757,6 @@ int transfer_ensemble_statistics(int pkey, NewMap* pDoc) {
                     }
                     sql += ");";
 
-
-
                     W.exec(sql.c_str());
                 }
             }
@@ -2696,17 +2783,16 @@ int transfer_initial_final(int pkey, NewMap* pDoc) {
 
 
         vpp = pDoc->GetPtrVector("State Variables", "");
-        for (size_t i = 0; i < vpp.size(); i++) {
-            sql = "INSERT INTO initial_final_states VALUES (";
-            sql += to_string(pkey) + ",";
+        for (size_t i = 0; i < vpp.size(); i++) {      
             auto pPtr = (SimB*)vpp[i];
-            sql +="'"+ pPtr->GetName() + "',";
-      
-            iv++;
             vp_final.push_back(pPtr);
         }
         bool IsVector = false;
         for (size_t i = 0; i < vp_final.size(); i++) {
+            sql = "INSERT INTO initial_final_states VALUES (";
+            sql += to_string(pkey) + ",";          
+            sql += "'" + vp_final[i]->GetName() + "',";
+
             auto pXT = static_cast<X*>(vp_final[i]);
             auto pX = static_cast<Xs*>(vp_final[i]);
             IsVector = vp_final[i]->Is_Vector();
@@ -2835,6 +2921,19 @@ int transfer_history(int pkey, NewMap* pDoc) {
                 name = pBase->GetName();
                 type = "ModelFiles";
             }
+            else if (HIST_INFO(h_node.RunInfoType) == HIST_INFO::OUTPUT_SINGLE) {
+                group = pBase->GetGroup();
+                name = pBase->GetName();
+                str = h_node.strvalue;
+                type = "Single Output";
+            }
+            else if (HIST_INFO(h_node.RunInfoType) == HIST_INFO::OUTPUT_VECTOR ) {
+                group = pBase->GetGroup();
+                name = pBase->GetName();
+                str = h_node.strvalue;
+                type = "Vector Output";
+            }
+
             sql = "INSERT INTO history_of_changes VALUES (";
             sql += to_string(pkey) + ",";
             sql += to_string(h_node.RunInfoType) + ",";

@@ -71,6 +71,7 @@ add_subdirectory(app)
 
 target_include_directories(Executable PRIVATE 
     "./"
+     "./src"
     "${PROJECT_SOURCE_DIR}"
     "${CMAKE_BINARY_DIR}/configured_files/include"
 )

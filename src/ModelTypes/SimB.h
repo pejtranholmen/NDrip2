@@ -69,11 +69,11 @@ enum vartype { NO_USE, DATEAXIS, MULTIRUN_NUM, PGVAR, SUMVAR, VALVAR, PARVAR, PG
 enum class CHART_TYPES { SCATTER, TIME_SERIE, FREQUENCE, CUM_FREQUENCE, CONTOUR_CHART };
 enum class TimeResolution { WITHIN_DAY, DAILY_MEAN, HOURLY, TEN_MIN };
 enum class SIMB_COMP{NOVALUE, LE, LT, GE, GT, EQ, NEQ, ON, OFF};
-enum class HIST_INFO {RUN_INFO, DATA_BASE_INFO, SWITCH_INFO, PARSINGLE_INFO, PARTABLE_INFO,NUMBER_ELEMENTS, MODELFILE_INFO};
+enum class HIST_INFO {RUN_INFO, DATA_BASE_INFO, SWITCH_INFO, PARSINGLE_INFO, PARTABLE_INFO,NUMBER_ELEMENTS, MODELFILE_INFO, OUTPUT_SINGLE, OUTPUT_VECTOR};
 struct OUTPUT {size_t LocalIndex; float Initial; float Final; float Min; float Max; float Mean; float Accumulated; size_t ValidFlagIndex; float OptInitial; size_t PgFileIndex; size_t PgMultiFileIndex;int StoreFlag;}	;
 static std::vector<std::string> simType_StringId = { "Ps","X","T","G","D","Sw","F", "Ps", "Xs","Ts", "Gs", "Ds", "P", "Table","DB","Func","CSV" };
 static std::vector<std::string> Sw_StringOptions = { "O1","O2","O3", "O4", "O5", "O6", "O7", "O8","O9","O10","O11", "O12", "O13", "O14", "O15", "O16" , "O17", "O18" };
-enum simtype {PAR, STATE, FLOW, AUX, DRIVE, SWITCH, PGFILE, PAR_SINGLE, STATE_SINGLE, FLOW_SINGLE,AUX_SINGLE, DRIVE_SINGLE, PAR_TABLE, TABLE, DB, FUNCTION, CSVFILE, NUM_ELEMENTS_VECTOR};
+enum simtype {PAR, STATE, FLOW, AUX, DRIVE, SWITCH, PGFILE, PAR_SINGLE, STATE_SINGLE, FLOW_SINGLE,AUX_SINGLE, DRIVE_SINGLE, PAR_TABLE, TABLE, DB, FUNCTION, CSVFILE, NUM_ELEMENTS_VECTOR, HEADER_INPUTS};
 enum datatype{SINGLE, SIMPROFILE, MPROFILE,SINGLEPLANT, PLANT, MYCON,OTHER, WATERPIPE, HEATBOX, ATMBOUNDARY, SURFACEPOOL, WATERPOND, 
 	IRRIGATIONCONTAINER,ROADSURFACE, SOILSURFACE,SOILBOTTOM, OBSERVED, TOTPROFILE,ALL_SOIL_LAYERS,ALL_SOIL_BOUNDARIES, ALLPLANTS,ACCUMULATOR, FILEDEFINEDPARAMETERS};
 enum elements {
@@ -259,7 +259,7 @@ class SimB
 		std::string GetElementName() const;
 
 		enum simtype GetSim() {return _stype;};
-		void SetSimType(enum simtype value) {_stype=value;};
+		void SetSimType(simtype value) {_stype=value;};
 		bool	IsTrue(size_t) const;	
 		virtual void	Notice();
 		virtual void	SetIsOriginalValue(){m_IsNotOriginal=false;};	
@@ -297,7 +297,7 @@ class SimB
 		std::string	_unit;
 		size_t _DBIntValue;
 		int _orgIntValue;
-		bool m_ChildChange;
+		bool m_ChildChange{ false };
 		CommonModelInfo* m_pCommonModelInfo;
 		std::vector<double> _orgFVector;
 	private:
@@ -308,7 +308,7 @@ class SimB
 		std::string _name;
 	
 		definitions _def;
-		enum simtype _stype;
+		simtype _stype;
 		size_t _ModuleNo;
 		std::string	cond;	
 		std::vector<Condition> conditions_Array;		// Array of conditions

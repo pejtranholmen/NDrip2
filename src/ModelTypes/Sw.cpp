@@ -12,7 +12,8 @@ Sw::Sw(size_t *target, datatype data, elements elem, fysprocess fproc, bioproces
 	:SimB(SWITCH,data, elem, fproc, bproc, ulev)
 {
 	_ptarget=target; 
-	;
+	SetSimType(SWITCH);
+
 }
 
 void Sw::Def(size_t ModuleNo,  string name, int def, string opt, string conditions, int recalc)
@@ -20,11 +21,13 @@ void Sw::Def(size_t ModuleNo,  string name, int def, string opt, string conditio
 	org_value=def;
 	_orgIntValue = def;
 	*_ptarget=def;
+	SetSimType(SWITCH);
 	SetName(name);
 	SetModuleNo(ModuleNo);
 	SetConditions(conditions);
 	_IsOldValue=false;
 	SetIsOriginalValue();
+
 
 	string		option;
 	if (opt.size()<=0) return;

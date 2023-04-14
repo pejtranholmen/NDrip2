@@ -39,8 +39,9 @@ public:
 	Link m_Link;
 #else 
 	pair<bool, unique_ptr<Register>> MakeSingleRun(bool DB_Source=false, int pkey=-1, unique_ptr<Register> pReg=nullptr);
+	unique_ptr<Register> SetNewRunNo(bool DB_Source = false, int pkey = -1, bool ChildDocument=false, unique_ptr<Register> pReg = nullptr);
 	pair<bool, unique_ptr<Register>> MakeMultiRun(bool DB_Source = false, int pkey = -1, unique_ptr<Register> pReg = nullptr);
-	pair<bool, unique_ptr<Register>> RunModel_Using_Postgres(int pkey, unique_ptr<Register> );
+	pair<bool, unique_ptr<Register>> RunModel_Using_Postgres(int pkey, bool makeChildDocument, unique_ptr<Register> );
 	
 #endif
 	Simulator m_Simulator;

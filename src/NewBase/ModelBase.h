@@ -242,9 +242,10 @@ class ModelBase : public ModelMap{
 
 
 	vector<SimB*> GetPtrVector(string type, string group, bool All=false);
-	vector<SimB*> GetPtrVector(simtype,  bool All=false);
+	vector<SimB*> GetPtrVector(simtype,  bool All=false, bool OnlyNotOriginal=true);
 	vector<SimB*> GetPtrVector(simtype, size_t GroupNo,bool All);
 	vector<SimB*> GetAllPtr(simtype);
+	vector<SimB*> GetAllEnabledPtr(simtype);
 	vector<SimB*> GetAllPtr(simtype, simtype, simtype, simtype);
 
 	vector<SimB*> GetPtrVector(string type, size_t igroup=-1);
@@ -405,7 +406,7 @@ class ModelBase : public ModelMap{
 	vector<string> m_PlantTypes;
 	string m_DB_choices[10];
 	DB_OldHeader m_DB_header[10];
-	PFCurve* p_PFCurve{nullptr};
+	unique_ptr<PFCurve> p_PFCurve{nullptr};
 	string GetTimeCreated();
 	string GetTimeModified();
 protected:

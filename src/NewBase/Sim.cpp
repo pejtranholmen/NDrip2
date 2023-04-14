@@ -323,10 +323,12 @@ string Sim::GetCurrentSubDirectoryFile()
 	return m_CurrentSubDirectoryFile;
 }
 
-pair<bool, unique_ptr<Register>> Sim::RunModel_Using_Postgres(int pkey, unique_ptr<Register> pReg) {
+pair<bool, unique_ptr<Register>> Sim::RunModel_Using_Postgres(int pkey, bool makechildDocument, unique_ptr<Register> pReg) {
 
-	if (SelectDoc_From_Postgres(pkey, false)) {
+	//if (SelectDoc_From_Postgres(pkey, false)) {
 		m_PG_OutPutFile.SetOnlyMemoryUse(true);
+
+		m_ChildDocument = makechildDocument;
 		m_pCommonModelInfo->SetForRunningWithoutFiles(true);
 		for(size_t i=0;i<MAXSIMVAL;++i)
 			ValidationResultPG_Pointer(i)->SetOnlyMemoryUse(true);
@@ -350,6 +352,9 @@ pair<bool, unique_ptr<Register>> Sim::RunModel_Using_Postgres(int pkey, unique_p
 			
 			
 			
+			
+			
+			
 			CheckAndUpdateFileName(true, true);
 
 			
@@ -357,8 +362,8 @@ pair<bool, unique_ptr<Register>> Sim::RunModel_Using_Postgres(int pkey, unique_p
 		}
 		else
 			return MakeSingleRun(true, pkey, move(pReg));
-	}
-	m_pCommonModelInfo->SetForRunningWithoutFiles(false);
+	//}
+	//m_pCommonModelInfo->SetForRunningWithoutFiles(false);
 }
 void Sim::SetCurrentName_SimNo(int NewNo)
 {
@@ -425,6 +430,24 @@ bool Sim::FixSumIndex()
 }
 
 #ifdef COUPSTD
+unique_ptr<Register> Sim::SetNewRunNo(bool DB_Source, int pkey, bool ChildDocument, unique_ptr<Register> reg_pointer)
+{
+	if (DB_Source == true) {
+		if (GetDB_Action() != 0) {
+			pair<int, unique_ptr<Register>> pn = FUtil::GetProfileIntNo("SimulationRunNo", 1, move(reg_pointer));
+			int testno = pn.first; reg_pointer = move(pn.second);
+			if (m_DocFile.m_SimulationRunNo <= testno) {
+				m_DocFile.m_SimulationRunNo = testno;
+			}
+			m_DocFile.m_SimulationRunNo++;
+			reg_pointer = FUtil::WriteProfileInt("SimulationRunNo", m_DocFile.m_SimulationRunNo, move(reg_pointer));
+			m_ChildDocument = ChildDocument;
+		}
+	}
+	History_Add(13, FUtil::ItoNumAscii(m_DocFile.m_SimulationRunNo));
+	return move(reg_pointer);
+
+}
 pair<bool, unique_ptr<Register>> Sim::MakeSingleRun(bool DB_Source, int pkey, unique_ptr<Register> reg_pointer) 
 {
 	if (DB_Source == true) {
@@ -432,17 +455,6 @@ pair<bool, unique_ptr<Register>> Sim::MakeSingleRun(bool DB_Source, int pkey, un
 		m_ValidationData.Init(this);
 		m_ValidationData.SetPointersToOutputValidationFiles(true);
 		m_MStorage.Init(this);
-		if (GetDB_Action() != 0) {
-			
-			pair<int, unique_ptr<Register>> pn = FUtil::GetProfileIntNo("SimulationRunNo", 1, move(reg_pointer));
-			int testno = pn.first; reg_pointer = move(pn.second);
-
-			if (m_DocFile.m_SimulationRunNo <= testno) {
-				m_DocFile.m_SimulationRunNo = testno;
-			}
-			m_DocFile.m_SimulationRunNo++;
-			reg_pointer = FUtil::WriteProfileInt("SimulationRunNo", m_DocFile.m_SimulationRunNo, move(reg_pointer));
-		}
 	}
 
 	m_DocFile.m_TimeModified = time(nullptr);

@@ -31,7 +31,7 @@ public:
 	size_t History_GetLocalIndex(size_t index);
 	size_t History_GetRunNo(size_t index);
 	size_t UpdateListToView();
-	bool   m_ToView[7],	m_ViewAll;
+	bool   m_ToView[9],	m_ViewAll;
 	vector<size_t> m_IndexToView;
 
 protected:

@@ -991,11 +991,11 @@ vector<string> create_Main_Tables(CommonModelInfo* pinfo) {
         drop(W, nametable);
         sql = create(nametable);
         sql += " (id_profile Integer REFERENCES soil_profiles(id_profile), ";
-        sql += "Descriptions VarChar(1000),";
+        sql += "Descriptions VarChar(4000),";
         sql += "CreatedBy Varchar(34),";
-        sql += "DateCreated integer,";
+        sql += "DateCreated VarChar(16),";
         sql += "ModifiedBy Varchar(34),";
-        sql += "DateModified Integer)";
+        sql += "DateModified VarChar(16))";
         W.exec(sql.c_str());
         nametables.push_back(nametable);
 

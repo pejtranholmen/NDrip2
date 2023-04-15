@@ -1266,7 +1266,8 @@ function<double(size_t, double)> FunctFactory::Set_D1_TableFunctor() {
 					r.UpperBTheta = m_pHydCoef->ret[i].UpperBTheta;
 					r.UpperBPsi = m_pHydCoef->ret[i].UpperBPsi;
 					r.ResWater = m_pHydCoef->ret[i].ResWater;
-					r.MacroPore = m_pHydCoef->ret[i].MacroPore;
+					r.
+						MacroPore = m_pHydCoef->ret[i].MacroPore;
 					r.Lambda = m_pHydCoef->ret[i].Lambda;
 					r.PsiEntry = m_pHydCoef->ret[i].PsiEntry;
 					r.ScalePsi = m_pHydCoef->ret[i].ScalePsi;

@@ -418,6 +418,10 @@ namespace FUtil
 				//str.replace(i, 1, " ");
 
 			}
+			else if (ss == 39) {
+				str.erase(str.begin() + i);
+				str.insert(i, " ");
+			}
 		}
 
 

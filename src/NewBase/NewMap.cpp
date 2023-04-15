@@ -3116,9 +3116,11 @@ bool NewMap::Export_OLDSOILDB_toPostgres() {
 	p_PFCurve->CloseMainDataBase();
 	p_PFCurve->OpenMainFile(m_DataBaseDirectory + "PfProf");
 	p_PFCurve->ReadHeaderFile();
+	p_PFCurve->SetDataBaseDirectory(m_DataBaseDirectory);
 	try {
-		connection c = initconnection("MultiRun Results");
+		connection c = initconnection("Soil Database");
 		pqxx::work W{ c };
+		int id_profile{ 0 }, id_layer{ 0 };
 	
 		size_t newcount = 10000;
 		for (size_t i = 0; i < p_PFCurve->GetNumProfiles(); i++) {
@@ -3147,10 +3149,81 @@ bool NewMap::Export_OLDSOILDB_toPostgres() {
 			sql += to_string(prof.Year) + ",'";
 			string soiltype = "agriculture";
 			if (prof.KeyProf > 10000) soiltype = "forest";
-			sql += soiltype + "')";		
-			W.exec(sql.c_str());
-		}
+			if (prof.KeyProf > 40100) soiltype = "agriculture";
+			if (prof.KeyProf > 50000) soiltype = "Organic";
+ 			sql += soiltype + "') returning id_profile;";		
+			result r=W.exec(sql.c_str());
+			id_profile = r.begin().at(0).as<int>();
 
+			auto koll=p_PFCurve->SetHeader(i);
+			if (koll) {
+				auto pressure = p_PFCurve->GetPF_Pressure(prof.RecLayers);
+				auto lf = [](float value) {
+					auto str = to_string(value) + ","; return str;
+				};
+				auto li = [](int value) {
+					auto str = to_string(value) + ","; return str;
+				};
+				auto lfv = [](vector<float> fv) {
+					string s = "'{"; for (size_t i = 0; i < fv.size(); i++) {
+						s += to_string(fv[i]); if (i < fv.size() - 1) s += ",";
+					}
+					s += "}',"; return s;
+				};
+				for (size_t ilayer = 0; ilayer < prof.NumLayers; ilayer++) {
+					sql = "INSERT INTO soil_layers VALUES("; sql += "Default,";
+					auto thetas = p_PFCurve->GetPF_Theta(ilayer);
+					auto coefs = p_PFCurve->GetPF_Coef(ilayer);
+					auto textures = p_PFCurve->GetTexture(ilayer);
+
+					sql += lf(coefs.UpperDepth); sql += lf(coefs.LowerDepth);
+					sql += li(0);//soiltype
+					 sql += lf(0.); // drybulk
+					 sql += lf(2.65); // particledensity
+					 sql += lf(textures[7]); // organic content
+					 sql += lf(0.); // carbon content
+					 sql += lf(0.); // nitrogen content
+					 sql += lf(0.); // P content
+					 sql += lfv(textures); // texture
+					 sql += lf(textures[0]); //clay
+					 sql += lf(textures[0]); // silt
+					 sql += lf(textures[6]); // sand
+					 sql += lf(0.); // gravel
+					 sql += li(pressure.size()); // numberofheads
+					 sql += lfv(pressure);
+					 sql += lfv(thetas);
+					 sql += lf(coefs.Saturation);
+					 sql += lf(coefs.Wilting);
+					 sql += lf(coefs.Residual);
+					 sql += lf(coefs.AirEntry);
+					 sql += lf(coefs.Lambda);
+					 sql += lf(coefs.UpperBoundary);
+					 sql += lf(coefs.LowerBoundary); //Macropores
+					 sql += lf(coefs.Gen_Alfa); 
+					 sql += lf(coefs.Gen_M); 
+					 sql += lf(coefs.Gen_N); 
+					 sql += lf(coefs.TotConductivity); 
+					 sql += lf(coefs.MatConductivity);
+					 sql += lf(coefs.Mualem_n);
+					 sql += lf(coefs.N_SrCoef);
+					 sql += to_string(coefs.N_SECoef)+") returning id_layers;";
+					 result r = W.exec(sql.c_str());
+					 id_layer = r.begin().at(0).as<int>();
+					 
+					 sql = "INSERT INTO soil_profile_layer_linking VALUES (";
+					 sql += to_string(id_profile) + "," + to_string(id_layer) + "," + to_string(0.)+ "," + to_string(0.)+")";
+					 W.exec(sql.c_str());
+				}
+				sql = "INSERT INTO soil_profile_details VALUES (";
+				string note = p_PFCurve->GetComments();
+				FUtil::trim_xmlstring(prof.CreatedBy);
+				FUtil::trim_xmlstring(prof.ModifiedBy);
+				FUtil::trim_xmlstring(note);
+				sql += to_string(id_profile) + ",'";
+				sql += note + "','" +prof.CreatedBy + "','" + prof.CreateDate + "','" + prof.ModifiedBy +"','"+prof.ModifiedDate+ "')";
+				W.exec(sql.c_str());
+			}
+		}
 		W.commit();
 		return true;
 	}

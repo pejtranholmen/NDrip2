@@ -500,7 +500,7 @@ int main(int argc, char* argv[]) {
         pst = FUtil::GetProfileStringStd("DataBaseDirectory", "", move(p_Register));
         string databasedir;
         p_Register = move(pst.second); databasedir = pst.first;
-        pDoc->m_DataBaseDirectory = databasedir;
+         pDoc->m_DataBaseDirectory = databasedir;
 
       
 

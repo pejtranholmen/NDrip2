@@ -407,6 +407,7 @@ class ModelBase : public ModelMap{
 	string m_DB_choices[10];
 	DB_OldHeader m_DB_header[10];
 	unique_ptr<PFCurve> p_PFCurve{nullptr};
+	unique_ptr<Register> m_pRegister;
 	string GetTimeCreated();
 	string GetTimeModified();
 protected:

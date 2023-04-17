@@ -549,6 +549,35 @@ namespace FUtil
 
 		return vv;
 	}
+	static vector<int> GetIntVectorFromString(string str) {
+		vector<int> vv;
+		size_t ipos;
+		ipos = str.find("(");
+		if (ipos != string::npos) str = str.substr(ipos + 1);
+		ipos = str.rfind(")");
+		if (ipos != string::npos)  str = str.substr(0, ipos);
+		ipos = str.find(','); 
+		while (ipos != string::npos) {
+			string sub;
+			sub = str.substr(0, ipos);
+			int value = AtoInt(sub);
+			vv.push_back(value);
+			str = str.substr(ipos + 1);
+			ipos = str.find(',');
+		}
+		if (str.size() > 0) vv.push_back(AtoInt(str));
+		return vv;
+	}
+	static string GetStringFromIntVector(vector<int> vint) {
+		string str="(";
+		size_t count = 0;
+		for (auto i : vint) {
+			str += to_string(i);
+			if (vint.size() - 1 > count) str += ",";
+			count++;
+		}
+		return str;
+	}
 	static vector<string> GetStringVectorFromStringLine(string str, size_t num) {
 		vector<string> outvector;
 		size_t ipos;

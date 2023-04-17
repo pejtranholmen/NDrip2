@@ -2512,7 +2512,7 @@ vector<int> NewMap::PreSelectDoc_From_Postgres(int pkey) {
 		{
 			int keys = pkey;
 			vector<int> priorkeys;
-			while (keys > 0) {
+			while (keys> 1) {
 
 				pqxx::result r = txn.exec("SELECT childdocument, originalfilename FROM runinfo WHERE id_simulations = " + to_string(keys));
 

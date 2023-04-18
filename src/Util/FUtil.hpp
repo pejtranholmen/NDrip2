@@ -576,8 +576,10 @@ namespace FUtil
 			if (vint.size() - 1 > count) str += ",";
 			count++;
 		}
+		str += ")";
 		return str;
 	}
+	static string getspace(size_t n) { string out; string space = " ";; for (size_t i = 0; i < n; i++) out += space; return out; };
 	static vector<string> GetStringVectorFromStringLine(string str, size_t num) {
 		vector<string> outvector;
 		size_t ipos;

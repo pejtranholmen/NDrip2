@@ -3255,26 +3255,25 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source ) {
 	t.comment = m_DocFile2.m_Comments;
 	t.simno = m_DocFile.m_SimulationRunNo;
 	t.name = FUtil::FileNameOnly(m_DocFileName,true);
-	unique_ptr<Register> reg_pointer = make_unique<Register>();
 
-	pair<string, unique_ptr<Register>> p = FUtil::GetProfileStringStd("Creator", "NN", move(reg_pointer));
-	t.creator = p.first; reg_pointer = move(p.second);
+	pair<string, unique_ptr<Register>> p = FUtil::GetProfileStringStd("Creator", "NN", move(m_pRegister));
+	t.creator = p.first; m_pRegister = move(p.second);
 	if (m_SiteName.size() == 0) {
-		p = FUtil::GetProfileStringStd("SiteNameId", "-", move(reg_pointer));
-		t.sitename = p.first; reg_pointer = move(p.second);
+		p = FUtil::GetProfileStringStd("SiteNameId", "-", move(m_pRegister));
+		t.sitename = p.first; m_pRegister = move(p.second);
 	}
 	else t.sitename = m_SiteName;
 	if (t.comment.size() == 0) {
-		p= FUtil::GetProfileStringStd("Comment", "-", move(reg_pointer));
-	    t.comment = p.first; reg_pointer = move(p.second);
+		p= FUtil::GetProfileStringStd("Comment", "-", move(m_pRegister));
+	    t.comment = p.first; m_pRegister = move(p.second);
 	}
 	
 	// Set SimulationRunNo
 
-	pair<int, unique_ptr<Register>> pn = FUtil::GetProfileIntNo("SimulationRunNo", 1, move(reg_pointer));
-	auto maxno = max(int(m_DocFile.m_SimulationRunNo), pn.first); reg_pointer = move(p.second);
+	pair<int, unique_ptr<Register>> pn = FUtil::GetProfileIntNo("SimulationRunNo", 1, move(m_pRegister));
+	auto maxno = max(int(m_DocFile.m_SimulationRunNo), pn.first); m_pRegister = move(pn.second);
 
-	if (maxno == int(m_DocFile.m_SimulationRunNo)|| pn.first == maxno) reg_pointer = FUtil::WriteProfileInt("SimulationRunNo", maxno+1, move(reg_pointer));
+	if (maxno == int(m_DocFile.m_SimulationRunNo)|| pn.first == maxno) m_pRegister = FUtil::WriteProfileInt("SimulationRunNo", maxno+1, move(m_pRegister));
 	
 
 	m_SiteName = t.sitename;

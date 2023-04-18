@@ -78,7 +78,11 @@ size_t Register::ReadRegisterFile() {
 		istringstream split (line);
 		if (line.size() > 3) {
 			getline(split, item, ',');
-			getline(split, numstr, ',');
+			auto pos = line.find(",");
+			if (pos != string::npos)
+				numstr = line.substr(pos + 1);
+			else
+				getline(split, numstr, ',');
 
 			if (count < Num_int) {
 				m_MapInt.insert(pair<string, int>(item, FUtil::AtoInt(numstr)));

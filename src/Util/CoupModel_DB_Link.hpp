@@ -2861,6 +2861,7 @@ int transfer_history(int pkey, NewMap* pDoc) {
         }
         else
             startindex = 0;
+
         for (size_t i = startindex; i < pDoc->m_History_Array.size(); i++) {
             auto h_node = pDoc->m_History_Array[i];
             SimB* pBase;

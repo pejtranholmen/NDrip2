@@ -13,6 +13,44 @@ using namespace std;
 #include "config.hpp"
 
 #include <nlohmann/json.hpp>
+vector<int> viewFilter(vector<string> items, vector<int> current) {
+    string ans;
+  
+    for (size_t i = 1; i < items.size(); i++) {
+        bool on = false;
+        size_t ll = items[i].length();
+        if (ll > 28) ll = 28;
+        string start = "";
+        if (i < 10) start += " ";
+        start += to_string(i) + " - " + FUtil::getspace(28 - ll) + items[i];
+        for (int ii : current) if (i == ii) on = true;
+        if (on) {
+                cout <<start + " -  " + "On    ";
+            }
+        else {
+            cout << start+ " - " + "Off    ";
+        }
+        if (i % 3 == 0) cout << endl;
+      }
+      while (true) {
+            cout << " Type number to toggle: (-1 all on) :";
+            getline(cin, ans);
+            if (ans.length() == 0) return current;
+            int new_item = FUtil::AtoInt(ans);
+            if (new_item == -1) {
+                current.clear(); return current;
+            }
+
+            bool change = false;
+            for (size_t ii = 0; ii < current.size(); ii++) {
+                if (new_item == current[ii]) {
+                    current.erase(current.begin() + ii);
+                    change = true;
+                }
+            }
+            if (!change) current.push_back(new_item);
+       }
+  }
 
 
 
@@ -22,6 +60,28 @@ pair<unique_ptr<Doc>, unique_ptr<Register>> ChangeViewFilter(unique_ptr<Doc> pDo
     pair<string, unique_ptr<Register>> pst = FUtil::GetProfileStringStd("ModuleFilter", "(1,2)", move(p_Register));
     p_Register = move(pst.second); filter_str = pst.first;
     filter_v=FUtil::GetIntVectorFromString(filter_str);
+
+    vector<string> items;
+  
+    cout << "Current choice of Modules to view:" << endl;
+    for (int i = 0; i < ModelCompNames::NoGroupNames; i++) items.push_back(ModelCompNames::GroupNames[i]);
+    filter_v = viewFilter(items, filter_v);
+    filter_str = FUtil::GetStringFromIntVector(filter_v);
+    p_Register = FUtil::WriteProfileString("ModuleFilter", filter_str, move(p_Register));
+
+
+
+    pst = FUtil::GetProfileStringStd("FysProcFilter", "()", move(p_Register));
+    p_Register = move(pst.second); filter_str = pst.first;
+    filter_v = FUtil::GetIntVectorFromString(filter_str);
+    
+    items.clear();
+    cout << "Current choice of Physical Processes to view:" << endl;
+    for (int i = 0; i < ModelCompNames::NoFysProcessNames; i++) items.push_back(ModelCompNames::FysProcessNames[i]);
+    filter_v = viewFilter(items, filter_v);
+    filter_str = FUtil::GetStringFromIntVector(filter_v);
+    p_Register = FUtil::WriteProfileString("FysProcFilter", filter_str, move(p_Register));
+
     CommonModelInfo* m_pCommonModelInfo = pDoc->m_pCommonModelInfo;
 
     pair<unique_ptr<Doc>, unique_ptr<Register>> ptrpair;
@@ -34,16 +94,19 @@ pair<unique_ptr<Doc>, vector<SimB*>> ApplyCurrentFilters(vector<SimB*> vSimB, un
     string filter_str;
     vector<int> filter_v;
     pair<string, unique_ptr<Register>> pst = FUtil::GetProfileStringStd("ModuleFilter", "(1,2)", move(p_Doc->m_pRegister));
-    p_Doc->m_pRegister = move(pst.second); filter_str = pst.first;
+    p_Doc->m_pRegister = move(pst.second); filter_str=pst.first;
     filter_v = FUtil::GetIntVectorFromString(filter_str);
+    vector<SimB*>  OutSimB;
 
-    vector<SimB*> OutSimB;
-    for (auto pSim : vSimB) {
-        for (size_t i : filter_v) {
-            if (pSim->GetGroupNo() == i) OutSimB.push_back(pSim);
+    if (filter_v.size() == 0) 
+        OutSimB = vSimB;
+    else {
+        for (auto pSim : vSimB) {
+            for (size_t i : filter_v) {
+                if (pSim->GetGroupNo() == i) OutSimB.push_back(pSim);
+            }
         }
     }
-
 
     pair<unique_ptr<Doc>, vector<SimB*>> pair_out;
     pair_out.first = move(p_Doc); pair_out.second = OutSimB;
@@ -175,6 +238,7 @@ unique_ptr<Doc> ApplyNewSwValue(Sw* pSw, unique_ptr<Doc> pDoc) {
    cout << "Current value of : " <<pSw->GetName()<<" is : "<< pSw->GetOption(pSw->GetIntValue()) << endl;
    
    for (size_t i = 0; i < n; i++) {
+       if (i < 10) cout << " ";
        cout << to_string(i + 1) + " - " + pSw->GetOption(i) << endl;
    }
    cout << "Your choice :";
@@ -200,7 +264,21 @@ unique_ptr<Doc> ChangeValues(simtype changetype, unique_ptr<Doc> pDoc) {
    vector<string> items;
    string item, ans, typetochange;
     for (auto pSim : ptr) {
-        item = pSim->GetName()+":"+ pSim->GetGroup() + ":" + pSim->GetProcessName() + ":" + pSim->GetElementName();
+        string name = pSim->GetName();
+        string group = pSim->GetGroup();
+        string proc = pSim->GetProcessName();
+        string elem = pSim->GetElementName();
+        size_t name_space = 28 - name.size(); if (name.size() > 28) name_space = 0;
+        size_t group_space = 28 - group.size(); if (group.size() > 28) group_space = 0;
+        size_t proc_space = 28 - proc.size(); if (proc.size() > 28) proc_space = 0;
+        size_t element_space =16 - elem.size(); if (elem.size() > 16) element_space = 0;
+
+
+
+        item = name+FUtil::getspace(name_space) + ":";
+        item += group + FUtil::getspace(group_space) + ":";
+        item += proc + FUtil::getspace(proc_space) + ":";
+        item += elem + FUtil::getspace(element_space) + ":";
         if (changetype == SWITCH) {
             Sw* pSw = static_cast<Sw*>(pSim);
             item+= "- "+pSw->GetOption(pSw->GetIntValue());           
@@ -252,6 +330,7 @@ unique_ptr<Doc> ChangeValues(simtype changetype, unique_ptr<Doc> pDoc) {
     auto listoptions = [&items]() {
         size_t count = 1;
         for (auto opt : items) {
+            if (count < 10) cout << " ";
             cout << to_string(count) + " - " + opt << endl;
             count++;
         }
@@ -659,12 +738,12 @@ int main(int argc, char* argv[]) {
                         cout << "Do want to change settings for your upload to database (Y/N):";
                         getline(cin, ans);
                         if (ans.find('y') != string::npos || ans.find('Y') != string::npos) {
-                            cout << "Current Creator Id :" << currentcreator << " Enter string (min of 2 char) to change: ";
-                            cin >> ans; if (ans.size() > 2)  p_Register = FUtil::WriteProfileString("Creator", ans, move(p_Register));
-                            cout << "Current SiteName Id :" << current_site << " Enter string (min of 2 char) to change: ";
-                            cin >> ans;  if (ans.size() > 2 && ans.size() < 25)   p_Register = FUtil::WriteProfileString("SiteNameId", ans, move(p_Register));
-                            cout << "Current Comment Id :" << current_comment << " Enter string (min of 2 char) to change: ";
-                            cin >> ans;  if (ans.size() > 2 && ans.size() < 25)  p_Register = FUtil::WriteProfileString("Comment", ans, move(p_Register));
+                            cout << "Current Creator Id :" << currentcreator << " Enter string : ";
+                            getline(cin, ans); if (ans.size() > 0)  p_Register = FUtil::WriteProfileString("Creator", ans, move(p_Register));
+                            cout << "Current SiteName Id :" << current_site << " Enter string : ";
+                            getline(cin, ans);  if (ans.size() > 0 && ans.size() < 25)   p_Register = FUtil::WriteProfileString("SiteNameId", ans, move(p_Register));
+                            cout << "Current Comment Id :" << current_comment << " Enter string : ";
+                            getline(cin, ans);  if (ans.size() > 0 && ans.size() < 25)  p_Register = FUtil::WriteProfileString("Comment", ans, move(p_Register));
                         };
 
                         unique_ptr<Doc> pDoca = SimUtil::CreateDoc(0, doc_file_name);
@@ -778,7 +857,9 @@ int main(int argc, char* argv[]) {
                         if (ans.length() > 0) {
                             int newaction = FUtil::AtoInt(ans);
                             if (newaction > 0 && newaction < 8) {
+                                p_Register = move(pDoc->m_pRegister);
                                 p_Register = FUtil::WriteProfileInt("Change_Action", newaction, move(p_Register));
+                                pDoc->m_pRegister = move(p_Register);
                             }
                             CurrentChangeAction = newaction;
                         }

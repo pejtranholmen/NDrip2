@@ -484,7 +484,9 @@ pair<bool, unique_ptr<Register>> Sim::MakeSingleRun(bool DB_Source, int pkey, un
 		cout << "Simulation Completed" << endl;
 #ifndef NO_FILES
 		if (pkey > 0&& GetDB_Action() == 0) DeleteDoc_From_Postgres(pkey);
+		m_pRegister = move(reg_pointer);
         bool result=WriteDocFile("", DB_Source);
+		reg_pointer = move(m_pRegister);
 		return pair<bool, unique_ptr<Register>>(result, move(reg_pointer));
 #else
         return true;

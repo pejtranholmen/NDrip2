@@ -22,7 +22,7 @@ vector<int> viewFilter(vector<string> items, vector<int> current) {
         if (ll > 28) ll = 28;
         string start = "";
         if (i < 10) start += " ";
-        start += to_string(i) + " - " + FUtil::getspace(28 - ll) + items[i];
+        start += to_string(i) + " - " + items[i];
         for (int ii : current) if (i == ii) on = true;
         if (on) {
                 cout <<start + " -  " + "On    ";
@@ -30,6 +30,7 @@ vector<int> viewFilter(vector<string> items, vector<int> current) {
         else {
             cout << start+ " - " + "Off    ";
         }
+        cout << FUtil::getspace(28 - ll);
         if (i % 3 == 0) cout << endl;
       }
       while (true) {
@@ -54,11 +55,11 @@ vector<int> viewFilter(vector<string> items, vector<int> current) {
 
 
 
-pair<unique_ptr<Doc>, unique_ptr<Register>> ChangeViewFilter(unique_ptr<Doc> pDoc, unique_ptr<Register> p_Register) {
+unique_ptr<Doc> ChangeViewFilter(unique_ptr<Doc> pDoc) {
     string filter_str;
     vector<int> filter_v;
-    pair<string, unique_ptr<Register>> pst = FUtil::GetProfileStringStd("ModuleFilter", "(1,2)", move(p_Register));
-    p_Register = move(pst.second); filter_str = pst.first;
+    pair<string, unique_ptr<Register>> pst = FUtil::GetProfileStringStd("ModuleFilter", "(1,2)", move(pDoc->m_pRegister));
+    pDoc->m_pRegister = move(pst.second); filter_str = pst.first;
     filter_v=FUtil::GetIntVectorFromString(filter_str);
 
     vector<string> items;
@@ -67,12 +68,12 @@ pair<unique_ptr<Doc>, unique_ptr<Register>> ChangeViewFilter(unique_ptr<Doc> pDo
     for (int i = 0; i < ModelCompNames::NoGroupNames; i++) items.push_back(ModelCompNames::GroupNames[i]);
     filter_v = viewFilter(items, filter_v);
     filter_str = FUtil::GetStringFromIntVector(filter_v);
-    p_Register = FUtil::WriteProfileString("ModuleFilter", filter_str, move(p_Register));
+    pDoc->m_pRegister = FUtil::WriteProfileString("ModuleFilter", filter_str, move(pDoc->m_pRegister));
 
 
 
-    pst = FUtil::GetProfileStringStd("FysProcFilter", "()", move(p_Register));
-    p_Register = move(pst.second); filter_str = pst.first;
+    pst = FUtil::GetProfileStringStd("FysProcFilter", "()", move(pDoc->m_pRegister));
+    pDoc->m_pRegister = move(pst.second); filter_str = pst.first;
     filter_v = FUtil::GetIntVectorFromString(filter_str);
     
     items.clear();
@@ -80,14 +81,11 @@ pair<unique_ptr<Doc>, unique_ptr<Register>> ChangeViewFilter(unique_ptr<Doc> pDo
     for (int i = 0; i < ModelCompNames::NoFysProcessNames; i++) items.push_back(ModelCompNames::FysProcessNames[i]);
     filter_v = viewFilter(items, filter_v);
     filter_str = FUtil::GetStringFromIntVector(filter_v);
-    p_Register = FUtil::WriteProfileString("FysProcFilter", filter_str, move(p_Register));
+    pDoc->m_pRegister = FUtil::WriteProfileString("FysProcFilter", filter_str, move(pDoc->m_pRegister));
 
     CommonModelInfo* m_pCommonModelInfo = pDoc->m_pCommonModelInfo;
 
-    pair<unique_ptr<Doc>, unique_ptr<Register>> ptrpair;
-    ptrpair.first = move(pDoc);
-    ptrpair.second = move(p_Register);
-    return ptrpair;
+    return move(pDoc);
 };
 
 pair<unique_ptr<Doc>, vector<SimB*>> ApplyCurrentFilters(vector<SimB*> vSimB, unique_ptr<Doc> p_Doc) {
@@ -194,19 +192,25 @@ unique_ptr<Doc> ApplyNewTableParValue(P* pP, unique_ptr<Doc> pDoc) {
     while (changewithinloop) {
         cout << "Specify index to change :";
         getline(cin, ans);
-        if (ans.length()>= 0) {
-            auto newindex = FUtil::AtoInt(ans);
+        if (ans.length()> 0) {
+            int newindex=1;
+            if(ans.length()>0&&FUtil::IsValidNumber(ans))  newindex = FUtil::AtoInt(ans);
             if (newindex > pNE->GetMinValue() && newindex <= pNE->GetMaxValue()) {
                 cout << "Current value of : " << pP->GetName() << " index : " << to_string(newindex) + " has value: " << to_string(pP->GetValue(newindex - 1)) << endl;
                 cout << "Your new choice :";
                 getline(cin, ans);
-                if (ans.length() > 0) {
+                if (ans.length() > 0&& FUtil::IsValidNumber(ans)) {
                     auto value = FUtil::AtoDouble(ans);
                     if (value >= pP->GetMinValue(newindex - 1) && value <= pP->GetMaxValue(newindex - 1))
                         pDoc = ModelUtil::SetParTableValue(move(pDoc), pP, newindex - 1, value);
                     else
                         cout << " Outside valid range !";
                 }
+                else {
+                    cout << "Not a valid number (" + ans + ")" << endl;
+                    return move(pDoc);
+                }
+
             }
         }
         else return move(pDoc);
@@ -281,12 +285,12 @@ unique_ptr<Doc> ChangeValues(simtype changetype, unique_ptr<Doc> pDoc) {
         item += elem + FUtil::getspace(element_space) + ":";
         if (changetype == SWITCH) {
             Sw* pSw = static_cast<Sw*>(pSim);
-            item+= "- "+pSw->GetOption(pSw->GetIntValue());           
+            item+= pSw->GetOption(pSw->GetIntValue());           
             typetochange = "Switch";
         }
         else if (changetype == PAR_SINGLE) {
             Ps* pP = static_cast<Ps*>(pSim);
-            item += " - " + to_string(pP->GetValue());
+            item += to_string(pP->GetValue());
             typetochange = "Parameter";
         }
         else if (changetype == PAR_TABLE) {
@@ -294,7 +298,7 @@ unique_ptr<Doc> ChangeValues(simtype changetype, unique_ptr<Doc> pDoc) {
             auto nep = pP->GetNEPointer();
             auto numvalues=nep->GetNEValue();
             auto nameindex = nep->GetName();
-            item += " - " + to_string(numvalues)+" of "+ nameindex;
+            item += to_string(numvalues)+" of "+ nameindex;
             typetochange = "Parameter Vector";
         }
         else if (changetype >= STATE && changetype <= DRIVE) {
@@ -302,7 +306,7 @@ unique_ptr<Doc> ChangeValues(simtype changetype, unique_ptr<Doc> pDoc) {
             auto pNE = pOut->GetNEPointer();
             auto numvalues = pNE->GetNEValue();
             auto nameindex = pNE->GetName();
-            item += " - " + to_string(numvalues) + " of " + nameindex;
+            item += to_string(numvalues) + " of " + nameindex;
             if (changetype == STATE) typetochange = "State Vector";
             else if (changetype == FLOW) typetochange = "Flow Vector";
             else if (changetype == AUX) typetochange = "Auxiliary Vector";
@@ -311,7 +315,7 @@ unique_ptr<Doc> ChangeValues(simtype changetype, unique_ptr<Doc> pDoc) {
         else if (changetype >= STATE_SINGLE && changetype <= DRIVE_SINGLE) {
             OutSingle* pOut = static_cast<OutSingle*>(pSim);
             auto storeflag=pOut->GetStoreFlag();
-            item += " - " + to_string(storeflag);
+            item += to_string(storeflag);
             if (changetype == STATE_SINGLE) typetochange = "State";
             else if (changetype == FLOW_SINGLE) typetochange = "Flow";
             else if (changetype == AUX_SINGLE) typetochange = "Auxiliary";
@@ -337,10 +341,15 @@ unique_ptr<Doc> ChangeValues(simtype changetype, unique_ptr<Doc> pDoc) {
     };
 
     bool keepon = true;
+    listoptions();
     while (keepon) {
-        listoptions();
-        cout << "Select one "+typetochange + " by number(#) or continue: ";
-        getline(cin, ans);
+       
+        if (typetochange.size() > 0) {
+            cout << "Select one " + typetochange + " by number(#): ";
+            getline(cin, ans);
+        }
+        else
+            return move(pDoc);
         int iselect = 0;
         if (ans.length()==0||ans.find("Y")==0 || ans.find("y")==0) return move(pDoc);
         else if(ans.length()>0 ) iselect = FUtil::AtoInt(ans);
@@ -430,21 +439,21 @@ unique_ptr<Doc> ChangeHeaderValues(unique_ptr<Doc> pDoc) {
     bool keepon = true;
 
     while (keepon) {
-        cout << "Specify item (#) to change or (Y) to continue without changes";
-        cin >> ans;
-        if (ans.find("Y") == 0 || ans.find("y") == 0) return move(pDoc);
-        int ichoice = FUtil::AtoInt(ans)-1;
-
-        switch (ichoice) {
+        cout << "Specify item (#):";
+        getline(cin,ans);
+        if (ans.length()==0) return move(pDoc);
+        if (FUtil::IsValidNumber(ans)) {
+            int ichoice = FUtil::AtoInt(ans) - 1;
+            switch (ichoice) {
             case 0:
-                cout << " New RunNo: ";           
+                cout << " New RunNo: ";
                 getline(cin, ans);
                 pDoc->m_DocFile.m_SimulationRunNo = FUtil::AtoInt(ans);
                 break;
             case 2:
                 cout << " Start Date: ";
                 getline(cin, ans);
-                pDoc->RunOpt.longMinStart=PGUtil::MinutConv(PGUtil::Ato_IPGTID(ans));
+                pDoc->RunOpt.longMinStart = PGUtil::MinutConv(PGUtil::Ato_IPGTID(ans));
                 break;
             case 3:
                 cout << " End Date: ";
@@ -475,7 +484,7 @@ unique_ptr<Doc> ChangeHeaderValues(unique_ptr<Doc> pDoc) {
                 if (idays > 0)
                     pDoc->RunOpt.oiminutes = iv - idays * 1440;
                 else
-                    pDoc->RunOpt.oiminutes = iv;               
+                    pDoc->RunOpt.oiminutes = iv;
                 break;
             case 8:
                 cout << " Number of iterations : ";
@@ -484,25 +493,47 @@ unique_ptr<Doc> ChangeHeaderValues(unique_ptr<Doc> pDoc) {
                 pDoc->RunOpt.noofiter = iv;
                 break;
             case 9:
-
                 cout << " Short RunId : ";
                 getline(cin, ans);
-               pDoc->m_DocFile2.m_RunId = ans;
+                pDoc->m_DocFile2.m_RunId = ans;
                 break;
             case 10:
                 cout << " Comments : ";
                 getline(cin, ans);
-   
+
                 pDoc->m_DocFile2.m_Comments = ans;
+            }
         }
-
-
 
 
     }
     return move(pDoc);
 }
 
+
+unique_ptr<Doc> ListSimulationsInDataBase(unique_ptr<Doc> pDoc) {
+    string db = "Local";
+    if (!pDoc->GetLocalHost()) db = "remote";
+    vector<pair<int, string>> simulations = pDoc->GetDataBaseSimulations();
+    cout << to_string(simulations.size()) + " simulations in " + db + " database"<<endl;
+    for (auto sim : simulations) {
+        if (sim.first < 10) cout << "  ";
+        else if (sim.first < 100) cout << " ";
+        cout << to_string(sim.first) + " - " + sim.second<<endl;
+    }
+    return move(pDoc);
+}
+
+
+
+
+
+unique_ptr<Doc> ChangeFromSoilDataBase(unique_ptr<Doc> pDoc) {
+    vector<pair<int, string>> profiles=pDoc->GetDataBaseSoilProfiles();
+
+
+    return move(pDoc);
+}
 
 unique_ptr<Doc> readJson(string jsonFileName, unique_ptr<Doc> pDoc) {
 
@@ -754,13 +785,12 @@ int main(int argc, char* argv[]) {
 
                     }
                     else {
-
                         string db = "local"; if (LocalHost == 0) db = "remote";
-                        bool makelist = true;
+                        bool makelist = false;
                         if (CurrentAction != 7) {
                             cout << to_string(numsim) << " simulations in " << db << " database - View list  (Y/N) :";
                             getline(cin, ans);
-                             if (ans.find('y') != string::npos || ans.find('Y') != string::npos) makelist = true;
+                            if (ans.find('y') != string::npos || ans.find('Y') != string::npos) makelist = true;
                         }
                         if (makelist) {
                             for (size_t i = 0; i < numsim; i++) {
@@ -769,7 +799,11 @@ int main(int argc, char* argv[]) {
                                 if (simulations[i].first == CurrentSimKey) keyexist = true;
                             }
                         }
-
+                        else {
+                            p = FUtil::GetProfileIntNo("SimKey", 0, move(p_Register));
+                            CurrentSimKey = p.first; p_Register = move(p.second);
+                            if (CurrentSimKey > 0 && CurrentSimKey <= numsim) keyexist = true;
+                        }
                     }
                     if (CurrentAction < 6) {
                         if (keyexist) {
@@ -816,14 +850,7 @@ int main(int argc, char* argv[]) {
                 if (valid) {
                     bool child = false;
                     if (CurrentAction == 3) child = true;
-                    vector<int> modulefilter, processfilter, elementfilter;
-                    cout << "Change Current View Filters ? (Y): ";
-                    getline(cin, ans);
-                    if (ans.length() > 0 && (ans.find("Y") == 0 || ans.find("y") == 0)) {
-                        pair<unique_ptr<Doc>, unique_ptr<Register>> ptrpair=ChangeViewFilter(move(pDoc), move(p_Register));
-                        pDoc = move(ptrpair.first); p_Register = move(ptrpair.second);
-                    }
-
+                   
                     p_Register = pDoc->SetNewRunNo(true, CurrentSimKey, child, move(p_Register));
                     ans = "y";
 
@@ -835,25 +862,28 @@ int main(int argc, char* argv[]) {
                     pDoc->m_pRegister = move(p_Register);
                     while (ans.find('y') != string::npos || ans.find('Y') != string::npos) {
                         vector<string> Action;
-                        if (MS_CODE) {
+
                             Action.clear();
+                            Action.push_back(" - Change Filter to view part of Model");
                             Action.push_back(" - Change General inputs");
                             Action.push_back(" - Change Switches");
                             Action.push_back(" - Change Parameters");
                             Action.push_back(" - Change Outputs");
                             Action.push_back(" - Change Input Time Series");
                             Action.push_back(" - Changes from Json file");
+                            Action.push_back(" - Change from SoilDataBase");
                             Action.push_back(" - No Changes");
-                        }
-                        cout << "Current Change Action is : " << Action[CurrentChangeAction - 1] << " See List of options : (Y) : ";
+
+                        cout << "Current Method to change a simulation is : " << Action[CurrentChangeAction - 1] << " - See List of other options : (Y) : ";
                         getline(cin, ans);
-                        if (ans.find('y') != string::npos || ans.find('Y') != string::npos) {
+                        if (ans.length()>0&&(ans.find('y') != string::npos || ans.find('Y') != string::npos)) {
                             size_t id = 1;
                             for (auto line : Action) { cout << to_string(id) << line << endl; id++; }
-                        }
+                        
 
-                        cout << "Current choice: " << to_string(CurrentChangeAction) << " Specify your choice (#) to change action :";
-                        getline(cin, ans);
+                            cout << "Current choice: " << to_string(CurrentChangeAction) << " Specify number (#) to make new choice :";
+                            getline(cin, ans);
+                        }
                         if (ans.length() > 0) {
                             int newaction = FUtil::AtoInt(ans);
                             if (newaction > 0 && newaction < 8) {
@@ -866,15 +896,19 @@ int main(int argc, char* argv[]) {
 
                         switch (CurrentChangeAction) {
                         case (1):
-                            pDoc = ChangeHeaderValues(move(pDoc));
+                            pDoc = ChangeViewFilter(move(pDoc));
+                            break;
                         case (2):
-                            pDoc = ChangeValues(SWITCH, move(pDoc));
+                            pDoc = ChangeHeaderValues(move(pDoc));
                             break;
                         case (3):
+                            pDoc = ChangeValues(SWITCH, move(pDoc));
+                            break;
+                        case (4):
                             pDoc = ChangeValues(PAR_SINGLE, move(pDoc));
                             pDoc = ChangeValues(PAR_TABLE, move(pDoc));
                             break;
-                        case (4):
+                        case (5):
                             pDoc = ChangeValues(STATE_SINGLE, move(pDoc));
                             pDoc = ChangeValues(FLOW_SINGLE, move(pDoc));
                             pDoc = ChangeValues(AUX_SINGLE, move(pDoc));
@@ -884,12 +918,14 @@ int main(int argc, char* argv[]) {
                             pDoc = ChangeValues(AUX, move(pDoc));
                             pDoc = ChangeValues(DRIVE, move(pDoc));
                             break;
-                        case (5):
+                        case (6):
                             pDoc = ChangeValues(PGFILE, move(pDoc));
                             break;
-                        case (6):
-                            auto path = FUtil::GetCurrentPath() + "par.json";
-                            pDoc = readJson(path, move(pDoc));
+                        case (7):
+                            pDoc = readJson(FUtil::GetCurrentPath() + "par.json", move(pDoc));
+                            break;
+                        case (8):                            
+                            pDoc = ChangeFromSoilDataBase(move(pDoc));
                             break;
                         }
 
@@ -926,6 +962,8 @@ int main(int argc, char* argv[]) {
                 break;// Download specific outputs
             case 7:
                 action_done = true;
+
+                pDoc = ListSimulationsInDataBase(move(pDoc));
                 break;
 
             case 8:
@@ -969,11 +1007,11 @@ int main(int argc, char* argv[]) {
             }
 
             if (action_done)
-                cout << " Action - " << Action[CurrentAction - 1] << "  made" << endl;
+                cout << " Action Completed : " << Action[CurrentAction - 1] <<  endl;
             else
                 if (CurrentAction != 7) cout << " No Successful Action no: " << to_string(CurrentAction) << endl;
 
-            cout << "Do you want to continue (Y/N) ?:";
+            cout << "Continue with more Actions (Y/N) ?:";
             getline(cin, ans);
             if (ans.length() > 0 && (ans.find("y") == 0 || ans.find("Y") == 0)) ans = "y";
         }

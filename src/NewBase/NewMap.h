@@ -49,6 +49,7 @@ public:
 	bool DeleteDoc_From_Postgres(int pkey=-1);
 
 	vector<pair<int, string>> GetDataBaseSimulations();
+	vector<pair<int, string>> GetDataBaseSoilProfiles();
 
 	bool CheckStart_EndTime();
 	void UpdateArchiveLists(size_t icat=8);

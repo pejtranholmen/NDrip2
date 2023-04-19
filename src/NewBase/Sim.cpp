@@ -341,7 +341,7 @@ pair<bool, unique_ptr<Register>> Sim::RunModel_Using_Postgres(int pkey, bool mak
 			if (GetDB_Action() != 0) {
 
 				pair<int, unique_ptr<Register>> pn = FUtil::GetProfileIntNo("SimulationRunNo", 1, move(pReg));
-				int testno = pn.first; pReg = move(pReg);
+				int testno = pn.first; pReg = move(pn.second);
 
 				if (m_DocFile.m_SimulationRunNo <= testno) {
 					m_DocFile.m_SimulationRunNo = testno;
@@ -485,7 +485,8 @@ pair<bool, unique_ptr<Register>> Sim::MakeSingleRun(bool DB_Source, int pkey, un
 #ifndef NO_FILES
 		if (pkey > 0&& GetDB_Action() == 0) DeleteDoc_From_Postgres(pkey);
 		m_pRegister = move(reg_pointer);
-        bool result=WriteDocFile("", DB_Source);
+
+		bool result=WriteDocFile("", DB_Source);
 		reg_pointer = move(m_pRegister);
 		return pair<bool, unique_ptr<Register>>(result, move(reg_pointer));
 #else

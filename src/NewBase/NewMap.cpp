@@ -3727,6 +3727,35 @@ bool NewMap::ReDefinePostgresDataBase()
 	return true;
 }
 
+vector<pair<int, string>> NewMap::GetDataBaseSoilProfiles() {
+	vector<pair<int, string>> out;
+#ifdef COUP_POSTGRES
+
+	pair<int, string> a;
+	try {
+		pqxx::connection c = initconnection("Select soil_profiles");
+		pqxx::work txn{ c };
+		{
+			pqxx::result r{ txn.exec("SELECT id_profile, id_oldkey, name, numlayers, upper_clay, upper_sand, upper_org FROM soil_profiles") };
+			for (auto row : r) {
+				int ii = row[0].as<int>();
+				string str = row[2].as<string>();
+				a = pair<int, string>(ii, str);
+				out.push_back(a);
+			};
+		}
+	}
+	catch (const std::exception& e) {
+		cerr << e.what() << std::endl;
+	}
+	return out;
+#endif
+	return out;
+}
+
+
+
+
 vector<pair<int, string>> NewMap::GetDataBaseSimulations() {
 	vector<pair<int, string>> out;
 #ifdef COUP_POSTGRES

@@ -145,9 +145,9 @@ public:
 	size_t m_WShed_ActiveIndex;
 	size_t m_WShed_Number_X_grids;
 
-	void GetProfileFromPlotPF(bool Add=true);
-	void GetProfileFromPlotPF(bool Add, bool Message=true);
-	void GetProfileFromPlotPF(string);
+	string GetProfileFromPlotPF(bool Add=true);
+	string GetProfileFromPlotPF(bool Add, bool Message=true);
+	string GetProfileFromPlotPF(string);
 	void MR_ReCalculatePostDist(bool BayesMeanMethod=true);
 	void MR_INIT_Bayesian_Nelder_Mead();
 	void MR_CHECK_Bayesian(bool UpdateExt=false);

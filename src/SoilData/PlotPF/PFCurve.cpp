@@ -128,6 +128,12 @@ bool PFCurve::Set_Header(NEWHEADER head, bool Extra)
 
 bool PFCurve::SetPF_Pressure(vector<float> pressure, bool Extra)
 {
+	if (m_PostGresDefined) {
+		m_PFSteps.clear();
+		m_PFSteps = pressure;
+		return true;
+	}
+
 	if(!IsMainEditOpen&&!Extra) return false;
 	size_t start;
 	start=(m_ActProfile.RecLayers-1)*NSizeLevel;
@@ -147,6 +153,15 @@ bool PFCurve::SetPF_Pressure(vector<float> pressure, bool Extra)
 }
 bool PFCurve::SetPF_Theta(size_t row, vector<float> theta, bool Extra)
 {
+	if (m_PostGresDefined) {
+		if (row == 0) {
+			for (auto a : m_Theta) {
+				a.clear();
+			}
+		}
+		m_Theta.push_back(theta);
+		return true;
+	}
 	if(!IsMainEditOpen&&!Extra) return false;
 	size_t start;
 	start=(m_ActProfile.RecLayers)*NSizeLevel+(row)*NSizeLevel+40;
@@ -162,6 +177,21 @@ bool PFCurve::SetPF_Theta(size_t row, vector<float> theta, bool Extra)
 };
 bool PFCurve::SetPF_Texture(size_t row, vector<float> texture, bool Extra)
 {
+	if (m_PostGresDefined) {
+		if (row == 0) m_TextureLayers.clear();
+		A_TEXTURE a;
+		a.clay = texture[0];
+		a.f_mjla = texture[1];
+		a.g_mjla= texture[2];
+		a.f_mo= texture[3];
+		a.g_mo = texture[4];
+		a.f_sand = texture[5];
+		a.g_sand = texture[6];
+		a.orgloss = texture[7];
+		m_TextureLayers.push_back(a);
+		return true;
+	}
+
 	if(!IsMainEditOpen&&!Extra) return false;
 	size_t start;
 	start=(m_ActProfile.RecLayers)*NSizeLevel+(row)*NSizeLevel+100;
@@ -177,6 +207,11 @@ bool PFCurve::SetPF_Texture(size_t row, vector<float> texture, bool Extra)
 };
 bool PFCurve::SetPF_Coef(size_t row, PFCOEF pfcoef, bool Extra)
 {
+	if (m_PostGresDefined) {
+		if (m_PostGresPF.size() <= row) m_PostGresPF.push_back(pfcoef);
+		else m_PostGresPF[row] = pfcoef;
+		return true;
+	}
 
 	size_t start;
 	start=(m_ActProfile.RecLayers)*NSizeLevel+(row)*NSizeLevel;

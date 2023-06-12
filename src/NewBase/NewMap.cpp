@@ -136,9 +136,16 @@ NewMap::~NewMap()
 
 
 }
+bool NewMap::SetLocalCredentials(string dbname, string user, string password, int port) {
+	return checkLocalCredentials(dbname, user, password, port);
+}
+
+bool NewMap::SetRemoteCredentials(string dbname, string user, string password, string host) {
+	return checkRemoteCredentials(dbname, user, password, host);
+}
+
 void NewMap::SetLocalHost(bool value) {
 	coup_pg::LocalHost = value;
-
 }
 bool NewMap::GetLocalHost() {
 	return coup_pg::LocalHost;
@@ -2434,6 +2441,7 @@ bool NewMap::DeleteDoc_From_Postgres(int pkey) {
 		pqxx::work txn{ c };
 		{
 			pqxx::result r = txn.exec("DELETE FROM runinfo WHERE id_simulations = " + to_string(pkey)) ;
+			r = txn.exec("DELETE FROM initial_final_states WHERE id_simulations = " + to_string(pkey));
 			r=txn.exec("DELETE FROM modified_switch_values WHERE id_simulations = " + to_string(pkey));
 			r=txn.exec("DELETE FROM modified_singleparameter_values WHERE id_simulations = " + to_string(pkey));
 			r=txn.exec("DELETE FROM modified_vectorparameter_values WHERE id_simulations = " + to_string(pkey)) ;
@@ -3105,6 +3113,46 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool init_call, bool download, st
 
 };
 
+bool NewMap::DownLoadTimeSerie(int id_file, string filebase, string localdirectory, bool TimeSerieAsCSV) {
+#ifdef COUP_POSTGRES
+	string current_str;
+	try {
+		pqxx::connection c = initconnection("Select from postgres");
+		pqxx::work txn{ c };
+
+
+
+		pqxx::result rr = txn.exec("SELECT id_filename, filename, numvar, numrecords FROM filenamearchive") ;
+		string filename;
+		std::map<int,string> fil_id_names;
+		for (auto row_inner : rr) {
+			int numvar = row_inner["numvar"].as<int>();
+			int numrec = row_inner["numrecords"].as<int>();
+			filename = row_inner["filename"].as<string>();
+			int id_filename = row_inner["id_filename"].as<int>();
+			if (filename.find(filebase) != string::npos) {
+				fil_id_names.insert(pair<int, string>(id_filename, filename));
+			}
+		}
+
+		for (auto i = fil_id_names.begin(); i != fil_id_names.end();++i) {
+			id_file = i->first;
+			if (TimeSerieAsCSV)
+				download_pg_file(id_file, localdirectory, TimeSerieAsCSV, m_pCommonModelInfo);
+			else
+				download_pg_file(id_file, localdirectory, TimeSerieAsCSV, m_pCommonModelInfo);
+		}
+
+		return true;
+
+	}
+	catch (const std::exception& e) {
+		cerr << e.what() << std::endl;
+	}
+	return false;
+#endif	
+
+}
 bool NewMap::Export_OLDSOILDB_toPostgres() {
 
 	string sql;
@@ -3751,6 +3799,129 @@ vector<pair<int, string>> NewMap::GetDataBaseSoilProfiles() {
 	return out;
 #endif
 	return out;
+}
+string NewMap::SetDataFromSoilProfile(int key) {
+
+#ifdef COUP_POSTGRES
+	if (p_PFCurve == nullptr) {
+		p_PFCurve = make_unique<PFCurve>();
+	}
+
+
+	PFCOEF pf;
+	pair<int, string> a;
+	try {
+
+		pqxx::connection c = initconnection("Select soil_profiles");
+		pqxx::work txn{ c };
+		{
+			NEWHEADER prof;
+			pqxx::result r{ txn.exec("SELECT * FROM soil_profiles WHERE id_profile = "+to_string(key) )};
+			for (auto row : r) {
+				int ii = row[0].as<int>();
+				prof.KeyProf = row[1].as<int>();
+				prof.Name = row[2].as<string>();			
+				prof.Country = row["country"].as<string>();
+				prof.County = row["county"].as<string>();
+				prof.Long= row["longitude"].as<double>();
+				prof.Lat = row["latitude"].as<double>();
+				prof.NumLayers = row["numlayers"].as<int>();
+				prof.LowDepth = row["lowerdepth"].as<int>();
+				prof.Upper_Clay = row["upper_clay"].as<double>();
+				prof.Upper_Sand = row["upper_sand"].as<double>();
+				prof.Upper_Org = row["upper_org"].as<double>();
+				prof.Lower_Clay = row["lower_clay"].as<double>();
+				prof.Lower_Sand = row["lower_sand"].as<double>();
+				prof.Lower_Org = row["lower_org"].as<double>();
+				prof.Year = row["year"].as<int>();
+			};
+			
+			vector<PFCOEF> pf_vector;
+			r=txn.exec("SELECT id_profile, id_layers, upperdepthfromprofile, lowerdepthfromprofile FROM soil_profile_layer_linking WHERE id_profile = " + to_string(key)) ;
+			size_t count_row = 0;
+
+			for (auto row : r) {
+				int iprof = row[0].as<int>();
+				int keylayer = row[1].as<int>();
+
+
+				double upper_b = row[2].as<double>();
+				double lower_b = row[3].as<double>();
+				if (count_row == 0) {
+					p_PFCurve->DefineWithPostGres();
+					p_PFCurve->SetPostGresProfile(prof);
+				}
+
+				auto setv = [](array_parser pvec) {
+					vector<float> vut;
+					auto next = pvec.get_next();
+					next = pvec.get_next();
+					while (next.second.size() > 0) {
+						float value;
+						while (next.second.size() > 0) {
+							value = stof(string(next.second));							
+							vut.push_back(value);
+							next = pvec.get_next();
+						}
+					}
+					return vut;				
+				};
+				pqxx::result rr=txn.exec("SELECT * FROM soil_layers WHERE id_layers = " + to_string(keylayer));
+				for (auto row : rr) {
+					pf.UpperDepth = row["upperdepth"].as<double>();
+					pf.LowerDepth = row["lowerdepth"].as<double>();
+					pf.Saturation = row["saturation"].as<double>();
+					pf.Wilting = row["wiltingpoint"].as<double>();
+					pf.Residual = row["residual"].as<double>();
+					pf.AirEntry = row["airentry"].as<double>();
+					pf.Lambda = row["lambda"].as<double>();
+					pf.UpperBoundary = row["upperboundaryhead"].as<double>();
+					pf.LowerBoundary = row["macropore"].as<double>();
+					pf.Gen_Alfa = row["genalpha"].as<double>();
+					pf.Gen_M = row["genm"].as<double>();
+					pf.Gen_N = row["genn"].as<double>();
+					pf.TotConductivity = row["totconductivity"].as<double>();
+					pf.MatConductivity = row["matricconductivity"].as<double>();
+					pf.Mualem_n = row["mualem_n"].as<double>();
+					pf.N_SrCoef = row["n_srcoef"].as<double>();
+					pf.N_SECoef = row["n_secoef"].as<double>();
+					p_PFCurve->SetPF_Coef(count_row, pf);
+
+					auto pvec = row["atterbergfractions"].as_array();
+					auto afrac = setv(pvec);
+
+					p_PFCurve->SetPF_Texture(count_row, afrac);
+
+					if (count_row == 0) {
+						auto pvec1 = row["heads"].as_array();
+						auto ahead = setv(pvec1);
+						p_PFCurve->SetPF_Pressure(ahead);
+					}
+
+					auto pvec2=row["thetameasured"].as_array();
+					auto atheta = setv(pvec2);
+					p_PFCurve->SetPF_Theta(count_row, atheta);
+					count_row++;
+				}
+
+			};
+			if (count_row > 0) {
+				return GetProfileFromPlotPF(false, false);
+
+			}		
+			
+		}
+	}
+	catch (const std::exception& e) {
+		cerr << e.what() << std::endl;
+	}
+	
+#endif
+
+
+
+
+	return "";
 }
 
 

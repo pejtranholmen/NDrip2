@@ -28,7 +28,13 @@ struct rgb_color
 	int green;
 	int blue;
 };
-
+struct connection_par {
+	string dbname;
+	string user;
+	string password;
+	string port;
+	string host;
+};
 
 
 struct DistStat

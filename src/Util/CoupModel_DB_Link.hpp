@@ -13,21 +13,70 @@
 using namespace pqxx;
 
 
-
 namespace coup_pg {
     static bool LocalHost{ false };
     static bool MakeMultiRunIfPossible{ false };
+    static connection_par local;
+    static connection_par remote;
+    
+
     enum class DB_RUN_ACTION { RUN_STORE_ON_CURRENT, RUN_STORE_AS_NEWRECORD };
     static DB_RUN_ACTION db_action=DB_RUN_ACTION::RUN_STORE_ON_CURRENT;
 
+    static bool checkLocalCredentials(string dbname, string user, string password, int port) {
+        string init;
+        try {
+            init = "dbname = " + dbname + " user = " + user + " password = " + password + " port = " + to_string(port);
+            connection c(init);
+            if (c.is_open()) {
+                c.close();
+                local.dbname = dbname; local.user = user; local.password = password; local.port = to_string(port);
+                return true;
+            }
+            else {
+                c.close();
+                return false;
+            }
+        }
+        catch (const std::exception& e) {
+            cerr << e.what() << std::endl;
+            cerr << init << std::endl;
+            return false;
+        }
+   
+    }
+    static bool checkRemoteCredentials(string dbname, string user, string password, string host) {
+        string init;
+        try {
+            init = "dbname = " + dbname + " user = " + user + " password = " + password + " host = " + host;
+            connection c(init);
+            if (c.is_open()) {
+                c.close();
+                remote.dbname = dbname; remote.user = user; remote.password = password; remote.host = host;
+                return true;
+            }
+            else {
+                c.close();
+                return false;
+            }
+        }
+        catch (const std::exception& e) {
+            cerr << e.what() << std::endl;
+            cerr << init << std::endl;
+            return false;
+        }
+    }
+    
     static connection initconnection(string work_to_be) {
         string init, ans;
         
+        
 
         if(LocalHost)
-            init = "dbname = coup user = postgres password = pe1950 port = 5432";
+            init = "dbname = " + local.dbname + " user = " + local.user + " password = " + local.password + " port = " + local.port;
         else 
-            init = "dbname = teyojvga  user = teyojvga password = lzigAYICibNNBU-Aefp4PszeBl9DkMEs host = balarama.db.elephantsql.com";       
+            init = "dbname = " + remote.dbname + " user = " + remote.user + " password = " + remote.password + " host = " + remote.host;
+//            init = "dbname = teyojvga  user = teyojvga password = lzigAYICibNNBU-Aefp4PszeBl9DkMEs host = "balarama.db.elephantsql.com";
 
         connection c(init);
         if (c.is_open()) {
@@ -74,7 +123,7 @@ static bool uploadpgFile(std::string filename) {
             string sql = "CREATE TABLE ";
             sql += "TimeSeries (";
             sql += "Id_TimeSeries SERIAL PRIMARY KEY,";
-            sql += "name VARCHAR(64),";
+            sql += "name VARCHAR(128),";
             sql += "NumVar Integer,";
             sql += "NumRecords Integer,";
             sql += "NumRepetions Integer,";
@@ -280,6 +329,11 @@ static bool download_pg_file(int pkey, string localdirectory, bool ExportToCSV, 
         pg.SetVarAlt(varno, altitude);
     }
     rr = txn.exec("SELECT pgmintime, pgvarvalues FROM filenamearchive_data WHERE id_filename = " + to_string(pkey)+" ORDER BY pgmintime ASC");
+
+    auto numrec_koll = size(rr);
+    if (numrec_koll > numrec) {
+        pg.AdjustSize(numrec_koll, numvar, 1);
+    }
     size_t recno = 1;
     for (auto row_inner : rr) {
         size_t min = row_inner[0].as<int>();
@@ -414,8 +468,8 @@ vector<string> create_Init_Tables(CommonModelInfo* pinfo) {
         drop(W, tablename);
         sql = create(tablename);
         sql += " (Id_FileName SERIAL PRIMARY KEY,";
-        sql += "FileName varchar(132) UNIQUE,";
-        sql += "ShortName varchar(32),";
+        sql += "FileName varchar(128) UNIQUE,";
+        sql += "ShortName varchar(128),";
         sql += "NumVar Integer,";
         sql += "NumRecords Integer,";
         sql += "NumRepetions Integer,";
@@ -2241,9 +2295,9 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
                         sql += to_string(r.Altitude[i]) + ");";
                         result rr = W.exec(sql.c_str());
                     }
-
+                    int count = 0;
                     for (const tuple<int, int, vector<float>>rec : pg) {
-
+                        count++;
                         sql = "INSERT INTO FileNameArchive_Data VALUES (";
                         sql += to_string(id_fileName) + ",";
                         sql += to_string(get<1>(rec)) + ",'{";
@@ -2254,6 +2308,7 @@ int transfer_Modified_TimeSeries(timeserie_set& r, vector<tuple<int, int, vector
                         }
                         sql += "}');";
                         W.exec(sql.c_str());
+                        if (count * 100 / r.NumRec % 10 == 0) cout << to_string(int(count * 100 / r.NumRec)) << "% done" << "\r";
                     }
 
                     cout << "All data from time serie data inserted into table from :" << shortname << endl;

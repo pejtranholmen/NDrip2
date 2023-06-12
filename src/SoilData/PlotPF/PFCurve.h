@@ -20,8 +20,12 @@ public:
 	bool UpdateActualProfile();
 	NEWHEADER GetNewHeader();
 	bool Export_Import_ActualProfile_CSVFile(size_t keyno, bool Export = true);
+	void DefineWithPostGres() { m_PostGresDefined = true;}
+	bool IsPostGresDefined() { return m_PostGresDefined; };
 
 private:
+	
+
 	std::vector<float> m_IniPressure;
 	std::vector<float> m_theta_ini;
 	std::vector<float> m_texture_ini;

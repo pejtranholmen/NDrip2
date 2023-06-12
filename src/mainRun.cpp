@@ -530,7 +530,22 @@ unique_ptr<Doc> ListSimulationsInDataBase(unique_ptr<Doc> pDoc) {
 
 unique_ptr<Doc> ChangeFromSoilDataBase(unique_ptr<Doc> pDoc) {
     vector<pair<int, string>> profiles=pDoc->GetDataBaseSoilProfiles();
+    cout << to_string(profiles.size()) + " profiles find in the database " << endl;
 
+    for (auto p : profiles) {
+        cout<<to_string(p.first) + " - " + p.second << endl;
+    }
+    string ans;
+    cout << "Select a Number:";
+    getline(cin, ans);
+    if (ans.length() > 0 && FUtil::IsValidNumber(ans)) {
+        int valid_key = FUtil::AtoInt(ans);
+        string result=pDoc->SetDataFromSoilProfile(valid_key);
+
+        SimB* pSimB = pDoc->DB_GetPointer(DB_types::Soil_Properties);
+
+        pDoc->History_Add(pSimB, 1, time(nullptr), result);
+    }
 
     return move(pDoc);
 }
@@ -659,11 +674,76 @@ int main(int argc, char* argv[]) {
         p_Register = move(pst.second); databasedir = pst.first;
         pDoc->m_DataBaseDirectory = databasedir;
 
-      
+//Credentials      
+        connection_par c_par;
+        pst = FUtil::GetProfileStringStd("Local_dbname", "coup", move(p_Register));
+        p_Register = move(pst.second); c_par.dbname=pst.first;
 
+        pst = FUtil::GetProfileStringStd("Local_user", "postgres", move(p_Register));
+        p_Register = move(pst.second); c_par.user = pst.first;
 
+        pst = FUtil::GetProfileStringStd("Local_password", "pe1950", move(p_Register));
+        p_Register = move(pst.second); c_par.password = pst.first;
+        
+        pst = FUtil::GetProfileStringStd("Local_port", "5432", move(p_Register));
+        p_Register = move(pst.second); c_par.port = pst.first;
 
+        bool check = false;
+        while (!check) {
+            check = true;
+            if (pDoc->SetLocalCredentials(c_par.dbname, c_par.user, c_par.password, FUtil::AtoInt(c_par.port))) {
+                p_Register = FUtil::WriteProfileString("Local_dbnane", c_par.dbname, move(p_Register));
+                p_Register = FUtil::WriteProfileString("Local_user", c_par.user, move(p_Register));
+                p_Register = FUtil::WriteProfileString("Local_password", c_par.password, move(p_Register));
+                p_Register = FUtil::WriteProfileString("Local_port", c_par.port, move(p_Register));
+            }
+            else {
+                cout << "Error when checking local credentials for database access " << endl;
+                cout << "specify dbname:";
+                cin >> c_par.dbname;
+                cout << "specify user:";
+                cin >> c_par.user;
+                cout << "specify password:";
+                cin >> c_par.password;
+                cout << "specify local_port:";
+                cin >> c_par.port;
+                check = false;
+            }
+        }
+        check = false;
+        pst = FUtil::GetProfileStringStd("Remote_dbname", "teyojvga", move(p_Register));
+        p_Register = move(pst.second); c_par.dbname = pst.first;
 
+        pst = FUtil::GetProfileStringStd("Remote_user", "teyojvga", move(p_Register));
+        p_Register = move(pst.second); c_par.user = pst.first;
+
+        pst = FUtil::GetProfileStringStd("Remote_password", "lzigAYICibNNBU-Aefp4PszeBl9DkMEs", move(p_Register));
+        p_Register = move(pst.second); c_par.password = pst.first;
+
+        pst = FUtil::GetProfileStringStd("Remote_host", "balarama.db.elephantsql.com", move(p_Register));
+        p_Register = move(pst.second); c_par.host = pst.first;
+
+        while (!check) {
+            check = true;
+            if (pDoc->SetRemoteCredentials(c_par.dbname, c_par.user, c_par.password, c_par.host)) {
+                p_Register = FUtil::WriteProfileString("Remote_dbbane", c_par.dbname, move(p_Register));
+                p_Register = FUtil::WriteProfileString("Remote_user", c_par.user, move(p_Register));
+                p_Register = FUtil::WriteProfileString("Remote_password", c_par.password, move(p_Register));
+                p_Register = FUtil::WriteProfileString("Remote_host", c_par.host, move(p_Register));
+            }
+            else {
+                cout << "Error when checking remote credentials for database access " << endl;
+                cout << "specify dbname:";
+                cin >> c_par.dbname;
+                cout << "specify user:";
+                cin >> c_par.user;
+                cout << "specify password:";
+                cin >> c_par.password;
+                cout << "specify local_port:";
+                cin >> c_par.port;
+                check = false;
+            }
+        }
 
         ans = "y";
         while (ans.find('y') != string::npos || ans.find('Y') != string::npos) {
@@ -676,7 +756,7 @@ int main(int argc, char* argv[]) {
                 Action.push_back(" - Download all files linked to Selected Record");
                 Action.push_back(" - Download output time series as CSV files");
                 Action.push_back(" - Upload a simulation document as xml and bin files:");
-                Action.push_back(" - View of Simulations in database");
+                Action.push_back(" - Download of Timeseries from database");
                 if (LocalHost == 0)
                     Action.push_back(" - Change from remote to local database");
                 else
@@ -693,7 +773,9 @@ int main(int argc, char* argv[]) {
                 Action.push_back(" - Clean Database from unlinked units");
                 Action.push_back(" - Soil Databas management");
 
-                cout << "Current Action is : " << Action[CurrentAction - 1] << " See List of possible actions : (Y / N) : ";
+                string dataview = " Local "; if (LocalHost == 0) dataview = " Remote ";
+
+                cout << dataview+" database action : " <<to_string(CurrentAction)<<" "<< Action[CurrentAction - 1] << " - See List of possible actions : (Y / N) : ";
                 std::getline(std::cin, ans);
                 // cin >> ans;
                 if (ans.length() == 0) {
@@ -727,6 +809,7 @@ int main(int argc, char* argv[]) {
 
             bool setoptionsforsimulations = true;
             if (CurrentAction >= 8 && CurrentAction <= 13) setoptionsforsimulations = false;
+            if (CurrentAction == 10) setoptionsforsimulations = true;
 
             if (setoptionsforsimulations) {
                 if (MS_CODE) {
@@ -805,7 +888,7 @@ int main(int argc, char* argv[]) {
                             if (CurrentSimKey > 0 && CurrentSimKey <= numsim) keyexist = true;
                         }
                     }
-                    if (CurrentAction < 6) {
+                    if (CurrentAction < 6|| CurrentAction ==10) {
                         if (keyexist) {
                             cout << " A simulation is identified with key id : " << to_string(CurrentSimKey) << " Continue with this or Give new Key(#) :";
                             getline(cin, ans);
@@ -886,7 +969,7 @@ int main(int argc, char* argv[]) {
                         }
                         if (ans.length() > 0) {
                             int newaction = FUtil::AtoInt(ans);
-                            if (newaction > 0 && newaction < 8) {
+                            if (newaction > 0 && newaction < 9) {
                                 p_Register = move(pDoc->m_pRegister);
                                 p_Register = FUtil::WriteProfileInt("Change_Action", newaction, move(p_Register));
                                 pDoc->m_pRegister = move(p_Register);
@@ -936,7 +1019,7 @@ int main(int argc, char* argv[]) {
                     p_Register = move(pDoc->m_pRegister);
                 }
             }
-
+            string str_file;
             switch (CurrentAction) {
             case 1:
             case 2:
@@ -962,8 +1045,14 @@ int main(int argc, char* argv[]) {
                 break;// Download specific outputs
             case 7:
                 action_done = true;
+                str_file;
+                cout << "Specify string to match names in table :";
 
-                pDoc = ListSimulationsInDataBase(move(pDoc));
+                cin >> str_file ;
+                if(pDoc->DownLoadTimeSerie(11, str_file, path, false))
+
+
+                //pDoc = ListSimulationsInDataBase(move(pDoc));
                 break;
 
             case 8:

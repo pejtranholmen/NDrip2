@@ -174,6 +174,9 @@ void GetPFCurve::ReadHeaderFile()
 	}
 //	int profnum=(str[0]);
 }
+void GetPFCurve::SetPostGresProfile(NEWHEADER input) {
+	m_ActProfile = input;
+}
 bool GetPFCurve::SaveNewFormat()
 {
 	InitSaveRecord(m_Records.size());
@@ -421,6 +424,10 @@ void GetPFCurve::ReadLevelFile()
 }
 vector<float> GetPFCurve::GetPF_Pressure(size_t rec)
 {
+	if (m_PostGresDefined) {
+		return m_PFSteps;
+	}
+
 	size_t start;
 	start=(rec-1)*NSizeLevel;
 	if(!m_LevelFile.good()) {
@@ -444,6 +451,13 @@ vector<float> GetPFCurve::GetPF_Pressure(size_t rec)
 }
 vector<float> GetPFCurve::GetPF_Theta(size_t rec)
 {
+if (m_PostGresDefined) {
+		if (rec < m_Theta.size()) {
+			return m_Theta[rec];
+		}
+		vector<float> a;
+		return a;
+}
 	size_t start;
 	start=(m_ActProfile.RecLayers)*NSizeLevel+(rec)*NSizeLevel+40;
 	m_LevelFile.seekg(start,ios::beg);
@@ -457,6 +471,13 @@ vector<float> GetPFCurve::GetPF_Theta(size_t rec)
 }
 PFCOEF GetPFCurve::GetPF_Coef(size_t rec)
 {   PFCOEF ut;
+	if (m_PostGresDefined) {
+		if (rec < m_PostGresPF.size()) {
+			return m_PostGresPF[rec];
+		}
+		return ut;
+	}
+
 	size_t start;
 	vector<float> values;
 	values.resize(37);
@@ -509,6 +530,22 @@ PFCOEF GetPFCurve::GetPF_Coef(size_t rec)
 }
 vector<float> GetPFCurve::GetTexture(size_t rec)
 {
+	if (m_PostGresDefined) {
+		vector<float> ut;
+		if (rec < m_TextureLayers.size()) {
+			auto a = m_TextureLayers[rec];
+			ut.push_back(a.clay);
+			ut.push_back(a.f_mjla);
+			ut.push_back(a.g_mjla);
+			ut.push_back(a.f_mo);
+			ut.push_back(a.g_mo);
+			ut.push_back(a.f_sand);
+			ut.push_back(a.g_sand);
+			ut.push_back(a.orgloss);
+			return ut;
+		}
+		return ut;
+	}
 	size_t start;
 	start=(m_ActProfile.RecLayers)*NSizeLevel+rec*NSizeLevel+100;
 	m_LevelFile.seekg(start,ios::beg);

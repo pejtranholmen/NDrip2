@@ -45,11 +45,13 @@ public:
 	bool ReDefinePostgresDataBase();
 	bool SelectDoc_From_Postgres(int pkey, bool init_call=true, bool download=false, string localdirectory="", bool OnlyTimeSerieAsCSV=false);
 	vector<int> PreSelectDoc_From_Postgres(int pkey);
+	bool DownLoadTimeSerie(int filename, string filebase = "", string localdirectory="", bool TimeSeriesAsCSV=false);
 	bool Export_OLDSOILDB_toPostgres();
 	bool DeleteDoc_From_Postgres(int pkey=-1);
 
 	vector<pair<int, string>> GetDataBaseSimulations();
 	vector<pair<int, string>> GetDataBaseSoilProfiles();
+	string SetDataFromSoilProfile(int key);
 
 	bool CheckStart_EndTime();
 	void UpdateArchiveLists(size_t icat=8);
@@ -96,6 +98,8 @@ public:
 	string Sim2XLSX(bool ReadFlag = true, bool AllItems=false);
 	
 	bool ID_MapsForPostgresReady = false;
+	bool SetLocalCredentials(string dbname, string user, string password, int port);
+	bool SetRemoteCredentials(string dbname, string user, string password, string host);
 	void SetLocalHost(bool status);
 	bool GetLocalHost();
 	void SetDB_Action(size_t value);

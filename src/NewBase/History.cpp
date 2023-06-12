@@ -276,9 +276,17 @@ bool History::History_Add(size_t index, string strvalue)
 
 	
  	string User,Computer;
+	unique_ptr<Register> RegPointer;
+	RegPointer = make_unique<Register>();
+	if (User == "") {
+		pair<string, unique_ptr<Register>> p = FUtil::GetProfileStringStd("Signature", User, move(RegPointer));
+		unique_ptr<Register> RegPointer = move(p.second); User = p.first;
+	}
+	Node.User = User;
+	pair<string, unique_ptr<Register>> p = FUtil::GetProfileStringStd("ComputerName", User, move(RegPointer));
+	Node.Computer = p.first;
 
-	User = "NN"; //FUtil::GetProfileStringStd("Signature", User);
-	Computer = "NN";// FUtil::GetProfileStringStd("ComputerName", Computer);
+
 	Node.User=User;
 	Node.Computer=Computer;
 	

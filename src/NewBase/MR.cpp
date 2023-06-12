@@ -3,6 +3,7 @@
 #include "../Util/StatUtil.h"
 #include "../Util/ModelUtil.h"
 #include "../SoilData/PlotPF/PFCurve.h"
+#include "../SoilData/PlotPF/PFStorage.h"
 #include "./Doc.h"
 //#include "../NetCDF/NetCDFTransfer.h"
 //#include "../NetCDF/ncFile.h"
@@ -2340,7 +2341,7 @@ float MR::MR_GetBayesianStepSize()
 	return m_BayesianStepSize;
 }
 
-void MR::GetProfileFromPlotPF(string test)
+string MR::GetProfileFromPlotPF(string test)
 {
 			bool Testkey;
 			Testkey=true;
@@ -2370,12 +2371,11 @@ void MR::GetProfileFromPlotPF(string test)
 			//NEWHEADER head=p_PFCurve->GetHeader(rec);
 			p_PFCurve->SetHeader(prof, repNumber);
 
-			GetProfileFromPlotPF( false, false);
+			return GetProfileFromPlotPF( false, false);
 
 	
-			return;
 }
-void MR::GetProfileFromPlotPF( bool Add_To_Multi, bool Message)
+string MR::GetProfileFromPlotPF( bool Add_To_Multi, bool Message)
 {
 
 // if(PLOTPF_mp_FINDPROFILE&&PLOTPF_mp_TOBEDOWNLOADED) {
@@ -2632,9 +2632,8 @@ void MR::GetProfileFromPlotPF( bool Add_To_Multi, bool Message)
 		string string="Profile :";
 		string+=FUtil::STD_ItoAscii(p_PFCurve->GetKey() /100);
 		string+=" :"; string+=FUtil::STD_ItoAscii(p_PFCurve->GetKey()%100);
-		string+= p_PFCurve->GetKey();
-		string+="\nfrom county : ";
-		string+= p_PFCurve->GetCountry();
+		string+= p_PFCurve->m_ActProfile.Name;
+		
 	
 		string+="\nincluding ";
 		string+=FUtil::STD_ItoAscii(p_PFCurve->GetNumLayers());
@@ -2647,10 +2646,20 @@ void MR::GetProfileFromPlotPF( bool Add_To_Multi, bool Message)
 	#endif	
 	}
 
+
 	ReCalculateNewSoilProfile();
 
 
 	if (Add_To_Multi) ModelUtil::SetMRSoilPropConnections(dynamic_cast<Doc*>(this));
+
+	if (!Message) {
+		string str=" Profile ";
+		str += FUtil::STD_ItoAscii(p_PFCurve->GetKey() / 100);
+		str += " :"; str += FUtil::STD_ItoAscii(p_PFCurve->GetKey() % 100);
+		str += p_PFCurve->m_ActProfile.Name;
+		return str;
+	}
+	return "";
 
 
 }	 

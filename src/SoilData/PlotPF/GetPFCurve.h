@@ -32,6 +32,7 @@ struct A_TEXTURE
 	float g_mo;
 	float f_sand;
 	float g_sand;
+	float orgloss;
 };
 struct OLDHEADER
 {
@@ -63,6 +64,7 @@ public:
 	GetPFCurve(void);
 	~GetPFCurve(void);
 	void ReadHeaderFile();
+	void SetPostGresProfile(NEWHEADER input);
 	void ReadLevelFile();
 	bool SaveNewFormat();
 	bool SaveRecord(bool NewRecord=false);
@@ -126,13 +128,19 @@ public:
 	size_t m_NumMeasured_PFSteps;
 protected:
 	double m_ConvCondUnit;
+	bool m_PostGresDefined{ false };
+	std::vector<PFCOEF> m_PostGresPF;
+	std::vector< std::vector<float>> m_Theta;
+	std::vector<A_TEXTURE> m_TextureLayers;
+	std::vector<float> m_PFSteps;
 
 private:
 	GaussKreuger *m_Convertor;
 	std::vector<PFCOEF> m_MeanLayers;
 	std::vector<PFCOEF> m_BoundaryLayers;
-	std::vector<A_TEXTURE> m_TextureLayers;
-	std::vector<float> m_PFSteps;
+	
+	
+
 	std::vector<float> m_OrgLayers;
 	int m_TopRow;
 

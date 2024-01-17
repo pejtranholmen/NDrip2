@@ -22,7 +22,7 @@ option(USE_POSTGRES "To include the link to a local Postgres Database" ON)
 if(USE_POSTGRES) 
 
     find_package(libpqxx CONFIG REQUIRED)
-    message("libpq will be used")
+    message("libpq will be used") 
     add_compile_definitions(COUP_POSTGRES DEBUG_FIX)
 
 endif()

@@ -1,14 +1,14 @@
 set(LIBRARY_SOURCES
    "ModelConst.cpp"
     "ModelInfo.cpp"
-    DefineModel.cpp
-    Simulator.cpp
+    "DefineModel.cpp"
+    "Simulator.cpp"
 )
 set(LIBRARY_HEADERS
     "ModelConst.h"
     "ModelInfo.h"
-    DefineModel.h
-    Simulator.h
+    "DefineModel.h"
+    "Simulator.h"
 )
 set(LIBRARY_INCLUDES
     "./"

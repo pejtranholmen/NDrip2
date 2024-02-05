@@ -2458,6 +2458,7 @@ bool NewMap::DeleteDoc_From_Postgres(int pkey) {
 			r = txn.exec("DELETE FROM validation WHERE id_simulations = " + to_string(pkey));
 			r = txn.exec("DELETE FROM multirun_ensembles WHERE id_simulations = " + to_string(pkey));
 			r = txn.exec("DELETE FROM multirun_ensemble_definedcriteria WHERE id_simulations = " + to_string(pkey));
+			r = txn.exec("DELETE FROM history_of_changes WHERE id_simulations = " + to_string(pkey));
 
 
 
@@ -2477,7 +2478,7 @@ bool NewMap::DeleteDoc_From_Postgres(int pkey) {
 					r = txn.exec("DELETE FROM filenamearchive_uses WHERE id_filename = " + to_string(id_filename));
 					r = txn.exec("DELETE FROM filenamearchive_descriptions WHERE id_filename = " + to_string(id_filename));
 					r = txn.exec("DELETE FROM filenamearchive_data WHERE id_filename = " + to_string(id_filename));
-					r = txn.exec("DELETE FROM filenamyearchive WHERE id_filename = " + to_string(id_filename));
+					r = txn.exec("DELETE FROM filenamearchive WHERE id_filename = " + to_string(id_filename));
 				
 				}
 
@@ -2495,7 +2496,7 @@ bool NewMap::DeleteDoc_From_Postgres(int pkey) {
 				r = txn.exec("DELETE FROM filenamearchive WHERE id_filename = " + to_string(id_filename));
 			}
 			//r= txn.exec("DELETE FROM multirun_Ensemble_DefinedCriteria WHERE id_simulations = " + to_string(pkey)) ;
-			r= txn.exec("DELETE FROM simulations WHERE id_simulations = " + to_string(pkey));
+ 			r= txn.exec("DELETE FROM simulations WHERE id_simulations = " + to_string(pkey));
 
 		}
 

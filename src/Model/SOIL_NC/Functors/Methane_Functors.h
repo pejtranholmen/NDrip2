@@ -30,12 +30,14 @@ private:
 };
 class HenryLawMethaneVolatility {
 public:
-	HenryLawMethaneVolatility(double Henry_cp, double HenryCoefTemp, double RefTemp ) noexcept 	:
+    HenryLawMethaneVolatility(double Henry_cp, double HenryCoefTemp, double RefTemp) noexcept :
 	cp(Henry_cp), ctemp(HenryCoefTemp), reftemp(RefTemp)
 	{		// Converts from mass/mass to mass per volume assuming the denisity of water to 10**6 g/m3
 			//	changing the unit from g/m3 to g/liter 2008-10-10
 		cp = Henry_cp *1000.; 
 	}
+	
+
 	double operator() (double WaterConc, double Temp) noexcept {
 		return WaterConc / (cp * exp(-ctemp * (1 / (Temp + 273.15) - 1 / (reftemp + 273.15))) * (Temp + 273.15) / 12.2);
 	};
@@ -44,28 +46,31 @@ public:
 private:
 	double cp, ctemp, reftemp;
 
+
+
 };
 class MethaneBoundaryLayerFlux {
 public:
 	MethaneBoundaryLayerFlux(double ref_conc, double ResistanceAir) noexcept : ref_conc(ref_conc), ra(ResistanceAir) { // This is the instantiation for fixed air resistance
-		ra /= Fix::SECPERDAY;};
+		ra /= Fix::SECPERDAY; ref_conc /= 1.E-6;
+	};
 	MethaneBoundaryLayerFlux(double ref_conc, double ResistanceAir, double LogScale) noexcept : ref_conc(ref_conc), ra(ResistanceAir) { //This is the instantiantion for dynamics scaling of surface flux
 		ra /= Fix::SECPERDAY; scalecoef = pow(10., LogScale); };
 
 	double operator() (double ConcSurface) noexcept {
-		return ( ConcSurface- ref_conc) / ra;
+		return ( ConcSurface- ref_conc/1.E-6) / ra;
 	};
 	double operator() (double ConcSurface, double TempSurface) { // This is the default fixed ra operator
-		double MethaneMassConcAtm = ref_conc * Fix::MOL_RATIO_CH4_AIR * AirDensityTempFunc(TempSurface);
-		double flux= (ConcSurface - MethaneMassConcAtm) / ra;
+		double MethaneMassConcAtm = Fix::MOL_RATIO_CH4_AIR * AirDensityTempFunc(TempSurface);
+		double flux= (ConcSurface - ref_conc)* MethaneMassConcAtm/ ra;
 		if (TempSurface < 0.)
 			return max(0., flux);
 		else
 			return flux;
 	};
 	double operator() (double ConcSurface, double TempSurface, double AirResistance) { //This is the operator for dynamics scaling of surface flux
-		double MethaneMassConcAtm = ref_conc * Fix::MOL_RATIO_CH4_AIR * AirDensityTempFunc(TempSurface);
-		double flux = (ConcSurface - MethaneMassConcAtm) / (AirResistance/Fix::SECPERDAY*scalecoef);
+		double MethaneMassConcAtm =  Fix::MOL_RATIO_CH4_AIR * AirDensityTempFunc(TempSurface);
+		double flux = (ConcSurface - ref_conc) / (AirResistance/Fix::SECPERDAY*scalecoef);
 		if (TempSurface < 0.)
 			return max(0., flux);
 		else

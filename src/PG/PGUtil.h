@@ -7,7 +7,7 @@
 #define BASE   1721424L  
 #endif
 //* Jan 1, AD 1 
-enum formats { STANDARD, SEPARATED_YMDHM, SEPARATED_YMD, YMD_HM, NOAA, SMHI, SWISS, SEPARATED_YMDH, CZECH, CZECH_COL_TRANS, MONTH_COL_TRANS, PROFOUND, IDSCAN, UNDEFINEDFORMAT, SMHI_OPENDATA, SILO, SITES };
+enum formats { STANDARD, SEPARATED_YMDHM, SEPARATED_YMD, YMD_HM, NOAA, SMHI, SWISS, SEPARATED_YMDH, CZECH, CZECH_COL_TRANS, MONTH_COL_TRANS, PROFOUND, IDSCAN, UNDEFINEDFORMAT, SMHI_OPENDATA, SILO, SITES, PERRENIAL };
 enum dateformats { YMDHM, YMD, DMY_SLASH };
 class GlobalInfo;
 class Doc;
@@ -133,7 +133,7 @@ public:
 	static std::string CheckedForExistingBinFileName(std::string filename);
 	static bool CheckForPossiblePGDateString(std::string str);
 	static bool CreateOutputCSVFile(std::string filename, std::string filenameinput, Doc* pDoc);
-	static std::string createInputBinFile(std::string csvFileName);
+	static std::string createInputBinFile(std::string csvFileName, size_t filetype=0);
 
 private:
 	void SetUnitMap(UNIT_TYPES type, std::string str) {

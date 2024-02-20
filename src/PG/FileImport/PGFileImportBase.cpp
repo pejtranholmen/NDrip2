@@ -828,7 +828,7 @@ bool PGFileImportBase::CreateNewFileAndDefineSize(FILEINFO input,  size_t Actual
 					CPGFile::CreateNewFile(input.MaxVar - m_time_red - input.RedNumVar,( input.TotRec - input.NumHeads)/ m_NumToImport, m_NumToImport);
 			}
 			else {
-				if (m_format == PROFOUND||m_format==STANDARD)
+				if (m_format == PROFOUND||m_format==STANDARD||m_format==PERRENIAL)
 					CPGFile::CreateNewFile(input.MaxVar - m_time_red - input.RedNumVar, input.LinkedSites[0].Records, input.LinkedSites.size());
 				else
 					CPGFile::CreateNewFile(input.MaxVar - m_time_red - input.RedNumVar, input.TotRec - input.NumHeads, m_ImportedFileVector.size());
@@ -1018,6 +1018,22 @@ bool PGFileImportBase::ReadHeading(FILEINFO input, size_t ActualIndexId) {
 			}
 		}
 		return true;
+	}
+	else if (m_format == PERRENIAL) {
+		size_t countv = 1;
+		auto pos = input.InputfileName.find("Perennial_");
+		string statname = input.InputfileName.substr(pos, 11);
+		for (size_t i = 0; i < input.ValidVariables.size(); i++) {
+			if (input.ValidVariables[i]) {
+				
+				SetVarName(countv, input.FirstValidHeads[i], 1);
+				SetVarUnit(countv, input.UnitsFromHead[i], 1);
+				SetVarStation(countv, statname, 1);
+				countv++;
+			}
+		}
+		return true;
+
 	}
 
 
@@ -1377,6 +1393,8 @@ bool PGFileImportBase::ReadHeading(FILEINFO input, size_t ActualIndexId) {
 				i_head = 3;
 			else if (varstr.find("Variable Pos") != string::npos)
 				i_head = 4;
+			else if(m_format==PERRENIAL)
+				i_head=1;
 			FUtil::trim(line);
 			if (m_ndelim != string::npos)
 				npos = line.find(m_delimiters.substr(m_ndelim, 1));
@@ -1610,6 +1628,8 @@ bool PGFileImportBase::ReadingVariableValues(FILEINFO input, size_t ActualIndexI
 				if (next_validLine < CountLine+1) {
 
 					if (ActualIndexId == 0 && m_format == SMHI_OPENDATA)
+						m_HeadingRead = true;
+					else if (ActualIndexId == 0 && m_format == PERRENIAL)
 						m_HeadingRead = true;
 					else if (ActualIndexId == 0&&m_format!=STANDARD)
 						CheckReadOfHeading();

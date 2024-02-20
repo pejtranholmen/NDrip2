@@ -91,7 +91,9 @@ namespace FUtil
 	};
 
 
-	static vector<string> GetFileList(string type) {
+
+
+	static vector<string> GetFileList(string type, string filepath="") {
 		vector<string> out;
 		struct stat sb;
 		string path;
@@ -99,10 +101,15 @@ namespace FUtil
 #ifdef LINUX2
 		path = "/temp";
 		return out;
-
 #else
 		namespace fs = std::filesystem;
-		path = GetCurrentPath();
+		if (filepath == "") {
+			
+			path = GetCurrentPath();
+		}
+		else {
+			path = filepath;
+		}
 
 
 		// Looping until all the items of the directory are
@@ -357,6 +364,14 @@ namespace FUtil
 			pos = str.find(" ");
 		}
 	}
+	static void trim_column(string& str)
+	{
+		size_t pos = str.find("\"");
+		while (pos != string::npos) {
+			str.erase(pos, 1);
+			pos = str.find("\"");
+		}
+	}
 	static void trim_index(string& str)
 	{
 		size_t pos1, pos2;
@@ -519,6 +534,7 @@ namespace FUtil
 
 		size_t ipos;
 		ipos = str.find(' '); if (ipos == string::npos) ipos = str.find(';'); if (ipos == string::npos) ipos = str.find('\t');
+		if (ipos == string::npos) ipos = str.find(',');
 		while (ipos == 0 && str[0] == ' ') { str = str.substr(1); ipos = str.find(' '); }
 		while (ipos != string::npos) {
 			string sub;
@@ -536,7 +552,7 @@ namespace FUtil
 			else {
 				str = str.substr(ipos + 1);
 				ipos = str.find(' '); if (ipos == string::npos) ipos = str.find(';'); if (ipos == string::npos) ipos = str.find('\t');
-
+				if (ipos == string::npos) ipos = str.find(',');
 
 				if (ipos == string::npos) {
 					float value = AtoFloat(str);
@@ -585,11 +601,26 @@ namespace FUtil
 		str += ")";
 		return str;
 	}
+	static vector<size_t> getcommapositions(string str) {
+		size_t ipos;
+		vector<size_t> outvector;
+		ipos = str.find(';'); if (ipos == string::npos) ipos = str.find('\t');
+		if (ipos == string::npos) ipos = str.find(',');
+		size_t acc{ ipos };
+		while (ipos != string::npos) {
+			outvector.push_back(acc);
+			str = str.substr(ipos + 1);		
+			ipos = str.find(",");
+			acc = acc + ipos + 1;
+		}
+		return outvector;
+	}
 	static string getspace(size_t n) { string out; string space = " ";; for (size_t i = 0; i < n; i++) out += space; return out; };
 	static vector<string> GetStringVectorFromStringLine(string str, size_t num) {
 		vector<string> outvector;
 		size_t ipos;
 		ipos = str.find(';'); if (ipos == string::npos) ipos = str.find('\t');
+		if (ipos == string::npos) ipos = str.find(',');
 		while (ipos != string::npos) {
 			string sub;
 			sub = str.substr(0, ipos);
@@ -605,10 +636,13 @@ namespace FUtil
 			else {
 				str = str.substr(ipos + 1);
 				ipos = str.find(';'); if (ipos == string::npos) ipos = str.find('\t');
+				if (ipos == string::npos) ipos = str.find(',');
 				if (ipos == string::npos) 	outvector.push_back(str);
 			}
 		}
-		if (str.size() > 0 && ipos == string::npos) outvector.push_back(str);
+		if (str.size() > 0 && ipos == string::npos&& outvector.back()!=str) {
+			outvector.push_back(str);
+		}
 		while (outvector.size() < num) outvector.push_back("");
 		return outvector;
 	}

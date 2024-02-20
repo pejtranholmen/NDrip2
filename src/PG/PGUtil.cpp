@@ -411,7 +411,15 @@ IPGTID PGUtil::Ato_IPGTID(string Datum) {
 		   out.iminut = AtoInt(Datum.substr(10, 2));
 
 	   }
-	   else {
+	 else if (num > 16) {
+		   out.iyear = AtoInt(Datum.substr(ndatepos-4, 4));
+		   out.imonth = AtoInt(Datum.substr(ndatepos+1, 2));
+		   out.iday = AtoInt(Datum.substr(ndatepos+4, 2));
+		   out.ihour = AtoInt(Datum.substr(nhourpos - 2, 2));
+		   out.iminut = AtoInt(Datum.substr(nhourpos + 1, 2));
+
+	  }
+	  else {
 		   out.iyear = AtoInt(Datum.substr(0, 4));
 		   out.imonth = AtoInt(Datum.substr(5, 2));
 		   out.iday = AtoInt(Datum.substr(8, 2));
@@ -1307,10 +1315,10 @@ bool PGUtil::CreateOutputCSVFile(string filename, string filenameinput, Doc* pDo
 }
 
 
-string PGUtil::createInputBinFile(string csvFileName) {
+string PGUtil::createInputBinFile(string csvFileName, size_t filetype) {
 	PGFileImport File;
 	string binfilename = "";
-	if (File.ImportFromFile(csvFileName, false, 0)) {
+	if (File.ImportFromFile(csvFileName, false, filetype)) {
 		binfilename = File.GetFileName();
 		File.CloseFile();
 	}

@@ -421,6 +421,7 @@ bool NewMap::Read_SimB_FromXmlFile(pugi::xml_node node, bool Reset_to_Default) {
 
 	string value_to_assign = "Current";
 
+
 	if (Reset_to_Default) value_to_assign = "Default";
 	
 	simtype type{ simtype::SWITCH };
@@ -2496,7 +2497,7 @@ bool NewMap::DeleteDoc_From_Postgres(int pkey) {
 				r = txn.exec("DELETE FROM filenamearchive WHERE id_filename = " + to_string(id_filename));
 			}
 			//r= txn.exec("DELETE FROM multirun_Ensemble_DefinedCriteria WHERE id_simulations = " + to_string(pkey)) ;
- 			r= txn.exec("DELETE FROM simulations WHERE id_simulations = " + to_string(pkey));
+  			r= txn.exec("DELETE FROM simulations WHERE id_simulations = " + to_string(pkey));
 
 		}
 
@@ -3399,7 +3400,7 @@ bool NewMap::WriteDoc_To_Postgres(bool UpdatedRecord, bool DB_Source ) {
 	// vector Par
 	{
 		vector<vectorpar_set> s;
-		auto kollv = GetPtrVector(PAR_TABLE);
+		auto kollv = GetPtrVector(PAR_TABLE, true, true);
 		m_Pt_Array.clear();
 		for (auto k : kollv) {
 			if (k->IsNotOriginalValue()) m_Pt_Array.push_back(static_cast<P*>(k));
@@ -4341,6 +4342,7 @@ bool NewMap::Info_ParTables(bool reading)
 								if (pVar != pP&&pVar != nullptr) pP = pVar;
 
 								rFloat(&fvalue);
+								pP->SetNotOriginalValue();
 
 								if(pP!=nullptr) {
 									bool LocalValidnewinfo=AssignNewValue_toP(pP, nRow, fvalue, ReCalcFromCol);
@@ -6961,6 +6963,9 @@ bool NewMap::AssignNewValue_toP(P* pP, size_t nRow, double newvalue, size_t &ReC
 		if (abs(newrel - relcurrent) > 1.E-6 || ratio < 0.99 || ratio>1.01) {
 			ReCalc = pP->SetValue(nRow, newvalue);
 			pP->SetNotOldValue(size_t(nRow));
+			pP->SetNotOriginalValue();
+
+
 			return true;
 		}
 	}

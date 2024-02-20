@@ -351,9 +351,9 @@ FILEINFO PGFileImport::MakeScanning(FILEINFO out)
 
 	map<size_t, size_t> TimeCheckMap, MultiTimeMap;
 	size_t MultiTimeCount = 0;
-	size_t PrevTime=0;
+	size_t PrevTime=0, PrevRecord=0;
 	pair<string, size_t> NextLine;
-
+	
 
 	auto SetTimeMap = [&]() {
 		if (m_CurrentMin < PrevTime) {
@@ -363,6 +363,13 @@ FILEINFO PGFileImport::MakeScanning(FILEINFO out)
 		else {
 			auto it = TimeCheckMap.find(m_CurrentMin);
 			if (it == TimeCheckMap.end()|| TimeCheckMap.size()==0) {
+				if (PrevTime > m_CurrentMin) {
+					int koll = 1;
+
+				}
+				if (nrec != PrevRecord+1) {
+					int gap = 1;
+				}
 				TimeCheckMap.insert(pair <size_t, size_t>(m_CurrentMin, nrec));
 				m_CheckedTimeMap.insert(pair <size_t, size_t>(nrec, m_CurrentMin));
 
@@ -372,6 +379,7 @@ FILEINFO PGFileImport::MakeScanning(FILEINFO out)
 				MultiTimeCount++;
 			}
 			PrevTime = m_CurrentMin;
+			PrevRecord = nrec;
 		}
 	};
 	auto ResetTimeMap = [&]() {
@@ -493,6 +501,7 @@ FILEINFO PGFileImport::MakeScanning(FILEINFO out)
 			ich = str.find(m_linebreak);
 
 		}
+
 		return ich;
 	};
 	auto SetValidTimeIdVariables = [&]() {
@@ -507,6 +516,11 @@ FILEINFO PGFileImport::MakeScanning(FILEINFO out)
 			out.CopyMode = true;
 			DateTimeIdentified = true;
 
+
+		}
+		else if (m_format == PERRENIAL) {
+			out.CopyMode = false;
+			DateTimeIdentified = true;
 		}
 
 		for (size_t i = 0; i < out.FirstValidHeads.size(); i++) {
@@ -557,6 +571,12 @@ FILEINFO PGFileImport::MakeScanning(FILEINFO out)
 				out.ValidVariables.push_back(false);
 				out.MinuteColumn = out.ValidVariables.size();
 				DateTimeIdentified = true;
+			}
+			else if (m_format == PERRENIAL) {
+				if(i>0&&i<124) 
+					out.ValidVariables.push_back(true);
+				else
+					out.ValidVariables.push_back(false);
 			}
 			else if(out.CopyMode)
 				out.ValidVariables.push_back(true);
@@ -657,6 +677,7 @@ FILEINFO PGFileImport::MakeScanning(FILEINFO out)
     enum class ReadVar  {StatNamn, ParNamn, Period, DatumStart, No};
 	auto ReadStatus = ReadVar::No;
 	size_t Valid_Line = 0;
+	int countvarhead = 0;
 	auto CountHeads = [&]() {
 	
 		if (m_format == SITES) {
@@ -851,6 +872,12 @@ FILEINFO PGFileImport::MakeScanning(FILEINFO out)
 			}
 			if (nrec == SMHI_HeadLineNo && nvar >= SMHI_TidPosStart && varstr!=""&&varstr!="Tidsutsnitt:") out.FirstValidHeads.push_back(varstr);
 
+		}
+		else if (m_format == PERRENIAL) {
+			countvarhead++;
+			nhead = min(size_t(2), nrec);
+			if(nrec==1)  out.FirstValidHeads.push_back(varstr);
+			if(nrec==2)  out.UnitsFromHead.push_back(varstr); ;
 		}
 		else {
 			if (varstr.find("SITES STATION:") != string::npos) {
@@ -1216,6 +1243,11 @@ FILEINFO PGFileImport::MakeScanning(FILEINFO out)
 			out.DateColumn = 1;
 
 		}
+		else if (nvar == 1 && m_format == PERRENIAL) {
+			out.IdentifiedDateFormat = YMDHM;
+			out.IdentifiedStartMin = PGUtil::MinutConv(PGUtil::DateConv(out.IdentifiedDateFormat, varstr));
+			out.DateColumn = 1;
+		}
 		m_CurrentFileInfo.DateColumn = out.DateColumn;
 		m_CurrentFileInfo.HourColumn = out.HourColumn;
 		m_CurrentFileInfo.TimeColumn = out.TimeColumn;
@@ -1237,6 +1269,19 @@ FILEINFO PGFileImport::MakeScanning(FILEINFO out)
 		ich = CheckSizeOfValidLine(string_buf);
 		string headerline;
 		if (nrec == 0) {
+			/*if (m_format == PERRENIAL) {
+				auto next = ich+2;
+				auto add = next;
+				headerline.clear();
+				for (size_t i = 0; i < 3; i++) {
+					string next_str = string_buf.substr(next);
+					headerline += next_str;
+					next += CheckSizeOfValidLine(next_str)+2;
+				}
+				ich = next-2;
+				headerline.substr(2, ich);
+			}
+			else */
 			if (string_buf.find(m_linebreak)>0) {
 				headerline = string_buf.substr(0, string_buf.find(m_linebreak));
 			}
@@ -2064,6 +2109,15 @@ FILEINFO PGFileImport::GetFileInfo(FILEINFO input, size_t ActualIndexId) {
 		input.MaxVar = 6;
 		input.NumHeads = 6;
 		input.FixedFormat = true;
+	}
+	else if (m_format == PERRENIAL) {
+		m_ImportedFileVector.push_back(m_CurrentFile);
+		input.FixedFormat = false;
+		m_CurrentFile.NumRec = input.TotRec - 1;
+		m_totrec_a = input.TotRec - 1;
+		//m_totrec_a=nrec;
+
+
 	}
 	else if (m_format == SWISS) {
 		m_CurrentFile.NumRec = input.TotRec - 1;

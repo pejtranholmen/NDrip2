@@ -1,5 +1,6 @@
 
 using namespace std;
+#include <iostream>;
 #include "Util/SimUtil.hpp"
 #include "NewBase/NewMap.h"
 #include "Util/StatUtil.h"
@@ -103,6 +104,107 @@ void readJson(string jsonFileName, Doc* pDoc) {
 
     }
 }
+vector<string> merge_filter_datafiles(vector<string> files) {
+    string climatefile, validationfile;
+    vector<string> out;
+    auto basenamepos = files[0].find("_LF");
+    climatefile = files[0].substr(0, basenamepos)+"_forcing.txt";
+    validationfile= files[0].substr(0, basenamepos) + "_validation.txt";
+    std::fstream  in_file;
+    //std::ofstream clim_stream, val_stream;
+    
+    //climatefile = FUtil::check_open_newcsvfile(&clim_stream, climatefile);
+    //validationfile = FUtil::check_open_newcsvfile(&val_stream, validationfile);
+    std::ofstream clim_stream(climatefile);
+    ofstream val_stream(validationfile);
+    out.push_back(climatefile); out.push_back(validationfile);
+
+    
+
+    string line_in, line_out;
+   
+    vector<string> str_v, units, names;
+    vector<float> float_v;
+    vector<size_t> commapos;
+    vector<size_t> valpos{3,6,9,12,13,14,20,52,65,69,72,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,100,101,102};
+    vector<size_t> climpos{23,25,29,30,36,39,48,54,56,64,66,68,79,80};
+    size_t count = 0, super_count = 0;
+    for (size_t ifil = 0; ifil < files.size(); ifil++) {
+        in_file.open(files[ifil], ios::in);
+        count = 0;
+        getline(in_file, line_in);
+        count++;
+
+        while (getline(in_file, line_in)) {
+            commapos = FUtil::getcommapositions(line_in);
+            FUtil::trim(line_in);
+            FUtil::trim_column(line_in);
+            if (count < 4) {
+                str_v = FUtil::GetStringVectorFromStringLine(line_in, commapos.size()+1);
+                if (count == 1) names = str_v;
+                else if (count == 2) units = str_v;
+                if (count == 3 && super_count == 0) {
+                    if (clim_stream.is_open()) {
+                        string provline;
+                        clim_stream << "TimeStamp,";
+                        val_stream << "TimeStamp, ";
+                        for (size_t i = 0; i < valpos.size(); i++) {
+                            val_stream << names[valpos[i]];
+                            if (i < valpos.size() - 1) val_stream << ",";
+                        }
+                        for (size_t i = 0; i < climpos.size(); i++) {
+                            clim_stream << names[climpos[i]];
+                            if (i < climpos.size() - 1) clim_stream << ",";
+                        }
+                        val_stream << "\n"; clim_stream << "\n";
+                        clim_stream << "-,";
+                        val_stream << "-,";
+                        for (size_t i = 0; i < valpos.size(); i++) {
+                            val_stream << units[valpos[i]];
+                            if (i < valpos.size() - 1) val_stream << ",";
+                        }
+                        for (size_t i = 0; i < climpos.size(); i++) {
+                            clim_stream << units[climpos[i]];
+                            if (i < valpos.size() - 1) clim_stream << ",";
+                        }
+                        val_stream << "\n"; clim_stream << "\n";
+                    }
+
+                }
+            }
+            else {
+                str_v = FUtil::GetStringVectorFromStringLine(line_in, commapos.size()+1);
+                float_v = FUtil::GetFloatVectorFromString(line_in, commapos.size()+1);
+                if (clim_stream.is_open()) {
+                    clim_stream << str_v[0].substr(0,16) + ",";
+                    val_stream << str_v[0].substr(0,16) + ",";
+                    for (size_t i = 0; i < valpos.size(); i++) {
+                        val_stream << str_v[valpos[i]];
+                        if (i < valpos.size() - 1) val_stream << ",";
+                    }
+                    for (size_t i = 0; i < climpos.size(); i++) {
+                        clim_stream << str_v[climpos[i]];
+                        if (i < climpos.size() - 1) clim_stream << ",";
+                    }
+                    val_stream << "\n";
+                    clim_stream << "\n";
+                }
+
+            }
+            count++;
+        }
+        
+        super_count += count;
+        in_file.close();
+    }
+    clim_stream.close();
+    val_stream.close();
+
+
+    return out;
+}
+
+
 
 int main(int argc, char *argv[])
 {
@@ -113,8 +215,23 @@ int main(int argc, char *argv[])
     string simFilePath;
     string SimInputsFileNameJson;
 
+
     path = FUtil::GetCurrentPath();
     auto kolla = FUtil::GetFileList(".Sim");
+
+    for (size_t i = 0; i < 2; i++) {
+       
+        path = "C:\\Dev\\Perennial data\\Perennial "+FUtil::STD_ItoAscii(i+1);
+        FUtil::SetDocumentPath(path);
+        kolla = FUtil::GetFileList(".dat", path);
+        vector<string> outfile = merge_filter_datafiles(kolla);
+        PGUtil::createInputBinFile(outfile[0], 17);
+        PGUtil::createInputBinFile(outfile[1], 17);
+    }
+    
+    
+    
+    /*
 #ifndef COUP_POSTGRES
 #ifdef LINUX2
     string pfile = string(argv[0]);
@@ -155,7 +272,7 @@ int main(int argc, char *argv[])
         pDoc->SelectDoc_From_Postgres(4);
         pDoc->MakeSingleRun(true);
      
-#endif       
+#endif       */
 
   
     return 0;

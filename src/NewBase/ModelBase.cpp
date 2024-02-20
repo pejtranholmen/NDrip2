@@ -703,7 +703,7 @@ vector<SimB*> ModelBase::GetPtrVector(simtype typ,  bool All, bool Original)
 
 	for (auto it = GlobalMap.begin(); it != GlobalMap.end(); ++it) {
 		pSimB = (*it).second;
-		if (typ == pSimB->GetType() && (pSimB->IsEnabled() || All)) {
+		if (size_t(typ) == pSimB->GetType() && (pSimB->IsEnabled() || All)) {
 			if (pSimB->IsNotOriginalValue()) {
 				if (m_ChildDocument && pSimB->IsChildChanged())
 					vptr.push_back(pSimB);

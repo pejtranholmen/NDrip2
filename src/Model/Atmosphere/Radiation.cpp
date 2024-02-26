@@ -58,7 +58,7 @@ bool Radiation::IniFunctors() {
 	f_CanopyShadeCover = Get_D2_Functor(MyFunc::CANOPY_SHADE_COVER);// :CanopyShadeCover(CanopyDiameterHeightRatio_Common, CanopyChadeCoef);
 
 
-	f_SlopeCorrDirectRad = Physf(FUNC_CHOICE::SLOPE_CORR, Latitude, AltSimPosition, RadFracAng1, RadFracAng2, Solar_Time_Adjust);
+	f_SlopeCorrDirectRad = Physf(FUNC_CHOICE::SLOPE_CORR, Latitude, AltSimPosition, RadFracAng1, RadFracAng2, Solar_Time_Adjust, px, py);
 
 	f_ThetaAngleHour = Physf(FUNC_CHOICE::THETA_ANGLE, Latitude, AltSimPosition, RadFracAng1, RadFracAng2);
 	f_potrisday = Physf(FUNC_CHOICE::POTRISDAILY, Latitude, AltSimPosition, RadFracAng1, RadFracAng2);

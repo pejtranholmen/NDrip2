@@ -186,14 +186,21 @@ bool Soil_Drainage_Functions::FunctionDef() {
 
 
 		//pFunc=FuncFactory(SIMPROFILE, GENERAL, NOFPROC, DECOMPOSITION, NORMAL);
-		/*pFunc = new Func(SIMPROFILE, GENERAL, NOFPROC, DECOMPOSITION, NORMAL);
+		pFunc= new Func(SIMPROFILE,GENERAL, NOFPROC,DECOMPOSITION, NORMAL);
 		functorprop.FuncName = MyFunc::DRAINAGE_EMPIRICAL;
 		functorprop.Arg = MyArgType::D1;
 		funcname = "Empirical Drainage Equation";
 		Define(pFunc, functorprop,this,funcname); 
-		double res=pFunc->GetValue(3.);*/
+		double res=pFunc->GetValue(3.);
 
 
+		pFunc= new Func(SIMPROFILE,GENERAL, NOFPROC,DECOMPOSITION, NORMAL);
+
+		functorprop.FuncName = MyFunc::DRAINAGE_PHYSICAL;
+		functorprop.Arg = MyArgType::D1;
+		funcname = "Physical Based Drainage Equation";
+		Define(pFunc, functorprop, this, funcname);
+		res=pFunc->GetValue(3.);
 
 		//fpoint=&Soil_Drainage_Functions::SeepageFunction;
 		pFunc= new Func(SIMPROFILE,GENERAL, NOFPROC,DECOMPOSITION, NORMAL);
@@ -209,6 +216,10 @@ bool Soil_Drainage_Functions::FunctionDef() {
 		functorprop.Arg = MyArgType::D1;
 		funcname = "Ditch Level Function";
 		Define(pFunc, functorprop, this, funcname);
+
+
+	//	Define(pFunc, m_fpointer0_1.size(),0, this, "Ditch Level Function");	m_fpointer0_1.push_back(fpoint);
+		res=pFunc->GetValue(3.);
 
 		return true;
 }

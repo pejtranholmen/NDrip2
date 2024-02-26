@@ -2,7 +2,6 @@
 #include "../PLANT/PlantModel.h"
 #include "../SOIL/SoilModel.h"
 #include "../SOIL/Functors/Profile_Functors.h"
-using namespace std;
 
 Thermal_Functions::Thermal_Functions(void)
 {
@@ -104,7 +103,7 @@ bool Thermal_Functions::Def()
 		m_pModelMap->GetPPointer("Thickness Layers")->GetVector(),
 		m_pModelMap->GetPPointer("DepthMidpLayers")->GetVector());
 
-	std::vector<double> DummyFracMidPoint, initv;
+	vector<double> DummyFracMidPoint, initv;
 
 	f_ModelLayers(m_pModelMap->GetPPointer("Quarts fraction of Sand")->GetVector(), DummyFracMidPoint, initv, true);
 
@@ -353,6 +352,15 @@ bool Thermal_Functions::Def()
 
 
 
+	mTab_ThScale.push_back(pP);
+
+
+	functorprop.FuncName = MyFunc::THERMALCOND_KERSTEN; functorprop.Arg = MyArgType::T_D2;
+	funcname = "Thermal Conductivity - Kersten"; functorprop.FunctorInitOption = string::npos;
+
+	pFunc = new Func(SINGLE, HEAT, HEAT_CONDUCTION, NOBPROC, NORMAL);
+	Define(pFunc, functorprop, funcname, ps_vec, p_vec, plotpar); p_vec.clear(); ps_vec.clear();
+
 
 	vector<double> P1[5];
 	auto koll = (m_pModelMap->GetPPointer("Upper Depth"))->GetVector();
@@ -464,7 +472,7 @@ bool Thermal_Functions::Thermal_ReCalc() noexcept
 			m_pModelMap->GetPPointer("Thickness Layers")->GetVector(),
 			m_pModelMap->GetPPointer("DepthMidpLayers")->GetVector());
 
-		std::vector<double> DummyFracMidPoint, newvalues;
+		vector<double> DummyFracMidPoint, newvalues;
 
 		f_ModelLayers(m_pModelMap->GetPPointer("Quarts fraction of Sand")->GetVector(), DummyFracMidPoint, newvalues, true);
 		m_pModelMap->GetPPointer("mQuarts")->SetValue(newvalues);

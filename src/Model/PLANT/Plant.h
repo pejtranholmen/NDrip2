@@ -104,7 +104,7 @@ class Plant : public SimModule
 		double T5{0.}, TimeZ, PotRis;
 		bool Winter;
 
-		double Islut;
+		double Islut{ 0. };
 
 		double TTinterp;
 		size_t IvalInterp;

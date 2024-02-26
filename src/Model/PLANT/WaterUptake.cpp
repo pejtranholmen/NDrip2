@@ -66,7 +66,7 @@ bool WaterUptake::Def()
 
 
 	pPs = new Ps(&AirMinContent, SINGLE, WATER, WATERUPTAKE, NOBPROC, NORMAL); ps_vec.push_back(pPs);
-	Define(pPs, "AirMinContent", 5., UNIT_TYPES::WATERCONTENT_UNIT, "PlantType > 0|WaterEq = 1|WaterUptakeFunction=0", 0., 20.);
+	Define(pPs, "AirMinContent", 5., UNIT_TYPES::VOLPERCENTAGE_UNIT, "PlantType > 0|WaterEq = 1|WaterUptakeFunction=0", 0., 20.);
 	pPs = new Ps(&AirRedCoef, SINGLE, WATER, WATERUPTAKE, NOBPROC, NORMAL); ps_vec.push_back(pPs);
 	Define(pPs, "AirRedCoef", 4.,UNIT_TYPES::NO_UNIT, "PlantType > 0|WaterEq = 1|WaterUptakeFunction=0", 0., 20.);
 	pPs = new Ps(&WupCri, SINGLE, WATER, WATERUPTAKE, NOBPROC, NORMAL); ps_vec.push_back(pPs);
@@ -280,7 +280,7 @@ bool WaterUptake::Def()
 
 
 	pP = new P(&v_AirMinContent, pNumPlants, PLANT, WATER, WATERUPTAKE, NOBPROC, NORMAL); p_vec.push_back(pP); initv.assign(NumPlants, 5.);	mTab_WaterResponse.push_back(pP);
-	Define(pP, pNumPlants, "v_AirMinContent", initv, UNIT_TYPES::WATERCONTENT_UNIT, "PlantType > 0|WaterEq=1|WaterUptakeFunction > 0", 0., 20.);
+	Define(pP, pNumPlants, "v_AirMinContent", initv, UNIT_TYPES::VOLPERCENTAGE_UNIT, "PlantType > 0|WaterEq=1|WaterUptakeFunction > 0", 0., 20.);
 	pP = new P(&v_AirRedCoef, pNumPlants, PLANT, WATER, WATERUPTAKE, NOBPROC, NORMAL); p_vec.push_back(pP); initv.assign(NumPlants, 4.);	mTab_WaterResponse.push_back(pP);
 	Define(pP, pNumPlants, "v_AirRedCoef", initv,UNIT_TYPES::NO_UNIT, "PlantType > 0|WaterEq=1|WaterUptakeFunction > 0", 0., 20.);
 	pP = new P(&v_WupCri, pNumPlants, PLANT, WATER, WATERUPTAKE, NOBPROC, NORMAL); p_vec.push_back(pP); initv.assign(NumPlants, 400.);	mTab_WaterResponse.push_back(pP);

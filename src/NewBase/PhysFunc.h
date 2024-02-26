@@ -28,11 +28,11 @@ public: PlantSeasonDev(struct PlantInterp L) : L(L) {}
 		  double w;
 		  if (day < L.Start[index]) return L.StartValue[index];
 		  if (day < L.Opt[index]) {
-			  w = std::pow(sin((day - L.Start[index]) / (L.Opt[index] - L.Start[index]) * Fix::PI / 2), L.ShapeStart[index]);
+			  w = pow(sin((day - L.Start[index]) / (L.Opt[index] - L.Start[index]) * Fix::PI / 2), L.ShapeStart[index]);
 			  return L.StartValue[index] * (1 - w) + L.OptValue[index] * w;
 		  }
 		  else if (day < L.End[index]) {
-			  w = std::pow(sin((day - L.Opt[index]) / (L.End[index] - L.Opt[index]) * Fix::PI / 2), L.ShapeEnd[index]);
+			  w = pow(sin((day - L.Opt[index]) / (L.End[index] - L.Opt[index]) * Fix::PI / 2), L.ShapeEnd[index]);
 			  return L.OptValue[index] * (1 - w) + L.EndValue[index] * w;
 		  }
 		  else
@@ -57,14 +57,16 @@ public:
 
 	}
 	Physf(enum  FUNC_CHOICE x) : OPTION(x) { Physf(); ICountErr = 0; }
-	Physf(enum  FUNC_CHOICE x, double a, double b, double c, double d, double TimeAdjust) : OPTION(x), _a(a), _b(b), _c(c), _d(d), Solar_Time_Adjust(TimeAdjust) {
+	Physf(enum  FUNC_CHOICE x, double a, double b, double c, double d, double TimeAdjust, double px_slope=0., double py_slope=0.) : OPTION(x), _a(a), _b(b), _c(c), _d(d), Solar_Time_Adjust(TimeAdjust) {
 		Physf();
 			m_Altitude = _b;
 			m_Angstrom1 = _c;
 			m_Angstrom2 = _d;
 			SNLT = sin(Fix::RAD*a);
 			CSLT = cos(Fix::RAD*a);
-			if (px > 0. || py > 0.)
+			px = px_slope;
+			py = py_slope;
+			if (px > 0.001 || py > 0.001)
 				SLOPE_CORR = true;
 			else
 				SLOPE_CORR = false;
@@ -258,6 +260,34 @@ public:
 			auto SNHS = SNLT*sin(Fix::RAD*DEC) - CSLT*cos(Fix::RAD*DEC)*cos(OMEGA);
 			return max(0., SNHS*Fix::SOLAR_CONST*Fix::SECPERDAY);
 		}
+		case FUNC_CHOICE::SLOPE_CORR:
+			if (SLOPE_CORR) {
+				double OMEGA = (x + Solar_Time_Adjust / 60.) * 15. * Fix::RAD;
+				DEC = -23.45 * cos(Fix::PI * (y + 10.173) / 182.61);
+				double SNHS = SNLT * sin(Fix::RAD * DEC) - CSLT * cos(Fix::RAD * DEC) * cos(OMEGA);
+				double Theta_Angle = acos(SNHS);
+				double ELEV = Fix::PI / 2. - Theta_Angle;
+				if (Theta_Angle < Fix::PI / 2.) {
+					double COSAZ = (SNLT * SNHS - sin(Fix::RAD * DEC)) / (CSLT * sin(Theta_Angle));
+					double SINAZ = sin(OMEGA) * cos(DEC * Fix::RAD) / sin(Theta_Angle);
+					double PHI = atan(abs(SINAZ / COSAZ));
+					if (COSAZ > 0. && SINAZ > 0.)
+						PHI = 2. * Fix::PI - PHI;
+					else if (COSAZ < 0. && SINAZ>0.)
+						PHI = Fix::PI + PHI;
+					else if (COSAZ < 0. && SINAZ < 0.)
+						PHI = Fix::PI - PHI;
+					double SX = sin(PHI) * cos(ELEV);
+					double SY = cos(PHI) * cos(ELEV);
+					double SZ = sin(ELEV);
+					double VEKTOR = (px * SX + py * SY + SZ) / (sqrt((px * px) + (py * py) + 1) * sqrt(SX * SX + SY * SY + SZ * SZ));
+					return max(0.,min(10., VEKTOR * sqrt(SX * SX + SY * SY + SZ * SZ) / SZ));
+				}
+				else
+					return 1.;
+			}
+			else
+				return 1.;
 		case FUNC_CHOICE::RADLONG_OUT_DYN_E: // TempSurf = x, Emisisivity = y
 			return y * 86400. * Fix::STEFB*pow(x+273.15, 4);
 		case FUNC_CHOICE::AVP_TEMP_RH: //Temp x, RH = y

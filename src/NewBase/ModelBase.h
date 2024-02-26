@@ -53,6 +53,10 @@ public:
 	float	A_NewError;
 	float	NewBoxCox_Power;
 	float	NewBoxCox_Offset;
+	int PG_FilterIndex=0;
+	int PG_FilterValue=0;
+	int PG_QualityIndex=0;
+	float Quality_Threshold=0;
 };
 
 class VALSUMv
@@ -228,22 +232,26 @@ class ModelBase : public ModelMap{
 	SimB* GetPtrFromIntType(size_t itype, string group, string name);
 	SimB* GetPtr(string type, string group, string name);
 	SimB* GetPtr(string type, string name);
-	SimB* GetPtr(simtype, string name, string group="");
-	SimB* GetPtr(simtype,simtype, string name);
+	SimB* GetPtr(enum simtype, string name, string group="");
+	SimB* GetPtr(simtype, simtype, string name);
+
 	SimB* GetPtrByName(string name, string group="");
 	P* GetP(string name)  {return (P*)GetPtr(PAR_TABLE, name);};
 	Ps* GetPs(string name) {return (Ps*)GetPtr(PAR_SINGLE, name);};
 	Sw* GetSw(string name) {return (Sw*)GetPtr(SWITCH,name);};
+	
 	F* GetF(string name) { return (F*)GetPtr(PGFILE, name); };
-	OutSingle* GetSingleOutputPtr(string name) { return static_cast<OutSingle*>(GetPtr(STATE_SINGLE,DRIVE_SINGLE, name)); };
+	OutSingle* GetSingleOutputPtr(string name) { return static_cast<OutSingle*>(GetPtr(STATE_SINGLE, DRIVE_SINGLE, name)); };
 	OutVector* GetVectorOutputPtr(string name) { return static_cast<OutVector*>(GetPtr(STATE, DRIVE, name)); };
+
 	size_t GetSwValue(string name) {return ((Sw*)GetPtr(SWITCH,name))->GetIntValue();};
 	size_t SetSwValue(string name, size_t value) {return ((Sw*)GetPtr(SWITCH,name))->SetIntValue(value);};
 
+	void* GetNE_Ptr(size_t* val);
 
-	vector<SimB*> GetPtrVector(string type, string group, bool All=false);
-	vector<SimB*> GetPtrVector(simtype,  bool All=false, bool OnlyNotOriginal=true);
-	vector<SimB*> GetPtrVector(simtype, size_t GroupNo,bool All);
+	vector<SimB*> GetPtrVector(string type, string group, bool All = false);
+	vector<SimB*> GetPtrVector(simtype, bool All = false, bool OnlyNotOriginal = true);
+	vector<SimB*> GetPtrVector(simtype, size_t GroupNo, bool All);
 	vector<SimB*> GetAllPtr(simtype);
 	vector<SimB*> GetAllEnabledPtr(simtype);
 	vector<SimB*> GetAllPtr(simtype, simtype, simtype, simtype);
@@ -379,7 +387,6 @@ class ModelBase : public ModelMap{
 	
 	bool m_IsMakingBayesianCalib; bool m_IsMakingNelderMeadCalib;
 	bool m_IsUsingDB_Source, m_IsUsingDB_Target;
-	
 	size_t m_CountError;
 	size_t m_MultiRun_TotalNumber;
 	size_t m_NumOutPuts;
@@ -406,7 +413,8 @@ class ModelBase : public ModelMap{
 	vector<string> m_PlantTypes;
 	string m_DB_choices[10];
 	DB_OldHeader m_DB_header[10];
-	unique_ptr<PFCurve> p_PFCurve{nullptr};
+
+	unique_ptr<PFCurve> p_PFCurve{ nullptr };
 	unique_ptr<Register> m_pRegister;
 	string GetTimeCreated();
 	string GetTimeModified();

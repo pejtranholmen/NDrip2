@@ -165,10 +165,15 @@ void Radiation::Flux()
     if(m_pModelStructure->TimeResolution!=1){  //! Removed 
              
        RadInDiffuse=RadInShort*f_DiffuseRadRatio(CloudFrac, f_ThetaAngleHour(Hour, m_pModelInfo->JDayNum));
-       RadInDirect=(RadInShort-RadInDiffuse)*f_SlopeCorrDirectRad(Hour); // ! Only correcting direct radiation /PEJ
-	  
+	   RadInDirect = (RadInShort - RadInDiffuse)*f_SlopeCorrDirectRad(Hour, m_pModelInfo->JDayNum); // ! Only correcting direct radiation /PEJ
+		//RadInDiffuse = RadInShort * 0.5;
+		//RadInDirect = RadInDiffuse;
+
        RadInShort=RadInDiffuse+RadInDirect ;//     ! Recalculating RadInShort to accout for extra direct radiation/PEJ
-	   RadFracDirect = RadInDirect / RadInShort;
+	   if (RadInShort > 0.)
+		   RadFracDirect = RadInDirect / RadInShort;
+	   else
+		   RadFracDirect = 1.;
     }
    // ! END SNOWMIP2 ADDITION, DG 2008-09-02
 	RADDIST radout;

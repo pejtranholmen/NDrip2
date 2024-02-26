@@ -599,7 +599,7 @@ double SnowPack::Snow_Ebal_Temperatures(int INDICATOR) {
     // ! C2. Iterative solution of surface energy balance
      SnowSensF_Old=SnowSensF;
      SnowLatentF_Old=SnowLatentF;
-	 double CHANGE;
+	 double CHANGE=1.;
      while (abs(SnowEbal)>1.E5&&Irep<40) {
        // ! C2.1 Estimate aerodynamic resistance
         //RaSnowSurf=NewRaHeatFunctionSnow(TempSnowSurf);

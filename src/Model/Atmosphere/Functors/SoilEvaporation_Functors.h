@@ -76,9 +76,10 @@ private:
 class RichardsonToEta {
 public:
 	RichardsonToEta(double zo_m, double zo_h) : zom(zo_m), zoh(zo_h) { max_itt = 10; f_Rich = RichardsonsNumber;
-		f_psi_m = Psi_m(); f_psi_h = Psi_h(); eta_old = 10.;
+	f_psi_m = Psi_m(); f_psi_h = Psi_h(); eta_old = 10.; if (zo_m <= 0.) zo_m = 1.E-4;
 	}
 	RichardsonToEta(double kb)   {
+		if (zom <= 0.) zom = 1.E-8;
 		max_itt = 10; f_Rich = RichardsonsNumber;
 		f_psi_m = Psi_m(); f_psi_h = Psi_h(); eta_old = 10.;
 		f_RoughLHeat = RoughnessHeatLengthFunction(kb);
@@ -136,7 +137,7 @@ public:
 		return Ri2eta*Ri;
 	};
 private:
-	double zom, zoh, eta_old;
+	double zom{0.00001}, zoh, eta_old;
 	size_t max_itt;
 	function<double(double, double, double, double)> f_Rich;
 	function<double(double)> f_psi_m, f_psi_h, f_RoughLHeat;;

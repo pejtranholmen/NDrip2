@@ -30,7 +30,7 @@ bool SoilEvaporation::Ini()	{
     SoilEbal=0.;
     SoilLatentF=0.;
 	SoilEvaporationFlux=0;
-    ((Soil_HeatF*)p_Soil_HeatF)->SurfHeatFlow=0.;
+    p_Soil_HeatF->SurfHeatFlow=0.;
 	if (!SnowPack::Ini()) return false;
 
 	return true;
@@ -94,6 +94,9 @@ void SoilEvaporation::Flux()
     Thetau=p_Soil_WaterF->WaterStorage.front()/p_Soil_WaterF->ThicknessLayers.front()/10.;
   else
     Thetau=p_Soil_WaterF->M_Saturation.front();
+
+  auto koll = p_Soil_HeatF->Temp[0];
+  koll = p_Soil_HeatF->Temp.front();
 
 
   double PsiUpper=p_Soil_WaterF->f_PsiTheta_M(0,Thetau);
@@ -164,9 +167,9 @@ void SoilEvaporation::Flux()
 		ebal_in.TotalCoverDegree=0; ebal_in.AreaFraction=1.;
 		ebal_in.SurfaceMoistureDiff = Surfmos;
         if(CanopyShade>=1)
-			ebal_out=SurfEvalSolution(ebal_in, ONE);	
+			SurfEvalSolution(ebal_in, ebal_out, soil_surfacetype::ONE);	
         else 
-			ebal_out=SurfEvalSolution(ebal_in, ONE);
+			SurfEvalSolution(ebal_in, ebal_out, soil_surfacetype::ONE);
 	 } 
 	 else {
 		ebal_in.AreaFraction=DripIrrigCover;
@@ -198,10 +201,10 @@ void SoilEvaporation::Flux()
            //		TempBareSoil
            //       RaSoilSurf
 			ebal_in.SurfaceMoistureDiff = SurfMos1;
-		   ebal_out1=SurfEvalSolution(ebal_in, SPLIT);	
+		    SurfEvalSolution(ebal_in, ebal_out1, soil_surfacetype::SPLIT);	
 		   ebal_in.TotalCoverDegree=SoilCoverEvap-ebal_in.TotalCoverDegree;
 		   ebal_in.SurfaceMoistureDiff = SurfMos2;
-		   ebal_out2=SurfEvalSolution(ebal_in, SPLIT);	
+		   SurfEvalSolution(ebal_in, ebal_out2, soil_surfacetype::SPLIT);	
        /*    Call SurfaceHeatBalance(SoilEbal1, SurfMos1, PsiUpper, RaSoilSurf1, RadNetBareSoil1, & 
                 SoilSensF1, SoilLatentF1,SurfHeatFlow1, Fraction1, &
                 RadNetGround1, RadNetShort, RadInLong, CanopyFracRad1, RadInLongGround1, &
@@ -235,10 +238,15 @@ void SoilEvaporation::Flux()
            //		TempBareSoil
            //       RaSoilSurf
 			ebal_in.SurfaceMoistureDiff = SurfMos1;
-		   ebal_out1=SurfEvalSolution(ebal_in, SPLIT);
+            SOILEBAL_OUT kolla;
+            kolla.Surface_Temp = p_Soil_HeatF->Temp[0];
+            koll = p_Soil_HeatF->Temp.front();
+
+
+		   SurfEvalSolution(ebal_in, ebal_out1, soil_surfacetype::SPLIT);
 		   ebal_in.TotalCoverDegree=SoilCoverEvap-ebal_in.TotalCoverDegree;
 		   ebal_in.SurfaceMoistureDiff = SurfMos2;
-		   ebal_out2=SurfEvalSolution(ebal_in, SPLIT);
+		   SurfEvalSolution(ebal_in, ebal_out2, soil_surfacetype::SPLIT);
      /*      Call SurfaceHeatBalance(SoilEbal1, SurfMos1, PsiUpper, RaSoilSurf1, RadNetBareSoil1, & 
                 SoilSensF1, SoilLatentF1,SurfHeatFlow1, Fraction1, &
                 RadNetGround, RadNetShort, RadInLong, CanopyFracRad, RadInLongGround, &
@@ -345,11 +353,15 @@ bool SoilEvaporation::End()
 SoilEvaporation::~SoilEvaporation(void)
 {
 }
-SOILEBAL_OUT SoilEvaporation::SurfEvalSolution(SOILEBAL_IN Input, enum soil_surfacetype choice)
+void SoilEvaporation::SurfEvalSolution(SOILEBAL_IN Input, SOILEBAL_OUT &out, soil_surfacetype choice)
 {
- SOILEBAL_OUT out;
+ //SOILEBAL_OUT out;
 
- double Rsoil=ThCond_R20(p_Soil_WaterF->Theta.front(), ((Soil_HeatF*)p_Soil_HeatF)->ThQual.front());
+ auto ko= p_Soil_HeatF->Temp.front();
+ out.Surface_Temp = ko;
+
+
+ double Rsoil=ThCond_R20(p_Soil_WaterF->Theta.front(),p_Soil_HeatF->ThQual.front());
 
  double CoverFraction=0;
  if(Input.AreaFraction>0) CoverFraction=Input.TotalCoverDegree/Input.AreaFraction;
@@ -358,7 +370,7 @@ SOILEBAL_OUT SoilEvaporation::SurfEvalSolution(SOILEBAL_IN Input, enum soil_surf
  bool POS,NEG;
  POS=NEG=false;
 
- out.Surface_Temp=((Soil_HeatF*)p_Soil_HeatF)->Temp.front();
+
 
  double Change;
  while(	abs(Input.SoilEbal)>1.E5 && Irep<40) {
@@ -440,7 +452,6 @@ SOILEBAL_OUT SoilEvaporation::SurfEvalSolution(SOILEBAL_IN Input, enum soil_surf
  else {
 	out.SoilEbal=Input.SoilEbal;
  }
- return out;
 
 }
 

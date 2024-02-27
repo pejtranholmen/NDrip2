@@ -3,6 +3,7 @@
 #include "../SOIL/Soil_Frost.h"
 #include "../PLANT/WaterUptake.h"
 class Additional_Variables;
+class Soil_HeatF;
 
 
 
@@ -105,7 +106,7 @@ vector<double> DT_A, DT_B, PrecCoef;
 
  Soil_Frost *p_Soil_WaterF; // Soil Water Flow module
  WaterUptake* p_Plant;
- SimModule* p_Soil_HeatF;
+ Soil_HeatF* p_Soil_HeatF;
  Additional_Variables *p_AdditionalVar;
 
  double AirTempDayFunction(double fractOfDay);

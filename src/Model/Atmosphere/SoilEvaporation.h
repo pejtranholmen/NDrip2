@@ -6,17 +6,17 @@ struct SOILEBAL_IN
 		double TotalCoverDegree;
 		double SurfaceMoistureDiff;
 } ;
-enum soil_surfacetype {ONE, SPLIT};
+enum class soil_surfacetype {ONE, SPLIT};
 struct SOILEBAL_OUT
 {
-	   double RadNet;
-	   double SoilEbal;
-	   double  LatentF;
-	   double  SensibleF;
-	   double  SoilSurfHeatFlow;
-	   double  Surface_Temp;
-	   double  Surface_VapourPressure;
-	   double  RaSoilSurf;
+	   double RadNet=0.;
+	   double SoilEbal=0.;
+	   double  LatentF=0.;
+	   double  SensibleF=0.;
+	   double  SoilSurfHeatFlow=0.;
+	   double  Surface_Temp=0.;
+	   double  Surface_VapourPressure=0.;
+	   double  RaSoilSurf=10.;
 };
 
 
@@ -32,6 +32,6 @@ class SoilEvaporation : public SoilEvaporation_Functions
 		void Flux();
 		void Integ();
 		bool End();
-		SOILEBAL_OUT SurfEvalSolution(SOILEBAL_IN , enum soil_surfacetype);
+		void SurfEvalSolution(SOILEBAL_IN , SOILEBAL_OUT &out, soil_surfacetype);
 
 };

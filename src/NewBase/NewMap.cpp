@@ -2664,7 +2664,8 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool init_call, bool download, st
 		for (auto row : r) {
 			string name = p_ModelInfo->GetSingleParameterName(row["id_singlepar"].as<int>());
 			Ps* pPs = GetPs(name);
-			if (pPs != nullptr) pPs->SetValue(row[1].as<float>());
+			double NewValue = row[1].as<float>();
+			if (pPs != nullptr&&pPs->GetMinValue()<=NewValue&&pPs->GetMaxValue()>=NewValue) pPs->SetValue(NewValue);
 			names1.push_back(name);
 			floats1.push_back(row["id_singlepar"].as<float>());
 		}
@@ -2672,7 +2673,8 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool init_call, bool download, st
 		for (auto row : r) {
 			string name = row[0].as<string>();
 			Ps* pPs = GetPs(name);
-			if (pPs != nullptr) pPs->SetValue(row[2].as<float>());
+			double NewValue = row[2].as<float>();
+			if (pPs != nullptr && pPs->GetMinValue() <= NewValue && pPs->GetMaxValue() >= NewValue) pPs->SetValue(NewValue);
 			names2.push_back(name);
 			floats2.push_back(row["id_singlepar"].as<float>());
 		}

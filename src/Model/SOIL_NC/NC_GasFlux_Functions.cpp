@@ -547,7 +547,7 @@ plotpar.Y_Label = "Relative Rate (-)";
 // CH4 model above;
 ; initv.assign(pSoil->NL, .0004);
 	pG= new G(&CO2_Conc ,pNL,SIMPROFILE,SOILCO2, TRANSPORT,RESPIRATION, NORMAL); 
-		Define(pG, pNL   , "CO2 Concentration",initv, UNIT_TYPES::GAS_CONC_UNIT, "Nitrogen and Carbon >= 1|Trace Gas Emissions > 0");
+		Define(pG, pNL   , "CO2 Concentration",initv, UNIT_TYPES::mMASS_LITER_UNIT, "Nitrogen and Carbon >= 1|Trace Gas Emissions > 0");
 		//wenxin ppm = volume ratio?
 	initv.assign(pSoil->NL, 20.);
 	pG= new G(&Oxygen_Conc ,pNL,SIMPROFILE,AIR, TRANSPORT,OXIDATION, NORMAL); 

@@ -201,6 +201,12 @@ static bool load_pg_file(int pkey, map<string, CPG*> links_to_pg_pointers) {
         numrec = row_inner["numrecords"].as<int>();
         filename = row_inner["filename"].as<string>();
     }
+    size_t countrecord = 0;
+    rr = txn.exec("SELECT pgmintime, pgvarvalues FROM filenamearchive_data WHERE id_filename = " + to_string(pkey) + " ORDER BY pgmintime ASC");
+    for (auto row_inner : rr) {
+        countrecord++;
+    }
+
     auto it=links_to_pg_pointers.find(filename);
     CPG* pPG;
     if (it != links_to_pg_pointers.end())
@@ -508,6 +514,22 @@ vector<string> create_Init_Tables(CommonModelInfo* pinfo) {
         sql = "INSERT INTO Simulations VALUES( ";
         sql += "Default, 'first_test_000001','PEJ',NOW(),Default,1,'When using Default of everything');";
         W.exec(sql.c_str());
+
+        tablenames.push_back(tablename);
+
+        tablename = "Register";
+        drop(W, tablename);
+        sql = create(tablename);
+        sql += "(Id_Item SERIAL PRIMARY KEY,";
+        sql += "name Varchar(128) UNIQUE,";
+        sql += "intNumber Integer ,";
+        sql += "StringItem Varchar(128) Default '-');";
+        W.exec(sql.c_str());
+
+        sql = "INSERT INTO Register VALUES( ";
+        sql += "Default, 'RunNo',1,'1');";
+        W.exec(sql.c_str());
+
 
         tablenames.push_back(tablename);
 

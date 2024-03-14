@@ -42,6 +42,9 @@ public:
 	bool WriteSimB_ToXmlFile(pugi::xml_node node, simtype, doc_enabled def = doc_enabled::ALL);
 
 	bool WriteDoc_To_Postgres(bool UpdatedRecord=false, bool DB_Source=false);
+
+	int GetCurrentRunNoFromPostgres();
+	bool SetCurrentRunNoInPostgres();
 	bool ReDefinePostgresDataBase();
 	bool SelectDoc_From_Postgres(int pkey, bool init_call=true, bool download=false, string localdirectory="", bool OnlyTimeSerieAsCSV=false);
 	vector<int> PreSelectDoc_From_Postgres(int pkey);

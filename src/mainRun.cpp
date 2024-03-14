@@ -934,7 +934,7 @@ int main(int argc, char* argv[]) {
                     bool child = false;
                     if (CurrentAction == 3) child = true;
                    
-                    p_Register = pDoc->SetNewRunNo(true, CurrentSimKey, child, move(p_Register));
+                    p_Register = pDoc->SetNewRunNo(true, CurrentSimKey, child, move(p_Register), true); // Last Argument to use Postgres
                     ans = "y";
 
 
@@ -1027,7 +1027,7 @@ int main(int argc, char* argv[]) {
 
                 if (CurrentAction == 3) makechild_document = true;
 
-                result_pair = pDoc->RunModel_Using_Postgres(CurrentSimKey, makechild_document, move(p_Register));
+                result_pair = pDoc->RunModel_Using_Postgres(CurrentSimKey, makechild_document, move(p_Register), true); // true if using postgres registertable
                 if (result_pair.first) action_done = true;
                 p_Register = move(result_pair.second);
                 break;

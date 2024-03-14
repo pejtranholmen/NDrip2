@@ -3117,6 +3117,53 @@ bool NewMap::SelectDoc_From_Postgres(int pkey, bool init_call, bool download, st
 
 };
 
+int NewMap::GetCurrentRunNoFromPostgres() {
+#ifdef COUP_POSTGRES
+	string current_str;
+	try {
+		pqxx::connection c = initconnection("Select from postgres");
+		pqxx::work txn{ c };
+		pqxx::result rr = txn.exec("SELECT id_item, name, intnumber FROM register WHERE name = 'RunNo' ");
+
+		int runno;
+		for (auto row : rr) {
+			auto id= row[0].as<int>();
+			auto name = row[1].as<string>();
+			runno = row[2].as<int>();
+		}
+
+		return runno;
+	}
+	catch (const std::exception& e) {
+		cerr << e.what() << std::endl;
+	}
+	return false;
+#endif	
+
+};
+bool NewMap::SetCurrentRunNoInPostgres() {
+#ifdef COUP_POSTGRES
+	string current_str;
+	try {
+		pqxx::connection c = initconnection("Select from postgres");
+		pqxx::work txn{ c };
+
+		//pqxx::result rr = txn.exec("SELECT id_item, name, intnumber FROM register WHERE name=RunNo");
+		m_DocFile.m_SimulationRunNo;
+		auto rr = txn.exec("UPDATE register SET intnumber = "+to_string(m_DocFile.m_SimulationRunNo)+ " WHERE name = 'RunNo' ");
+
+		txn.commit();
+		return true;
+	}
+	catch (const std::exception& e) {
+		cerr << e.what() << std::endl;
+	}
+	return false;
+#endif	
+
+
+};
+
 bool NewMap::DownLoadTimeSerie(int id_file, string filebase, string localdirectory, bool TimeSerieAsCSV) {
 #ifdef COUP_POSTGRES
 	string current_str;
